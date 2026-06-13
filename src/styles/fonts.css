@@ -1,0 +1,55 @@
+/* ============================================================================
+   fonts.css  —  pixel font loading (the set Elisha chose)
+   ----------------------------------------------------------------------------
+   THREE self-hosted webfonts, all free / OFL 1.1 — every face lives in
+   public/fonts/ (woff2 + woff) and nothing loads from a CDN, so the CSP can
+   keep font-src/style-src locked to 'self':
+     Sysfont        — Alina Sava's revival of Susan Kare's Chicago (Apple System).
+                      Giant page titles; preloaded from Layout.astro <head>
+                      since it renders the title on every route.
+     W95FA          — Windows-95 system-font revival. Window titles, UI, body.
+     Departure Mono — readable retro mono for labels/code (departuremono.com).
+   ========================================================================== */
+
+/* --- Sysfont --------------------------------------------------------------- */
+@font-face {
+  font-family: "Sysfont";
+  src: url("/fonts/sysfont.woff2") format("woff2"),
+       url("/fonts/sysfont.woff")  format("woff");
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* --- W95FA ----------------------------------------------------------------- */
+@font-face {
+  font-family: "W95FA";
+  src: url("/fonts/w95fa.woff2") format("woff2"),
+       url("/fonts/w95fa.woff")  format("woff");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* --- Departure Mono -------------------------------------------------------- */
+@font-face {
+  font-family: "Departure Mono";
+  src: url("/fonts/DepartureMono-Regular.woff2") format("woff2"),
+       url("/fonts/DepartureMono-Regular.woff")  format("woff");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* Pixel fonts look crisper with anti-aliasing turned down. */
+html {
+  -webkit-font-smoothing: none;
+  -moz-osx-font-smoothing: grayscale;
+  font-smooth: never;
+  text-rendering: geometricPrecision;
+}
+
+/* Pixel-perfect rendering for inline SVG (the wallpaper + icons). */
+svg {
+  shape-rendering: crispEdges;
+}

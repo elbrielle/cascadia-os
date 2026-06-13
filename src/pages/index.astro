@@ -1,0 +1,85 @@
+---
+import Layout from "../layouts/Layout.astro";
+import Window from "../components/Window.astro";
+import AttentionLog from "../components/AttentionLog.astro";
+import { getPosts, formatDate, SUBSTACK_FEED_URL } from "../lib/substack.js";
+
+const posts = (await getPosts()).slice(0, 4);
+---
+
+<Layout title="Elisha Lucero" pageTitle="Home" current="home">
+
+  <div class="layout__cell home__left">
+  <Window id="intro" title="Introduction" width={520}>
+    <div class="intro-grid">
+      <div class="avatar avatar--photo">
+        {/* ?v=N is a cache-buster — bump it whenever the avatar art changes so a
+            previously-cached /images/avatar.png doesn't linger (KV/CDN cache is 4h). */}
+        <img src="/images/avatar.png?v=2" alt="Elisha Lucero portrait" width="128" height="128" />
+      </div>
+      <div>
+        <h2>Hi, I'm Elisha.</h2>
+        <p>I currently teach innovative technology, create classroom tools, and write opinions about the systems underneath everything.</p>
+      </div>
+    </div>
+    <p>
+      Check out some of my projects!
+      <span class="blink">_</span>
+    </p>
+    <div class="project-tiles" aria-label="Featured projects">
+      <a class="project-tile" href="/work/#work-idk" aria-label="IDK Can You?">
+        <span class="project-tile__logo">
+          <img src="/images/projects/idk.png" alt="" loading="lazy" />
+        </span>
+        <span class="project-tile__label">IDK Can You?</span>
+      </a>
+      <a class="project-tile" href="/work/#work-brielle" aria-label="Brielle Builds">
+        <span class="project-tile__logo project-tile__logo--dark">
+          <img src="/images/projects/brielle-builds.svg" alt="" loading="lazy" />
+        </span>
+        <span class="project-tile__label">Brielle Builds</span>
+      </a>
+      <a class="project-tile" href="/work/#work-cce" aria-label="CCE Curriculum">
+        <span class="project-tile__logo">
+          <img src="/images/projects/cce.png" alt="" loading="lazy" />
+        </span>
+        <span class="project-tile__label">CCE Curriculum</span>
+      </a>
+      <a class="project-tile" href="/work/#work-doplarrchaptarr" aria-label="DoplarrChaptarr">
+        <span class="project-tile__logo">
+          <img src="/images/projects/doplarrchaptarr.svg" alt="" loading="lazy" />
+        </span>
+        <span class="project-tile__label">Doplarr<wbr />Chaptarr</span>
+      </a>
+      <a class="project-tile" href="/work/#work-framedeck" aria-label="FrameDeck">
+        <span class="project-tile__logo">
+          <img src="/images/projects/framedeck.png" alt="" loading="lazy" />
+        </span>
+        <span class="project-tile__label">FrameDeck</span>
+      </a>
+    </div>
+    <div style="display: flex; gap: var(--space-2); flex-wrap: wrap;">
+      <a class="btn btn--primary" href="/work/">See my work →</a>
+      <a class="btn" href="/about/">About me</a>
+    </div>
+  </Window>
+
+  <Window id="buildlog" title="Build Log" width={420}>
+    <a class="rss-corner" data-icon="rss" href={SUBSTACK_FEED_URL} target="_blank" rel="noopener" aria-label="Subscribe via RSS"></a>
+    <ul class="panel-list" aria-label="Recent posts">
+      {posts.map((post) => (
+        <li class="panel post">
+          <span class="post__date">{formatDate(post.date)}</span>
+          <a class="post__title" href={post.link} target="_blank" rel="noopener">{post.title}</a>
+        </li>
+      ))}
+    </ul>
+    <a class="btn" href="/blog/">Read the blog →</a>
+  </Window>
+  </div>
+
+  <div class="layout__cell home__attention">
+  <AttentionLog width={460} />
+  </div>
+
+</Layout>

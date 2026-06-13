@@ -1,0 +1,25 @@
+# ============================================================================
+#  .github/dependabot.yml  —  weekly dependency bump PRs
+# ----------------------------------------------------------------------------
+#  Two ecosystems track the only things this repo pulls in:
+#    - npm           the Astro + rss-parser dependency tree
+#    - github-actions  the actions used by .github/workflows/ci.yml
+#
+#  Weekly cadence keeps PR noise low without letting advisories age. If a
+#  bump fails CI (see ci.yml), the PR will be visibly red — easier to triage
+#  than a silent stale lockfile.
+# ============================================================================
+
+version: 2
+updates:
+  - package-ecosystem: npm
+    directory: /
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 5
+
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 5

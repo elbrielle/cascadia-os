@@ -1,0 +1,130 @@
+---
+// ============================================================================
+//  AttentionLog.astro  —  the curated "attention.log" panel (Home-only)
+// ----------------------------------------------------------------------------
+//  An icon-grid feed: each section (Currently reading / Recently watched /
+//  Recently played / On repeat / Recently read) renders as a compact grid of
+//  cover tiles with the title as a caption. Clicking a tile shows the title +
+//  my note: on desktop it fills the sticky detail bar pinned to the window
+//  bottom; on mobile (<=720px) that same bar becomes a bottom sheet that slides
+//  up over a backdrop (discoverable + dismissible, no page-scroll jump).
+//  Interaction lives in public/scripts/attention-grid.js; tiles carry the data
+//  in data-* attrs.
+//  This keeps the panel dense — many covers per screen, comments on demand —
+//  instead of one tall row per item.
+//
+//  Build-time data: the curated KV list (managed at /log-admin) owns each
+//  section once it has items; Goodreads / Trakt stay as a fallback for the
+//  reading + watched sections so they never go empty. Games / music / articles
+//  are manual-only (KV) and render only when curated (Phase E).
+//
+//  Props:  width — preferred window width in px (default 460)
+// ============================================================================
+import Window from "./Window.astro";
+import { getCurrentlyReading, GOODREADS_PROFILE_URL } from "../lib/goodreads.js";
+import { getRecentlyWatched, TRAKT_PROFILE_URL } from "../lib/trakt.js";
+import { getAttention } from "../lib/attention.js";
+
+const { width = 460 } = Astro.props;
+
+const [goodreadsReading, trakt, curatedBooks, curatedWatch, curatedGames, curatedMusic, curatedArticles] =
+  await Promise.all([
+    getCurrentlyReading(4),
+    getRecentlyWatched(4),
+    getAttention(["book"], 4),
+    getAttention(["film", "show"], 6),
+    getAttention(["game"], 6),
+    getAttention(["album"], 6),
+    getAttention(["paper"], 6),
+  ]);
+
+// Normalize every section to one item shape the grid + detail bar can consume.
+const norm = (it) => ({
+  title: it.title || "",
+  detail: it.detail ?? it.author ?? "",
+  note: it.note ?? "",
+  image: it.image ?? null,
+  link: it.link ?? "",
+  kind: it.kind || "book",
+});
+
+const readingSrc = curatedBooks.length > 0 ? curatedBooks : goodreadsReading;
+const watchingSrc = curatedWatch.length > 0 ? curatedWatch : trakt;
+
+const sections = [
+  {
+    heading: "Currently reading",
+    items: readingSrc.map((b) => norm({ ...b, kind: "book" })),
+    footer: { label: "Full shelf:", text: "goodreads.com/elisha-lucero", href: GOODREADS_PROFILE_URL },
+  },
+  {
+    heading: "Recently watched",
+    items: watchingSrc.map((w) => norm({ ...w, kind: w.kind || "show" })),
+    footer: { label: "Full history:", text: "on Trakt", href: TRAKT_PROFILE_URL },
+  },
+  { heading: "Recently played", items: curatedGames.map(norm) },
+  { heading: "On repeat", items: curatedMusic.map(norm) },
+  { heading: "Recently read", items: curatedArticles.map(norm) },
+].filter((s) => s.items.length > 0);
+---
+
+<Window id="now" title="attention.log" width={width}>
+  <p class="attn__intro">what's got my attention</p>
+
+  {/* sections.length === 0 only when KV is down AND both Goodreads/Trakt
+      fallbacks come back empty — an infrastructure-failure state, not a quiet
+      week, so the copy stays a neutral log idiom rather than inventing a reason
+      (audit #35). Gives the attention.log the graceful empty-degrade its twin
+      (About Favorites, .fav__empty) already has. */}
+  {sections.length === 0 ? (
+    <p class="attn__empty">— log empty —</p>
+  ) : (
+  <div class="attn" data-attn>
+    {sections.map((section) => (
+      <Fragment>
+        <h2>{section.heading}</h2>
+        <ul class="attn__grid">
+          {section.items.map((it) => (
+            <li>
+              <button
+                class="attn__tile"
+                type="button"
+                data-title={it.title}
+                data-detail={it.detail}
+                data-note={it.note}
+                data-link={it.link}
+                data-image={it.image ?? ""}
+                data-kind={it.kind}
+              >
+                <span
+                  class:list={["attn__cov", it.kind === "album" && "attn__cov--sq", !it.image && "attn__cov--doc"]}
+                  style={`--tint: var(--t-${it.kind})`}
+                >
+                  {it.image ? (
+                    <img class="attn__cov-img" src={it.image} alt={`Cover of ${it.title}`} loading="lazy" />
+                  ) : (
+                    <span class="attn__doc">▤</span>
+                  )}
+                </span>
+                <span class="attn__cap">{it.title}</span>
+              </button>
+            </li>
+          ))}
+        </ul>
+        {section.footer && (
+          <p class="attn__more">
+            {section.footer.label}{" "}
+            <a href={section.footer.href} target="_blank" rel="noopener">{section.footer.text}</a>
+          </p>
+        )}
+      </Fragment>
+    ))}
+
+    <div class="attn__detail" data-attn-detail aria-live="polite">
+      <div class="attn__detail-content" data-attn-detail-content></div>
+      <button class="attn__detail-close" type="button" data-attn-close aria-label="Close details">✕</button>
+    </div>
+    <div class="attn__backdrop" data-attn-backdrop hidden></div>
+  </div>
+  )}
+</Window>

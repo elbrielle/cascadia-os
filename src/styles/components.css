@@ -1,0 +1,968 @@
+/* ============================================================================
+   components.css  —  the small reusable bits
+   ----------------------------------------------------------------------------
+   Headings, links, buttons, inset panels, pixel cards, the form controls.
+   Anything that lives INSIDE a window body.
+   ========================================================================== */
+
+/* --- Typography inside windows ------------------------------------------ */
+.window__body h2,
+.window__body h3 {
+  font-family: var(--font-display);
+  color: var(--color-text);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  text-shadow: 1px 1px 0 var(--color-accent-soft);
+}
+.window__body h2 { font-size: var(--text-xl); }
+.window__body h3 { font-size: var(--text-lg); }
+
+/* Body links — exclusions so styled-button-shaped anchors (.btn), tag pills
+   (.tag), and the card-shaped project tiles (.project-tile) keep their own
+   decoration. Without :not(.project-tile) this rule (specificity 0,3,1) beat
+   the tile's own `text-decoration: none` (0,1,0), so the accent underline
+   leaked onto the tile labels — and landed mid-word when a label wrapped to
+   two lines (e.g. "CCE CURRICULUM"). */
+.window__body a:not(.btn):not(.tag):not(.project-tile) {
+  color: var(--color-accent);
+  text-decoration: underline;
+  text-decoration-thickness: 2px;
+  text-underline-offset: 2px;
+  font-weight: 500;
+}
+.window__body a:not(.btn):not(.tag):not(.project-tile):hover {
+  color: var(--color-accent-hover);
+  background: var(--color-accent-soft);
+}
+:root[data-theme="dark"] .window__body a:not(.btn):not(.tag):hover {
+  color: var(--color-accent-hover);
+}
+
+.window__body strong { color: var(--color-text); font-weight: 700; }
+
+/* Custom list bullets — ">" markers for that retro-CLI feel.              */
+.window__body ul.cli {
+  list-style: none;
+  padding-left: 0;
+}
+.window__body ul.cli > li {
+  position: relative;
+  padding-left: 24px;
+}
+.window__body ul.cli > li::before {
+  content: "▸";
+  position: absolute;
+  left: 4px;
+  color: var(--color-accent);
+  font-weight: 700;
+}
+
+/* --- The chunky beveled button ----------------------------------------- */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  padding: 6px var(--space-3);
+  background: var(--color-surface);
+  color: var(--color-text);
+  border: var(--window-border) solid var(--bevel-darker);
+  box-shadow:
+    inset  1px  1px 0 var(--bevel-light),
+    inset -1px -1px 0 var(--bevel-dark);
+  font-family: var(--font-display);
+  font-size: 11px;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  text-decoration: none;
+  cursor: pointer;
+  transition: filter var(--speed-fast) var(--ease);
+}
+.btn:hover { background: var(--color-surface-hover); }
+.btn:active {
+  box-shadow:
+    inset -1px -1px 0 var(--bevel-light),
+    inset  1px  1px 0 var(--bevel-dark);
+}
+
+.btn--primary {
+  background: var(--color-accent);
+  color: var(--color-text-inverse);
+  border-color: var(--bevel-darker);
+}
+.btn--primary:hover { background: var(--color-accent-hover); }
+
+/* --- Inset "sunken" panel (used for blog post list items, project cards) - */
+.panel {
+  background: var(--color-surface-sunken);
+  color: var(--color-text);
+  padding: var(--space-2) var(--space-3);
+  border: 1px solid var(--bevel-dark);
+  box-shadow:
+    inset  1px  1px 0 var(--bevel-dark),
+    inset -1px -1px 0 var(--bevel-light);
+}
+
+.panel-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  list-style: none;
+}
+
+.post {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.post__date {
+  font-family: var(--font-mono);
+  font-size: 14px;
+  color: var(--color-text-muted);
+  letter-spacing: 1px;
+}
+.post__title {
+  font-family: var(--font-display);
+  font-size: var(--text-sm);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+/* --- The Introduction window's hero layout ---------------------------- */
+.intro-grid {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: var(--space-3);
+  align-items: start;
+}
+.avatar {
+  width: 96px;
+  height: 96px;
+  background: var(--color-surface-sunken);
+  border: 2px solid var(--bevel-darker);
+  box-shadow:
+    inset  1px  1px 0 var(--bevel-dark),
+    inset -1px -1px 0 var(--bevel-light);
+  padding: 4px;
+  flex-shrink: 0;
+}
+/* Photo variant — the real portrait: a genuine 128×128 pixel-art piece.
+   `box-sizing: content-box` makes the 128px below the IMAGE area, so the pixel
+   art renders at exactly its asset size (1:1 at 1× DPR, clean 2×/3× on retina) —
+   the global border-box default would have the 2px bevel eat in to 124px, a
+   fractional 0.969× that muddies the grid `image-rendering: pixelated` exists to
+   keep crisp. The bevel border just sits outside the image. (audit #15) */
+.avatar--photo {
+  box-sizing: content-box;
+  width: 128px;
+  height: 128px;
+  padding: 0;
+  overflow: hidden;
+}
+.avatar--photo img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  image-rendering: pixelated;
+}
+
+
+/* --- The marquee — restrained, one line only -------------------------- */
+.marquee {
+  display: flex;
+  overflow: hidden;
+  border: 2px solid var(--bevel-darker);
+  background: #000;
+  color: var(--color-warning);
+  font-family: var(--font-mono);
+  font-size: 14px;
+  letter-spacing: 1px;
+  padding: 4px 0;
+}
+.marquee__track {
+  display: inline-flex;
+  white-space: nowrap;
+  gap: 48px;
+  padding-left: 100%;
+  animation: marquee 18s linear infinite;
+}
+.marquee__track > span::before { content: "▸ "; color: var(--color-accent); }
+@keyframes marquee {
+  from { transform: translateX(0); }
+  to   { transform: translateX(-100%); }
+}
+.marquee:hover .marquee__track { animation-play-state: paused; }
+
+/* --- Blinking accent (used sparingly) --------------------------------- */
+.blink {
+  animation: blink 1s steps(2, end) infinite;
+}
+@keyframes blink {
+  to { opacity: 0; }
+}
+
+/* --- Stat row (the "now playing / now building" widgets) -------------- */
+.stat-row {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: var(--space-2);
+  font-family: var(--font-mono);
+  font-size: 14px;
+  color: var(--color-text-muted);
+  letter-spacing: 0.5px;
+  align-items: baseline;
+}
+.stat-row__key {
+  color: var(--color-accent);
+  text-transform: uppercase;
+}
+
+/* --- RSS pixel glyph in the Build Log corner -------------------------- */
+.rss-corner {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  width: 18px;
+  height: 18px;
+  display: block;
+  line-height: 0;
+  transition: transform var(--speed-fast) var(--ease-soft),
+              filter var(--speed-fast) var(--ease-soft);
+}
+.rss-corner:hover { transform: scale(1.1); filter: brightness(1.06); }
+.rss-corner svg { width: 100%; height: 100%; display: block; }
+.window__body { position: relative; }
+
+/* --- Book list (About → attention.log, Goodreads currently-reading) ---- */
+.book-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: grid;
+  gap: var(--space-2);
+}
+.book {
+  display: grid;
+  grid-template-columns: 48px 1fr;
+  gap: var(--space-3);
+  align-items: start;
+  padding: var(--space-2);
+  background: var(--color-surface-sunken);
+  border: 1px solid var(--bevel-dark);
+  box-shadow:
+    inset  1px  1px 0 var(--bevel-dark),
+    inset -1px -1px 0 var(--bevel-light);
+}
+.book__cover-link {
+  display: block;
+  line-height: 0;
+}
+.book__cover {
+  width: 48px;
+  height: auto;
+  display: block;
+  border: 2px solid var(--bevel-darker);
+  box-shadow: var(--shadow-hard);
+  image-rendering: auto; /* covers are photos, not pixel-art */
+}
+.book__meta {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+.book__title {
+  font-family: var(--font-display);
+  font-size: var(--text-sm);
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  color: var(--color-accent);
+  text-decoration: underline;
+  text-decoration-thickness: 2px;
+  text-underline-offset: 2px;
+  word-break: break-word;
+}
+.book__title:hover { color: var(--color-accent-hover); }
+.book__author {
+  font-family: var(--font-mono);
+  font-size: 14px;
+  color: var(--color-text-muted);
+  letter-spacing: 0.5px;
+}
+
+/* --- attention.log: recently-watched (Trakt) -------------------------- */
+/*  Poster (TMDB, optional) + a colored kind chip — Film vs TV. Same sunken
+    panel chrome as .book so the two lists read as one feed. Rows render fine
+    with OR without a poster (no TMDB key → just the chip + title). */
+.watch-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: grid;
+  gap: var(--space-2);
+}
+.watch {
+  display: flex;
+  gap: var(--space-3);
+  align-items: flex-start;
+  padding: var(--space-2);
+  background: var(--color-surface-sunken);
+  border: 1px solid var(--bevel-dark);
+  box-shadow:
+    inset  1px  1px 0 var(--bevel-dark),
+    inset -1px -1px 0 var(--bevel-light);
+}
+.watch__poster-link {
+  display: block;
+  line-height: 0;
+  flex: 0 0 auto;
+}
+.watch__poster {
+  width: 46px;
+  height: auto; /* posters are 2:3 — let height follow */
+  display: block;
+  border: 2px solid var(--bevel-darker);
+  box-shadow: var(--shadow-hard);
+  image-rendering: auto; /* real artwork, not pixel art */
+}
+.watch__meta {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+.watch__head {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  flex-wrap: wrap;
+}
+.kind {
+  flex: 0 0 auto;
+  font-family: var(--font-display);
+  font-size: 9px;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  padding: 2px 6px;
+  color: #fff;
+  border: 1px solid var(--bevel-darker);
+}
+.kind--film { background: var(--tint-film); }
+.kind--show { background: var(--tint-show); }
+.watch__title {
+  font-family: var(--font-display);
+  font-size: var(--text-sm);
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  color: var(--color-accent);
+  text-decoration: underline;
+  text-decoration-thickness: 2px;
+  text-underline-offset: 2px;
+  word-break: break-word;
+}
+.watch__title:hover { color: var(--color-accent-hover); }
+.watch__detail {
+  font-family: var(--font-mono);
+  font-size: 14px;
+  color: var(--color-text-muted);
+  letter-spacing: 0.5px;
+}
+.watch__note {
+  font-size: var(--text-sm);
+  font-style: italic;
+  color: var(--color-text);
+}
+
+/* --- attention.log: icon-grid feed (Home) -------------------------------- */
+/*  Each section is a compact grid of cover tiles (title as caption); clicking a
+    tile fills the sticky detail bar at the bottom with the note. Denser than one
+    row per item — many covers per screen, comments on demand. Per-kind tints
+    back a missing cover, the article document tiles, and the detail chip.
+    Interaction: public/scripts/attention-grid.js.                            */
+.attn {
+  --t-book: var(--tint-book);  --t-film: var(--tint-film);  --t-show: var(--tint-show);
+  --t-game: var(--tint-game);  --t-album: var(--tint-album); --t-paper: var(--tint-paper);
+}
+.attn > * + * { margin-top: var(--space-3); }
+/* Intro is a single punchy line; scale it up with the window but keep it on
+   ONE line down to the narrowest phones (min term ≈ current size, vw term sized
+   so "what's got my attention" never wraps in the narrow mobile column). */
+.attn__intro {
+  font-size: clamp(var(--text-sm), 5vw, var(--text-lg));
+  color: var(--color-text-muted);
+  line-height: 1.2;
+}
+.attn__more { font-size: var(--text-sm); color: var(--color-text-muted); }
+/* All-empty fallback (audit #35) — same muted idiom as .attn__more / .fav__empty,
+   a touch of top margin to sit clear of the .attn__intro line above it. */
+.attn__empty { font-size: var(--text-sm); color: var(--color-text-muted); margin-top: var(--space-2); }
+
+.attn__grid {
+  list-style: none; margin: 0; padding: 0;
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(72px, 1fr));
+  gap: var(--space-2); align-content: start;
+}
+.attn__tile {
+  display: flex; flex-direction: column; gap: 5px;
+  width: 100%; padding: 0; cursor: pointer; text-align: left;
+  background: none; border: none; color: inherit; font: inherit;
+}
+.attn__cov {
+  position: relative; aspect-ratio: 2 / 3; overflow: hidden;
+  background: var(--tint, #888);
+  border: 2px solid var(--bevel-darker); box-shadow: var(--shadow-hard);
+}
+.attn__cov--sq { aspect-ratio: 1 / 1; }
+.attn__cov-img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; image-rendering: auto; }
+/* Cover arrival: the tint block is the designed placeholder, and each lazy
+   cover reveals with a brief steps() hard-cut once decoded — pixel
+   vocabulary, never a smooth cross-fade. Gated on [data-covers] (stamped by
+   attention-grid.js at init) so a no-JS visitor gets full-opacity covers
+   from first paint. Reduced motion is squashed by the global rule. */
+[data-covers] .attn__cov-img { opacity: 0; }
+[data-covers] .attn__cov-img.is-loaded {
+  opacity: 1;
+  transition: opacity var(--speed-fast) steps(3, end);
+}
+.attn__cov--doc { display: flex; align-items: center; justify-content: center; background: var(--color-surface-2); }
+.attn__doc { font-family: var(--font-mono); font-size: 24px; color: var(--color-text-muted); }
+.attn__cap {
+  font-family: var(--font-display); font-size: var(--text-xs); line-height: 1.15;
+  letter-spacing: 0.3px; text-transform: uppercase; color: var(--color-text);
+  display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+}
+.attn__tile:hover .attn__cov { filter: brightness(1.08); transform: translate(-1px, -1px); }
+.attn__tile.is-sel .attn__cov { outline: 2px solid var(--color-accent); outline-offset: 1px; }
+
+/* sticky detail bar — pinned to the bottom of the scrolling window body, bled to
+   the panel edges (negative margins cancel the .window__body padding). */
+.attn__detail {
+  position: sticky; bottom: calc(-1 * var(--space-3));
+  margin: var(--space-3) calc(-1 * var(--space-4)) calc(-1 * var(--space-3));
+  padding: var(--space-3) var(--space-4);
+  min-height: 84px;
+  background: var(--color-surface); border-top: 2px solid var(--bevel-darker);
+  box-shadow: 0 -3px 0 rgba(0, 0, 0, 0.25);
+}
+/* cover + meta row. The flex lives here (not on .attn__detail) so the
+   persistent close button — visible only as the mobile sheet — isn't pulled
+   into the row. */
+.attn__detail-content { display: flex; gap: var(--space-3); align-items: flex-start; }
+/* The close button + backdrop are part of the mobile bottom sheet only
+   (see mobile.css). On desktop the detail is a plain sticky bar, both hidden. */
+.attn__detail-close { display: none; }
+.attn__backdrop { display: none; }
+.attn__detail-cov {
+  flex: 0 0 auto; width: 52px; position: relative; aspect-ratio: 2 / 3; overflow: hidden;
+  background: var(--tint, #888); border: 2px solid var(--bevel-darker); box-shadow: var(--shadow-hard);
+}
+.attn__detail-cov--sq { aspect-ratio: 1 / 1; }
+.attn__detail-cov img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+.attn__detail-cov--doc { display: flex; align-items: center; justify-content: center; background: var(--color-surface-sunken); }
+
+/* kind chips for the detail bar (film/show defined above) */
+.kind--book { background: var(--tint-book); }
+.kind--game { background: var(--tint-game); }
+.kind--album { background: var(--tint-album); }
+.kind--paper { background: var(--tint-paper); }
+
+/* --- Tag cloud (Blog → Tags window) ----------------------------------- */
+.tag-cloud {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2) var(--space-3);
+  align-items: baseline;
+  line-height: 1.4;
+}
+.tag {
+  font-family: var(--font-display);
+  text-transform: lowercase;
+  letter-spacing: 0.5px;
+  color: var(--color-accent);
+  text-decoration: none;
+  border-bottom: 2px solid transparent;
+  transition: color var(--speed-fast) var(--ease),
+              border-color var(--speed-fast) var(--ease),
+              background-color var(--speed-fast) var(--ease);
+}
+.tag::before { content: "#"; opacity: 0.6; }
+.tag:hover {
+  color: var(--color-accent-hover);
+  border-bottom-color: var(--color-accent);
+}
+/* Active state — set on /blog/tagged/<slug>/ for the tag matching the route. */
+.tag.is-active {
+  color: var(--color-text-inverse);
+  background: var(--color-accent);
+  padding: 0 6px;
+  border-bottom-color: transparent;
+}
+.tag.is-active::before { opacity: 0.85; }
+
+/* --- "Tagged with X" filter pill (top of Posts window on tag routes) --- */
+.filter-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  margin-bottom: var(--space-2);
+  padding: 4px 8px 4px 10px;
+  background: var(--color-surface);
+  border: var(--window-border) solid var(--bevel-darker);
+  box-shadow:
+    inset  1px  1px 0 var(--bevel-light),
+    inset -1px -1px 0 var(--bevel-dark);
+  font-family: var(--font-display);
+  font-size: 11px;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+}
+.filter-pill__label { color: var(--color-text-muted); }
+.filter-pill__tag {
+  color: var(--color-accent);
+  text-transform: lowercase;
+  letter-spacing: 0;
+}
+.filter-pill__clear {
+  margin-left: 4px;
+  width: 18px;
+  height: 18px;
+  display: inline-grid;
+  place-items: center;
+  background: var(--color-surface-sunken);
+  border: 1px solid var(--bevel-darker);
+  color: var(--color-text);
+  text-decoration: none;
+  line-height: 1;
+  font-size: 12px;
+  cursor: pointer;
+}
+.filter-pill__clear:hover {
+  background: var(--color-accent);
+  color: var(--color-text-inverse);
+}
+
+/* --- Pixel link rows (Contact / project links) ------------------------ */
+.link-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: grid;
+  gap: var(--space-2);
+}
+.link-list > li {
+  margin: 0;
+  padding: 0;
+}
+.pixel-link {
+  display: inline-grid;
+  grid-template-columns: 22px 1fr;
+  align-items: center;
+  gap: var(--space-2);
+  color: var(--color-text);
+  text-decoration: none;
+}
+.pixel-link:hover .pixel-link__label {
+  color: var(--color-accent-hover);
+  text-decoration: underline;
+}
+.pixel-link__icon {
+  width: 20px;
+  height: 20px;
+  display: inline-grid;
+  place-items: center;
+  image-rendering: pixelated;
+}
+.pixel-link__icon svg {
+  width: 100%;
+  height: 100%;
+}
+.pixel-link__label {
+  color: var(--color-accent);
+  text-decoration: underline;
+}
+.pixel-link__note {
+  color: var(--color-text-muted);
+}
+.project-links {
+  display: flex;
+  gap: var(--space-2);
+  flex-wrap: wrap;
+  align-items: center;
+}
+.project-links .pixel-link {
+  grid-template-columns: 18px auto;
+  padding: 4px 8px;
+  background: var(--color-surface);
+  border: 1px solid var(--bevel-darker);
+  box-shadow:
+    inset  1px  1px 0 var(--bevel-light),
+    inset -1px -1px 0 var(--bevel-dark);
+}
+.project-links .pixel-link__icon {
+  width: 16px;
+  height: 16px;
+}
+
+/* --- Project tiles (Home → "Check out some of my projects!") ---------- */
+/*  A row of beveled cards above the CTA buttons. Each card has a 1:1
+    logo plate up top (real project brand logos, not generic pixel icons)
+    and a tiny pixel-font label below.
+    Sized so all 5 tiles fit on one line in the 520px Introduction
+    window, keeping the CTAs ("See my work →" / "About me") above the
+    fold on a normal desktop. Wraps gracefully on narrow viewports.       */
+.project-tiles {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-1);
+  margin: var(--space-2) 0 var(--space-3);
+  align-items: stretch;
+}
+.project-tile {
+  flex: 1 1 72px;
+  min-width: 60px;
+  max-width: 88px;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 4px;
+  padding: 4px;
+  background: var(--color-surface);
+  border: var(--window-border) solid var(--bevel-darker);
+  box-shadow:
+    inset  1px  1px 0 var(--bevel-light),
+    inset -1px -1px 0 var(--bevel-dark);
+  color: var(--color-text);
+  text-decoration: none;
+  cursor: pointer;
+  text-align: center;
+  transition: transform var(--speed-fast) var(--ease);
+}
+.project-tile:hover {
+  transform: translate(-1px, -1px);
+  filter: brightness(1.05);
+}
+.project-tile:active {
+  transform: translate(1px, 1px);
+  box-shadow:
+    inset -1px -1px 0 var(--bevel-light),
+    inset  1px  1px 0 var(--bevel-dark);
+}
+.project-tile__logo {
+  aspect-ratio: 1 / 1;
+  width: 100%;
+  display: grid;
+  place-items: center;
+  /* Inner padding around the rendered mark — increase to shrink the logo
+     within the plate without changing the tile's outer footprint. The
+     beveled frame stays the same size; just the artwork inside breathes. */
+  padding: 10px;
+  background: #fff;
+  border: 1px solid var(--bevel-darker);
+  /* Hidden overflow so the Brielle B-mark, which we scale up to visually
+     match the other (square) marks' apparent size, never bleeds past the
+     plate edge.                                                            */
+  overflow: hidden;
+}
+/* Brand marks whose colors only read on a dark plate (e.g. Brielle Builds
+   neon B-mark). Add modifier on the .project-tile__logo span.            */
+.project-tile__logo--dark {
+  background: #11202A;
+  border-color: #000;
+}
+.project-tile__logo img {
+  max-width: 100%;
+  max-height: 100%;
+  width: auto;
+  height: auto;
+  object-fit: contain;
+  /* No pixelated rendering — these are real brand assets, not pixel art. */
+}
+/* Brielle Builds' B-mark has a ~0.74:1 (tall) native aspect ratio, so
+   inside a square plate it letterboxes narrower than the other (square)
+   logos and reads "smaller." Slight scale-up keeps it visually balanced
+   with the others; overflow:hidden on the plate clips any edge bleed.    */
+.project-tile__logo--dark img { transform: scale(1.15); }
+.project-tile__label {
+  font-family: var(--font-display);
+  font-size: 10px;
+  letter-spacing: 0.4px;
+  text-transform: uppercase;
+  line-height: 1.1;
+  color: var(--color-text);
+  /* Long single-word labels (e.g. "DoplarrChaptarr") must wrap inside the
+     narrow tile instead of spilling past its right edge. */
+  overflow-wrap: anywhere;
+}
+
+/* --- Work-item card (Work → Client Work) ------------------------------ */
+.work-item {
+  border-left: 6px solid var(--accent, var(--color-accent));
+  padding-left: var(--space-3);
+}
+.work-item__header {
+  display: grid;
+  grid-template-columns: 24px 1fr;
+  gap: var(--space-2);
+  align-items: center;
+  margin-bottom: 4px;
+}
+.work-item__icon {
+  width: 22px;
+  height: 22px;
+  display: inline-grid;
+  place-items: center;
+  image-rendering: pixelated;
+}
+.work-item__icon svg {
+  width: 100%;
+  height: 100%;
+}
+.work-item h3 {
+  font-family: var(--font-display);
+  font-size: var(--text-sm);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: var(--accent, var(--color-accent));
+  margin: 0;
+}
+/* Deep-link target (a Home project tile → this card): a small scroll offset +
+   a brief highlight ring so the clicked project is obvious on arrival.
+   explorer.js adds .is-target, then removes it after the flash. */
+.work-item { scroll-margin: var(--space-3); }
+.work-item.is-target {
+  outline: 3px solid var(--color-accent);
+  outline-offset: 2px;
+  animation: work-item-target 2s var(--ease) forwards;
+}
+@keyframes work-item-target {
+  from { outline-color: var(--color-accent); }
+  to   { outline-color: transparent; }
+}
+
+/* --- Selected Work as a Win95 Explorer (folders) ---------------------- */
+/*  work.astro groups the project cards into native <details> "folders"
+    (Apps / Curriculum / Services). Native <details> is keyboard-accessible
+    and works with JS off; the [+]/[−] toggle + pixel folder icon supply the
+    Explorer flavor. The folder icon is mounted by icons.js.                */
+.explorer {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+/* Address bar — a sunken Win95 field showing the current "path". */
+.explorer__bar {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: 4px var(--space-2);
+  background: var(--color-surface-2);
+  border: 1px solid var(--bevel-dark);
+  box-shadow:
+    inset  1px  1px 0 var(--bevel-dark),
+    inset -1px -1px 0 var(--bevel-light);
+  font-family: var(--font-mono);
+  font-size: var(--text-sm);
+  letter-spacing: 1px;
+  color: var(--color-text-muted);
+}
+.explorer__bar-icon {
+  width: 16px;
+  height: 16px;
+  display: inline-grid;
+  place-items: center;
+  image-rendering: pixelated;
+}
+.explorer__bar-icon svg { width: 100%; height: 100%; }
+
+/* A folder = a <details> box. */
+.folder {
+  border: 1px solid var(--bevel-dark);
+  background: var(--color-surface);
+}
+/* Folder header (<summary>):  [+]/[−]  icon  name  …  count  */
+.folder__head {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: 6px var(--space-2);
+  cursor: pointer;
+  user-select: none;
+  list-style: none;                 /* hide the default disclosure marker (FF) */
+  font-family: var(--font-display);
+  font-size: var(--text-sm);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: var(--color-text);
+}
+.folder__head::-webkit-details-marker { display: none; }   /* Safari/Chrome */
+/* Win95 tree toggle: [+] when closed, [−] when open. */
+.folder__head::before {
+  content: "[+]";
+  font-family: var(--font-mono);
+  font-size: var(--text-sm);
+  letter-spacing: 0;
+  color: var(--color-text-muted);
+}
+.folder[open] > .folder__head::before { content: "[\2212]"; }
+.folder[open] > .folder__head { border-bottom: 1px solid var(--bevel-dark); }
+.folder__head:hover { background: var(--color-surface-hover); }
+.folder__head:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: -2px;
+}
+.folder__icon {
+  width: 18px;
+  height: 18px;
+  display: inline-grid;
+  place-items: center;
+  image-rendering: pixelated;
+}
+.folder__icon svg { width: 100%; height: 100%; }
+.folder__count {
+  margin-left: auto;
+  font-family: var(--font-mono);
+  font-size: var(--text-sm);
+  letter-spacing: 0;
+  text-transform: none;
+  color: var(--color-text-muted);
+}
+/* Folder contents — indented under the header, Explorer-style. */
+.folder__body {
+  padding: var(--space-2) var(--space-2) var(--space-3) var(--space-3);
+}
+
+/* --- Contact form ----------------------------------------------------- */
+.form-grid {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+.form-grid .field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.form-grid .field > span {
+  font-family: var(--font-display);
+  font-size: 10px;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: var(--color-text-muted);
+}
+.form-grid input,
+.form-grid textarea {
+  padding: var(--space-2);
+  background: var(--color-surface-2);
+  color: var(--color-text);
+  border: var(--window-border) solid var(--bevel-darker);
+  box-shadow:
+    inset  1px  1px 0 var(--bevel-dark),
+    inset -1px -1px 0 var(--bevel-light);
+  font-family: var(--font-body);
+  font-size: var(--text-base);
+  resize: vertical;
+}
+.form-grid input:focus,
+.form-grid textarea:focus {
+  outline: 2px solid var(--color-accent);
+  outline-offset: -2px;
+}
+.form-grid .btn {
+  align-self: flex-start;
+}
+
+/* --- Stylized résumé (Work → resume.doc) ------------------------------ */
+/*  An in-theme résumé rendered as searchable, theme-aware HTML — NOT an
+    embedded PDF. The real PDF downloads from the pixel button up top. */
+.resume__head {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.resume__name {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: var(--text-xl);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: var(--color-accent);
+  text-shadow: 1px 1px 0 var(--color-accent-soft);
+}
+.resume__tagline {
+  font-family: var(--font-mono);
+  font-size: 14px;
+  letter-spacing: 0.5px;
+  color: var(--color-text);
+}
+.resume__sub {
+  font-family: var(--font-mono);
+  font-size: 14px;
+  letter-spacing: 0.5px;
+  color: var(--color-text-muted);
+}
+.resume__contact {
+  list-style: none;
+  margin: var(--space-1) 0 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px var(--space-3);
+  font-family: var(--font-mono);
+  font-size: 14px;
+}
+.resume__download {
+  align-self: flex-start;
+  margin-top: var(--space-2);
+}
+
+/* Pixel divider between sections. */
+.resume__rule {
+  border: 0;
+  border-top: 2px dashed var(--bevel-dark);
+  margin: var(--space-3) 0;
+}
+
+.resume__section > h3 {
+  margin: 0 0 var(--space-2);
+  font-family: var(--font-display);
+  font-size: var(--text-sm);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: var(--color-text);
+  text-shadow: 1px 1px 0 var(--color-accent-soft);
+}
+
+.resume__job + .resume__job { margin-top: var(--space-3); }
+.resume__job-head {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 2px var(--space-2);
+}
+.resume__role {
+  font-family: var(--font-display);
+  font-size: var(--text-sm);
+  letter-spacing: 0.5px;
+  color: var(--color-accent);
+}
+.resume__date {
+  font-family: var(--font-mono);
+  font-size: 14px;
+  letter-spacing: 0.5px;
+  color: var(--color-text-muted);
+  white-space: nowrap;
+}
+.resume__org {
+  margin: 2px 0 4px;
+  font-family: var(--font-mono);
+  font-size: 14px;
+  color: var(--color-text-muted);
+}
+.resume__job .cli { margin-top: 4px; }
+.resume__skills {
+  font-family: var(--font-mono);
+  font-size: 14px;
+  line-height: 1.7;
+  color: var(--color-text);
+}

@@ -1,0 +1,43 @@
+---
+// ============================================================================
+//  Window.astro  —  the reusable desktop window
+// ----------------------------------------------------------------------------
+//  Props:
+//    id    : unique key, used by windows.js + the taskbar (string). Also
+//            rendered as the section's HTML `id` so cross-page hash links
+//            (e.g. /work/#client) can scroll to it natively.
+//    title : text in the title bar + taskbar button (string)
+//    width : optional PREFERRED width in px (number). The window will be
+//            this wide if there's room, and SHRINK below it if the viewport
+//            is narrower — text reflows naturally. min-width in window.css
+//            keeps it from getting silly-narrow. Omit to use the global
+//            default (480px). On mobile, mobile.css forces full-width.
+//  Layout note: <main> in Layout.astro is a CSS Grid with per-page named
+//  cells; each <Window /> is placed inside a .layout__cell wrapper that
+//  occupies a fixed grid slot. Drag is applied as a CSS transform via
+//  --drag-x / --drag-y custom props that windows.js updates — never via
+//  top/left, so resize never breaks the flow.
+// ============================================================================
+const { id, title = "Window", width } = Astro.props;
+const styleVar = width ? `--preferred-width: ${width}px` : undefined;
+---
+
+{/* aria-labelledby gives the bare <section> an accessible name (the titlebar
+    text) so AT announces "<title>, region" instead of an anonymous landmark —
+    deliberately NOT role="dialog": these are non-modal desktop regions.
+    The titlebar's tabindex="-1" is a programmatic focus target only (it never
+    joins the Tab order): windows.js focuses it after a restore so a keyboard
+    user lands back on the window they brought back. title= on the name span
+    is the native full-text tooltip for when the CSS ellipsis truncates. */}
+<section class="window" id={id} data-window={id} style={styleVar} aria-labelledby={`${id}-window-title`}>
+  <header class="window__titlebar" tabindex="-1">
+    <span class="window__title" id={`${id}-window-title`} title={title}>{title}</span>
+    <div class="window__controls">
+      <button class="window__btn" data-action="minimize" aria-label="Minimize">_</button>
+      <button class="window__btn" data-action="maximize" aria-label="Maximize">▢</button>
+    </div>
+  </header>
+  <div class="window__body">
+    <slot />
+  </div>
+</section>

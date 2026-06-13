@@ -1,0 +1,62 @@
+# ============================================================================
+#  .github/workflows/ci.yml  —  build + audit on every PR and main push
+# ----------------------------------------------------------------------------
+#  What this catches:
+#    - npm install drift (npm ci enforces exact package-lock.json resolution)
+#    - Astro build failures
+#    - CSP hash drift: if an inline <script> in src/**/*.astro was edited
+#      without rerunning `node scripts/compute-csp-hashes.cjs` to refresh
+#      public/_headers, the live browser would silently block that script.
+#      The "Verify CSP hashes" step runs the same generator with --check;
+#      it compares the just-built dist/ against the committed _headers and
+#      exits 1 on drift, blocking the merge.
+#    - High-severity dependency advisories. We use --audit-level=high (not
+#      moderate) on purpose: a separate Astro 6 upgrade branch is planned
+#      to close the existing moderate advisory on astro<=6.1.9, and we
+#      don't want this workflow blocking unrelated PRs until that lands.
+#      Bump to --audit-level=moderate once Astro 6 is in.
+#
+#  Triggers:
+#    pull_request   any branch → main (CI gate before merge)
+#    push: main     post-merge confidence check; also makes the workflow
+#                   appear in repo Insights → Actions
+# ============================================================================
+
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+jobs:
+  build:
+    name: Build + audit
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build site
+        run: npm run build
+
+      # Hash-drift gate: regenerates CSP script-src hashes from the just-built
+      # dist/ and compares to what's pinned in public/_headers. Exits 1 if
+      # someone edited an inline <script> without refreshing the hash. Runs
+      # before audit so the more-likely failure surfaces first.
+      - name: Verify CSP hashes match build
+        run: node scripts/compute-csp-hashes.cjs --check
+
+      # Only fail on high/critical. The Astro <=6.1.9 moderate advisory is
+      # tracked separately.
+      - name: Audit production deps
+        run: npm audit --omit=dev --audit-level=high

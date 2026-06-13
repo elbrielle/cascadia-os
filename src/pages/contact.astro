@@ -1,0 +1,207 @@
+---
+import Layout from "../layouts/Layout.astro";
+import Window from "../components/Window.astro";
+import { SUBSTACK_URL } from "../lib/substack.js";
+---
+
+<Layout title="Elisha Lucero — Contact" pageTitle="Contact" current="contact">
+
+  <div class="layout__cell contact__form">
+  <Window id="form" title="Contact" width={480}>
+    <h2>Say hi</h2>
+    <p>
+      Want to share something with me? Send a note.
+    </p>
+    <!-- Submits via Web3Forms (free, no backend). To activate:
+           1. Get a free access key at https://web3forms.com (enter your email).
+           2. Paste it into the access_key value below.
+         Alternatives: Formspree (set action="https://formspree.io/f/XXXX" and
+         delete the access_key line) or Netlify Forms (add `data-netlify="true"`
+         + a hidden input name="form-name" value="contact", host on Netlify). -->
+    <form class="form-grid" action="https://api.web3forms.com/submit" method="POST" data-contact-form>
+      <input type="hidden" name="access_key" value="69e1c6ae-628a-4e3a-9ea4-185ad8e1b9b0" />
+      <input type="hidden" name="subject" value="New message from elishalucero.com" />
+      <input type="hidden" name="from_site" value="elishalucero.com" />
+      <!-- honeypot: bots fill this; humans never see it -->
+      <input type="checkbox" name="botcheck" tabindex="-1" autocomplete="off" style="display:none" aria-hidden="true" />
+      <label class="field">
+        <span>Your email</span>
+        <input type="email" name="email" placeholder="you@example.com" required />
+      </label>
+      <label class="field">
+        <span>Subject</span>
+        <input type="text" name="user_subject" placeholder="brief title" />
+      </label>
+      <label class="field">
+        <span>Message</span>
+        <textarea name="message" rows="5" placeholder="say hi" required></textarea>
+      </label>
+      <button class="btn btn--primary" type="submit">Ping me →</button>
+      <p class="form-status" data-form-status role="status" aria-live="polite" style="font-size: var(--text-sm); margin-top: var(--space-2);"></p>
+    </form>
+  </Window>
+  </div>
+
+  <div class="layout__cell contact__elsewhere">
+  <Window id="elsewhere" title="Elsewhere" width={420}>
+    <h2>Find me on</h2>
+    <ul class="link-list">
+      <li>
+        <a class="pixel-link" href="mailto:ebriellelucero@gmail.com">
+          <span class="pixel-link__icon" data-icon="email" aria-hidden="true"></span>
+          <span><span class="pixel-link__label">Email</span> <span class="pixel-link__note">— ebriellelucero@gmail.com</span></span>
+        </a>
+      </li>
+      <li>
+        <a class="pixel-link" href={SUBSTACK_URL} target="_blank" rel="noopener">
+          <span class="pixel-link__icon" data-icon="substack" aria-hidden="true"></span>
+          <span><span class="pixel-link__label">Substack</span> <span class="pixel-link__note">— writing</span></span>
+        </a>
+      </li>
+      <li>
+        <a class="pixel-link" href="https://www.linkedin.com/in/elisha-lucero/" target="_blank" rel="noopener">
+          <span class="pixel-link__icon" data-icon="linkedin" aria-hidden="true"></span>
+          <span><span class="pixel-link__label">LinkedIn</span></span>
+        </a>
+      </li>
+      <li>
+        <a class="pixel-link" href="https://github.com/elbrielle" target="_blank" rel="noopener">
+          <span class="pixel-link__icon" data-icon="github" aria-hidden="true"></span>
+          <span><span class="pixel-link__label">GitHub</span> <span class="pixel-link__note">— code</span></span>
+        </a>
+      </li>
+      <li>
+        <a class="pixel-link" href="https://www.threads.net/@elisha.lucero" target="_blank" rel="noopener">
+          <span class="pixel-link__icon" data-icon="threads" aria-hidden="true"></span>
+          <span><span class="pixel-link__label">Threads</span> <span class="pixel-link__note">— short-form</span></span>
+        </a>
+      </li>
+      <li>
+        <a class="pixel-link" href="https://briellebuilds.com/" target="_blank" rel="noopener">
+          <span class="pixel-link__icon" data-icon="pc" aria-hidden="true"></span>
+          <span><span class="pixel-link__label">Brielle Builds</span> <span class="pixel-link__note">— PC builds & repair</span></span>
+        </a>
+      </li>
+    </ul>
+  </Window>
+  </div>
+
+  <script is:inline>
+    // Bind on `astro:page-load` (fires on initial doc load AND after every
+    // <ClientRouter /> view-transition swap). `DOMContentLoaded` only fires
+    // once and would leave the form unbound after navigating /home → /contact.
+    // The `data-bound` flag makes the binding idempotent so repeated fires
+    // (or persisted form state) don't stack listeners.
+    (function () {
+      // Diegetic success: instead of a one-line "Sent, cheers!", pop the shared
+      // Win95 .os-dialog (same chrome as the 404 + the Start-menu "About" modal)
+      // so the highest-intent action terminates in the OS language the rest of
+      // the site speaks (audit #36). role="alertdialog" + aria-modal so AT treats
+      // it as a modal alert; focus OK on open, return focus to the submit button
+      // on dismiss; Esc / backdrop / × / OK all close. Built with the same
+      // innerHTML-of-static-strings pattern as startmenu.js openAbout() — no
+      // user-controlled text reaches the markup.
+      function showSentDialog(returnFocusTo) {
+        // A fast double-submit could call this twice before the first dialog is
+        // dismissed (the chosen variant has no in-flight button disable, by
+        // design); bail if a sent dialog is already up so two never stack. Keyed
+        // on #sent-title so it won't clash with the Start-menu "About" modal.
+        if (document.getElementById("sent-title")) return;
+        var modal = document.createElement("div");
+        modal.className = "os-modal";
+        modal.innerHTML =
+          '<div class="os-dialog" role="alertdialog" aria-modal="true" aria-labelledby="sent-title" aria-describedby="sent-msg">' +
+            '<header class="os-dialog__bar">' +
+              '<span class="os-dialog__title" id="sent-title">Message sent</span>' +
+              '<button class="os-dialog__close" type="button" aria-label="Close">×</button>' +
+            '</header>' +
+            '<div class="os-dialog__body">' +
+              '<div class="os-dialog__row">' +
+                '<span class="os-dialog__icon" data-icon="email" aria-hidden="true"></span>' +
+                '<div class="os-dialog__message" id="sent-msg">' +
+                  '<p>Your message is on its way. Thanks for reaching out.</p>' +
+                  '<p>I read everything myself and usually reply within a few days.</p>' +
+                  '<p class="os-dialog__code">CASCADIA_MAIL · 0x00000000 · MESSAGE_SENT</p>' +
+                '</div>' +
+              '</div>' +
+              '<div class="os-dialog__actions">' +
+                '<button class="btn btn--primary" type="button" data-sent-ok>OK</button>' +
+              '</div>' +
+            '</div>' +
+          '</div>';
+        document.body.appendChild(modal);
+        setShellInert(true);                                      // trap focus in the dialog
+        if (window.CascadiaIcons) window.CascadiaIcons.mountAll(); // render the email glyph
+
+        function close() {
+          document.removeEventListener("keydown", onEsc, true);
+          setShellInert(false);                                   // clear BEFORE refocusing the trigger
+          modal.remove();
+          if (returnFocusTo && typeof returnFocusTo.focus === "function") returnFocusTo.focus();
+        }
+        function onEsc(e) { if (e.key === "Escape") { e.preventDefault(); close(); } }
+        modal.addEventListener("click", function (e) {
+          if (e.target === modal) return close();                   // backdrop
+          if (e.target.closest(".os-dialog__close")) return close();
+          if (e.target.closest("[data-sent-ok]")) return close();
+        });
+        document.addEventListener("keydown", onEsc, true);
+        var ok = modal.querySelector("[data-sent-ok]");
+        if (ok) ok.focus();
+      }
+
+      // While the dialog is open, the page behind it must not be tabbable —
+      // focus would otherwise walk out of the alertdialog onto the form fields
+      // hidden behind the backdrop (WCAG 2.4.3, and the aria-modal="true" we
+      // assert). Mirrors boot.js's splash inert treatment; cleared on close
+      // BEFORE focus returns to the trigger (you can't focus an inert element).
+      function setShellInert(on) {
+        [document.querySelector("main"),
+         document.querySelector(".desktop-icons"),
+         document.querySelector(".taskbar")].forEach(function (el) {
+          if (el) el.inert = on;
+        });
+      }
+
+      function bindContactForm() {
+        const form = document.querySelector("[data-contact-form]");
+        if (!form || form.dataset.bound === "1") return;
+        form.dataset.bound = "1";
+
+        const status = form.querySelector("[data-form-status]");
+        form.addEventListener("submit", async (e) => {
+          e.preventDefault();
+          const key = form.querySelector('[name="access_key"]').value;
+          if (key.indexOf("REPLACE_") === 0) {
+            status.textContent = "Form isn't connected yet — add a Web3Forms key in contact.astro.";
+            status.style.color = "var(--color-warning)";
+            return;
+          }
+          status.textContent = "Sending…";
+          status.style.color = "var(--color-text-muted)";
+          try {
+            const res = await fetch(form.action, {
+              method: "POST",
+              body: new FormData(form),
+              headers: { Accept: "application/json" },
+            });
+            const data = await res.json();
+            if (data.success) {
+              form.reset();
+              status.textContent = ""; // the alertdialog announces success; clear so AT doesn't double-speak
+              showSentDialog(e.submitter || form.querySelector('button[type="submit"]'));
+            } else {
+              status.textContent = "That didn't send: " + (data.message || "unknown error");
+              status.style.color = "var(--color-warning)";
+            }
+          } catch (err) {
+            status.textContent = "Network error — try again.";
+            status.style.color = "var(--color-warning)";
+          }
+        });
+      }
+      document.addEventListener("astro:page-load", bindContactForm);
+    })();
+  </script>
+
+</Layout>

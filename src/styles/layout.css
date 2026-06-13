@@ -1,0 +1,202 @@
+/* ============================================================================
+   layout.css  —  per-page CSS Grid templates for the windows region
+   ----------------------------------------------------------------------------
+   The <main> element (set up in Layout.astro) is a CSS Grid container. Each
+   page wraps its windows in <div class="layout__cell page-<id>__<name>">
+   wrappers, and the rules below place those cells at fixed grid positions.
+
+   Why this matters: the GRID holds the layout slots, not the windows
+   themselves. When a window is minimized (display:none) its cell remains in
+   the grid at the same column/row — neighbors don't reflow to fill the gap
+   and don't snap back when the window is restored. (This was a real problem
+   under the previous flex-wrap layout.)
+
+   Mobile / portrait / short viewports fall back to the single-column default
+   defined in Layout.astro's inline style — cells stack vertically as block
+   flow. The per-page grid templates only kick in at a desktop breakpoint.
+   ========================================================================== */
+
+.layout__cell {
+  position: relative;
+  /* Allow flex/grid children to shrink — without this, very long unbroken
+     content can push a cell wider than its grid track allocation.          */
+  min-width: 0;
+  /* Cells are vertical stacks so a cell can hold multiple sibling blocks if
+     a page ever needs more than one window per cell.                       */
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+/* Home post titles: bigger + mixed-case (was 15px ALL-CAPS pixel — hard to
+   scan). Set here, outside the desktop media query, so mobile Home reads well
+   too. Scoped to Home until the look is approved site-wide.                    */
+.layout__grid.page-home .post__title {
+  font-size: 1.125rem;            /* 18px */
+  text-transform: none;           /* mixed-case */
+  letter-spacing: 0;
+  line-height: 1.3;
+}
+
+/* Minimize HOLDS the slot on Home (OS-true windows), at every width where a
+   window can be dragged. Home is the only page that stacks two windows in one
+   cell (Introduction over Build Log inside home__left, a flex column), so the
+   global `display: none` minimize rule (window.css) pulls the minimized window's
+   box out of flow — Build Log reflows UP into Introduction's space, and because
+   drag is a transform offset ON TOP of the flow position, a dragged window then
+   leaps by that gap. Keep the box instead: `visibility: hidden` reserves the
+   window's NATURAL slot (no hardcoded height) while still removing it from the
+   a11y tree, tab order, and hit-testing exactly like display:none — so a
+   minimized window leaves empty wallpaper where it was and its neighbor never
+   moves. Restores the per-window-slot contract this file and windows.js share.
+
+   Gated at 721px to MIRROR the drag-enable threshold, NOT the grid breakpoint:
+   windows.js disables drag at `(max-width: 720px), (pointer: coarse)`, so ≥721px
+   is exactly the range a mouse can drag — and thus the range where a reflow
+   would be felt as a leap. This deliberately spans BOTH the ≥62em per-page grid
+   AND the 721–991px band where that grid hasn't engaged yet but mouse-drag is
+   still live (e.g. a half-screen window on a wide monitor). Below 721px drag is
+   off and the single-column stack SHOULD reclaim the space, so the global
+   display:none stands there. (Specificity 0,5,0 > the global 0,3,0; display:flex
+   matches the .window base so the reserved box keeps its titlebar+body layout.) */
+@media (min-width: 721px) {
+  .layout__grid.page-home .window.is-minimized:not(.is-closing) {
+    display: flex;
+    visibility: hidden;
+  }
+}
+
+/* Desktop / wide viewports: per-page grid templates kick in.
+   Below this breakpoint the parent grid stays at the
+   `grid-template-columns: 1fr` default → cells stack vertically.          */
+@media (min-width: 62em) {
+
+  /* HOME — the left column STACKS Introduction
+     over Build Log; attention.log sits alone on the right at its NATURAL height
+     (top-aligned), so wallpaper breathes below it instead of the window being
+     stretched floor-to-ceiling (the old "cramped" look).
+
+         ┌──────────────┬──────────────┐
+         │ Introduction │ attention.log│
+         ├──────────────┤  (natural    │
+         │  Build Log   │   height)    │
+         └──────────────┟··············┤
+                        ┊  wallpaper   ┊  ← breathing room
+                        └ · · · · · · ·┘
+
+     Why Introduction + Build Log are NESTED in one cell (home__left): a single
+     CSS-grid row is shared across BOTH columns, so a tall right-hand window
+     inflates the row tracks the left column depends on — which shoved Build Log
+     off the bottom and hid its posts. Giving the left pair their own cell =
+     their own formatting context: attention.log can be any height without
+     pushing them around.
+
+     The grid is ONE row at the full (viewport-locked) main height, and the left
+     cell is bounded to it. Introduction takes its natural size; Build Log fills
+     the remainder and scrolls its OWN body only if the viewport is too short to
+     show every post — on a normal laptop everything fits with room to spare.
+     DOM order intro → build-log → attention, so the mobile single-column stack
+     reads greeting → posts → what I'm into.                                     */
+  .layout__grid.page-home {
+    /* Three tracks: left stack (Intro + Build Log) | attention.log | a flexible
+       wallpaper gutter. The content columns are CAPPED at the windows' designed
+       widths (not greedy fr), so on a big desktop they stop stretching into ugly
+       internal whitespace — the extra space becomes wallpaper, which also makes the
+       windows read as distinct, draggable objects. The caps shrink on narrower
+       desktops (minmax floor 0), so the tighter look there is preserved. */
+    grid-template-columns: minmax(0, 540px) minmax(0, 470px) minmax(0, 1fr);
+    grid-template-rows: minmax(0, 1fr);
+    column-gap: var(--space-4);
+    align-items: stretch;
+  }
+  .layout__grid.page-home > .home__left      { grid-column: 1; grid-row: 1; min-height: 0; }
+  .layout__grid.page-home > .home__attention { grid-column: 2; grid-row: 1; min-height: 0; }
+  /* Home windows fill their column width (drop the per-window 480px cap). */
+  .layout__grid.page-home .window { min-width: 0; max-width: none; }
+  /* Introduction keeps its natural height and never collapses to its titlebar. */
+  .layout__grid.page-home [data-window="intro"] { flex: 0 0 auto; }
+  /* Build Log sits at its natural height (wallpaper breathes below it, like
+     attention.log) but is allowed to SHRINK and scroll its own body when the
+     column is too short to show every post — flex-grow 0 so it never stretches
+     into a big half-empty window on tall screens; flex-shrink 1 + min-height 0
+     so a long list (or a short viewport) scrolls instead of clipping.          */
+  .layout__grid.page-home [data-window="buildlog"] { flex: 0 1 auto; min-height: 0; }
+  /* "Scroll for more" cue: a soft fade at the Build Log's bottom edge so a
+     clipped post list reads as intentional ("there's more below"), not a hard
+     cut-off. Pairs with the retro scrollbar (window.css) for the macOS case
+     where overlay scrollbars stay hidden. When the list fits, the fade sits
+     over the empty tail of the window and reads as nothing.                    */
+  .layout__grid.page-home [data-window="buildlog"]::after {
+    content: "";
+    position: absolute;
+    left: 4px; right: 4px; bottom: 4px;
+    height: 1.75rem;
+    background: linear-gradient(to top, var(--color-surface-2) 35%, transparent);
+    pointer-events: none;
+    z-index: 2;
+  }
+  /* attention.log sits at its natural height when short (wallpaper breathes below
+     it), but is bounded to the locked main height and scrolls its OWN body when
+     the curated sections (reading/watching + games/music/articles) run long —
+     flex-grow 0 so it never stretches half-empty; flex-shrink 1 + min-height 0 so
+     it scrolls instead of overflowing the non-scrolling desktop. (Phase E.) */
+  .layout__grid.page-home .home__attention .window { flex: 0 1 auto; min-height: 0; }
+
+  /* Trim the Introduction hero (desktop) so the post list gets more height —
+     tighter project tiles reclaim room for more posts at the larger title size.
+     The avatar deliberately stays at its native 128px (audit #15): it's a real
+     128×128 pixel-art asset, so the old 96px override was a 0.75× downscale that
+     muddied the very grid `image-rendering: pixelated` exists to keep crisp.
+     Post-title sizing itself lives OUTSIDE this media query (above) so mobile
+     Home reads well too.                                                       */
+  .layout__grid.page-home .project-tile { flex-basis: 64px; max-width: 78px; }
+  .layout__grid.page-home .project-tile__logo { padding: 7px; }
+  /* The native-128 avatar makes the hero ~36px taller than the old 96px box;
+     claw it back by tightening the intro window's vertical rhythm — the > * + *
+     gaps (intro→tiles, tiles→buttons) drop space-3→space-2 — plus the tiles'
+     bottom margin (space-3→space-2). The rhythm rule already owns the tiles'
+     TOP margin, so the rule below only trims the bottom. Home intro, desktop. */
+  .layout__grid.page-home [data-window="intro"] .window__body > * + * { margin-top: var(--space-2); }
+  .layout__grid.page-home .project-tiles { margin-bottom: var(--space-2); }
+
+  /* ABOUT — README (left) + Favorites explorer (right, wider so the folder
+     sidebar + cover grid + detail pane have room). attention.log is Home-only
+     now (Phase C); About leads with the README and the Favorites explorer.     */
+  .layout__grid.page-about {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1.5fr);
+    align-items: start;
+  }
+  .layout__grid.page-about > .about__readme    { grid-column: 1; grid-row: 1; }
+  .layout__grid.page-about > .about__favorites { grid-column: 2; grid-row: 1; }
+  /* Let the explorer exceed the default per-window cap, but bound it: a tight
+     2-column cover grid (covers stay big, no stretched gap before the detail
+     pane), with wallpaper breathing to the right on wide screens.             */
+  .layout__grid.page-about .about__favorites .window { max-width: 660px; }
+  /* Cap the README too, so prose stays readable and both windows leave
+     wallpaper breathing room on very wide screens.                            */
+  .layout__grid.page-about .about__readme .window { max-width: 600px; }
+
+  /* WORK — Selected Work (left, wider) + résumé.doc (right). */
+  .layout__grid.page-work {
+    grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr);
+    align-items: start;
+  }
+  .layout__grid.page-work > .work__selected { grid-column: 1; grid-row: 1; }
+  .layout__grid.page-work > .work__resume   { grid-column: 2; grid-row: 1; }
+
+  /* BLOG and BLOG/TAGGED — Posts (left, wider) + Tags (right). */
+  .layout__grid.page-blog {
+    grid-template-columns: minmax(0, 1.6fr) minmax(0, 1fr);
+    align-items: start;
+  }
+  .layout__grid.page-blog > .blog__posts { grid-column: 1; grid-row: 1; }
+  .layout__grid.page-blog > .blog__tags  { grid-column: 2; grid-row: 1; }
+
+  /* CONTACT — Form (left) + Elsewhere socials (right). */
+  .layout__grid.page-contact {
+    grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr);
+    align-items: start;
+  }
+  .layout__grid.page-contact > .contact__form      { grid-column: 1; grid-row: 1; }
+  .layout__grid.page-contact > .contact__elsewhere { grid-column: 2; grid-row: 1; }
+}

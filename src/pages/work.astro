@@ -1,0 +1,272 @@
+---
+import Layout from "../layouts/Layout.astro";
+import Window from "../components/Window.astro";
+---
+
+<Layout title="Elisha Lucero — Work" pageTitle="Work" current="work">
+
+  <div class="layout__cell work__selected">
+  <Window id="client" title="File Explorer" width={680}>
+    <div class="explorer">
+      <div class="explorer__bar">
+        <span class="explorer__bar-icon" data-icon="folder" aria-hidden="true"></span>
+        <span class="explorer__path">C:\Work</span>
+      </div>
+
+      <details class="folder" open>
+        <summary class="folder__head">
+          <span class="folder__icon" data-icon="folder" aria-hidden="true"></span>
+          <span class="folder__name">Apps</span>
+          <span class="folder__count">3 items</span>
+        </summary>
+        <ul class="panel-list folder__body">
+          <li class="panel work-item" id="work-idk" style="--accent: var(--color-accent);">
+            <div class="work-item__header">
+              <span class="work-item__icon" data-icon="idk" aria-hidden="true"></span>
+              <h3>IDK Can You?</h3>
+            </div>
+            <p>
+              A K-12 classroom app for autonomous hall passes and device checkouts.
+              Time limits, ban systems, device history, and accountability without
+              interrupting the lesson.
+            </p>
+            <div class="project-links">
+              <a class="pixel-link" href="https://www.idkcanu.com/" target="_blank" rel="noopener">
+                <span class="pixel-link__icon" data-icon="idk" aria-hidden="true"></span>
+                <span class="pixel-link__label">Website</span>
+              </a>
+              <a class="pixel-link" href="https://play.google.com/store/apps/details?id=com.idkcanu.app" target="_blank" rel="noopener">
+                <span class="pixel-link__icon" data-icon="play" aria-hidden="true"></span>
+                <span class="pixel-link__label">Google Play</span>
+              </a>
+            </div>
+          </li>
+          <li class="panel work-item" id="work-framedeck" style="--accent: #0f6f8f;">
+            <div class="work-item__header">
+              <span class="work-item__icon" data-icon="play" aria-hidden="true"></span>
+              <h3>FrameDeck</h3>
+            </div>
+            <p>
+              A Chrome extension that turns your open tabs into an autoscrolling slidedeck.
+            </p>
+            <div class="project-links">
+              <a class="pixel-link" href="https://github.com/elbrielle/FrameDeck" target="_blank" rel="noopener">
+                <span class="pixel-link__icon" data-icon="github" aria-hidden="true"></span>
+                <span class="pixel-link__label">GitHub</span>
+              </a>
+            </div>
+          </li>
+          <li class="panel work-item" id="work-doplarrchaptarr" style="--accent: #c84020;">
+            <div class="work-item__header">
+              <span class="work-item__icon" data-icon="bot" aria-hidden="true"></span>
+              <h3>DoplarrChaptarr</h3>
+            </div>
+            <p>
+              A personal fork of Doplarr that adds Chaptarr support, so one Discord bot
+              can request movies, shows, ebooks, and audiobooks across a self-hosted media
+              stack.
+            </p>
+            <div class="project-links">
+              <a class="pixel-link" href="https://github.com/elbrielle/DoplarrChaptarr" target="_blank" rel="noopener">
+                <span class="pixel-link__icon" data-icon="github" aria-hidden="true"></span>
+                <span class="pixel-link__label">GitHub</span>
+              </a>
+            </div>
+          </li>
+        </ul>
+      </details>
+
+      <details class="folder">
+        <summary class="folder__head">
+          <span class="folder__icon" data-icon="folder" aria-hidden="true"></span>
+          <span class="folder__name">Curriculum</span>
+          <span class="folder__count">1 item</span>
+        </summary>
+        <ul class="panel-list folder__body">
+          <li class="panel work-item" id="work-cce" style="--accent: #1a8c5a;">
+            <div class="work-item__header">
+              <span class="work-item__icon" data-icon="cce" aria-hidden="true"></span>
+              <h3>CCE Curriculum</h3>
+            </div>
+            <p>
+              A 36-week Career and College Explorations curriculum built as a
+              source-grounded MkDocs site, using Hats and Ladders and Xello as
+              supplementary materials.
+            </p>
+            <div class="project-links">
+              <a class="pixel-link" href="https://elbrielle.github.io/cce-curriculum/latest/" target="_blank" rel="noopener">
+                <span class="pixel-link__icon" data-icon="cce" aria-hidden="true"></span>
+                <span class="pixel-link__label">View curriculum</span>
+              </a>
+            </div>
+          </li>
+        </ul>
+      </details>
+
+      <details class="folder">
+        <summary class="folder__head">
+          <span class="folder__icon" data-icon="folder" aria-hidden="true"></span>
+          <span class="folder__name">Services</span>
+          <span class="folder__count">1 item</span>
+        </summary>
+        <ul class="panel-list folder__body">
+          <li class="panel work-item" id="work-brielle" style="--accent: #d45886;">
+            <div class="work-item__header">
+              <span class="work-item__icon" data-icon="pc" aria-hidden="true"></span>
+              <h3>Brielle Builds</h3>
+            </div>
+            <p>
+              A flat-rate DFW PC build and repair service.
+            </p>
+            <div class="project-links">
+              <a class="pixel-link" href="https://briellebuilds.com/" target="_blank" rel="noopener">
+                <span class="pixel-link__icon" data-icon="pc" aria-hidden="true"></span>
+                <span class="pixel-link__label">Website</span>
+              </a>
+            </div>
+          </li>
+        </ul>
+      </details>
+    </div>
+  </Window>
+  </div>
+
+  <div class="layout__cell work__resume">
+  <Window id="resume" title="resume.doc" width={460}>
+    <div class="resume">
+      <header class="resume__head">
+        <h2 class="resume__name">Elisha Lucero</h2>
+        <p class="resume__tagline">Tech educator · curriculum designer · builder</p>
+        <p class="resume__sub">Irving ISD · 2025–26 Campus Teacher of the Year &amp; District Finalist</p>
+        <ul class="resume__contact">
+          <li><a href="https://www.linkedin.com/in/elisha-lucero" target="_blank" rel="noopener">linkedin.com/in/elisha-lucero</a></li>
+          <li><a href="mailto:luceroelisha@icloud.com">luceroelisha@icloud.com</a></li>
+        </ul>
+        <a class="btn btn--primary resume__download" href="/resume/elisha-lucero-resume.pdf" download>Download PDF →</a>
+      </header>
+
+      <hr class="resume__rule" />
+
+      <section class="resume__section">
+        <h3>Summary</h3>
+        <ul class="cli">
+          <li>Integrated foundation in computer science, psychology, and linguistics, grounded in contemporary cognitive neuroscience research.</li>
+          <li>Implementing evidence-based practices that connect learning to self and community.</li>
+          <li>Committed to community building and support through education, project management, and technical problem solving.</li>
+        </ul>
+      </section>
+
+      <hr class="resume__rule" />
+
+      <section class="resume__section">
+        <h3>Educational experience</h3>
+
+        <div class="resume__job">
+          <div class="resume__job-head">
+            <span class="resume__role">Summer STEM Camp · Facilitator &amp; Acting Administrator</span>
+            <span class="resume__date">Summer 2026</span>
+          </div>
+          <p class="resume__org">Irving ISD · Irving, TX</p>
+          <ul class="cli">
+            <li>Acting administrator for the district STEM Camp summer program: lead and support camp staff.</li>
+            <li>Build spreadsheets to track attendance, manage waitlists, and coordinate supplies, curriculum, and staff placements.</li>
+            <li>Maintain student records and progress, and support teacher training.</li>
+          </ul>
+        </div>
+
+        <div class="resume__job">
+          <div class="resume__job-head">
+            <span class="resume__role">Bowie MS · Innovative Technology &amp; Publication</span>
+            <span class="resume__date">Aug 2023 – Present</span>
+          </div>
+          <p class="resume__org">Irving ISD · Irving, TX</p>
+          <ul class="cli">
+            <li>Teach project-based courses in CAD, Immersive Media, and AI + Robotics, centered on real-world problem-solving and student voice.</li>
+            <li>Lead student media production such as yearbook, journalism, and campus broadcasting.</li>
+            <li>Named 2025–26 Campus Teacher of the Year and District finalist, recognized for equity-focused instruction and student-centered innovation.</li>
+            <li>Advise Student Council and CTSO, fostering leadership, civic engagement, and career-readiness.</li>
+          </ul>
+        </div>
+
+        <div class="resume__job">
+          <div class="resume__job-head">
+            <span class="resume__role">Bowie MS · 8th Grade ELAR / ESL Teacher</span>
+            <span class="resume__date">Aug 2021 – Jul 2023</span>
+          </div>
+          <p class="resume__org">Irving ISD · Irving, TX</p>
+          <ul class="cli">
+            <li>Instructed six Honors RLA/ESL sections in collaboration with a highly effective PLC team, fostering academic excellence and language proficiency.</li>
+          </ul>
+        </div>
+
+        <div class="resume__job">
+          <div class="resume__job-head">
+            <span class="resume__role">YMCA · Childcare Group Leader</span>
+            <span class="resume__date">Dec 2020 – Jul 2021</span>
+          </div>
+          <p class="resume__org">Irving, TX</p>
+        </div>
+
+        <div class="resume__job">
+          <div class="resume__job-head">
+            <span class="resume__role">Johnson Middle School · Permanent Substitute</span>
+            <span class="resume__date">Aug 2020 – May 2021</span>
+          </div>
+          <p class="resume__org">Irving, TX</p>
+        </div>
+
+        <div class="resume__job">
+          <div class="resume__job-head">
+            <span class="resume__role">University of British Columbia · Teaching Assistant</span>
+            <span class="resume__date">2018 – 2019</span>
+          </div>
+        </div>
+      </section>
+
+      <hr class="resume__rule" />
+
+      <section class="resume__section">
+        <h3>Technical experience</h3>
+        <div class="resume__job">
+          <div class="resume__job-head">
+            <span class="resume__role">The Haven · Systems Administrator</span>
+            <span class="resume__date">Jun 2021 – Aug 2022</span>
+          </div>
+          <ul class="cli">
+            <li>Managed Jira Kanban boards and tickets to keep timelines and deadlines on track for a distributed team.</li>
+            <li>Administered Google Workspace and Jira access control, managed domain administration end-to-end and supported front-end work for digital media spaces.</li>
+          </ul>
+        </div>
+      </section>
+
+      <hr class="resume__rule" />
+
+      <section class="resume__section">
+        <h3>Education</h3>
+        <div class="resume__job">
+          <div class="resume__job-head">
+            <span class="resume__role">B.A. Cognitive Systems · Brain &amp; Cognition</span>
+            <span class="resume__date">UBC</span>
+          </div>
+          <p class="resume__org">Minor in Creative Writing · University of British Columbia</p>
+        </div>
+        <ul class="cli">
+          <li>TExES 7–12 ELAR, PPR &amp; ESL — Texas teaching certification (ACT Dallas Alt Cert).</li>
+          <li>Singley Academy — HSDG, Digital Media &amp; Game Design CTE.</li>
+        </ul>
+      </section>
+
+      <hr class="resume__rule" />
+
+      <section class="resume__section">
+        <h3>Skills</h3>
+        <p class="resume__skills">
+          HTML/CSS · SQL · Java · SPSS data analysis · web hosting &amp; server management ·
+          Kanban workflows · Adobe Photoshop, Lightroom &amp; Premiere · audio recording &amp; engineering · Microsoft Office
+        </p>
+      </section>
+    </div>
+  </Window>
+  </div>
+
+</Layout>

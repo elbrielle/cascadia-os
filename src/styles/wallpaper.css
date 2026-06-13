@@ -1,0 +1,57 @@
+/* ============================================================================
+   wallpaper.css  —  desktop wallpaper with cross-fade between day & night
+   ----------------------------------------------------------------------------
+   The .wallpaper container (in Layout.astro) is a fixed, full-viewport layer
+   behind everything (positioned in desktop.css). It contains two children
+   layers — one day, one night — stacked at the same coordinates. Both
+   layers are always painted; the theme just toggles their opacity. Because
+   opacity is animatable (background-image is not), this cross-fades smoothly
+   when the user flips Light/Dark in Settings or when their OS preference
+   changes mid-session.
+
+   Files: public/wallpaper/wallpaper-day.webp + wallpaper-night.webp
+   (1920×1080 pixel-art — 640px art-res, Bayer-dithered, ~36-colour
+   token-snapped palette, ~40–52 KB each). `image-rendering: pixelated`
+   on the layers keeps the pixel grid crisp when CSS scales them up on
+   larger/hi-dpi screens (instead of blurring the blocks). Pipeline:
+   scripts/pixelate-wallpaper.py.
+   ========================================================================== */
+
+.wallpaper {
+  background-color: var(--color-desktop); /* themed fallback while images load */
+}
+
+.wallpaper__layer {
+  position: absolute;
+  inset: 0;
+  background-size: cover;
+  background-position: center bottom;
+  background-repeat: no-repeat;
+  /* Keep the pixel-art grid crisp when scaled up past the image's native
+     1920px (e.g. wide/hi-dpi displays) — nearest-neighbour, not blur. */
+  image-rendering: pixelated;
+  /* The cross-fade. 800ms feels like a "soft sunset" — long enough to read
+     as a transition, short enough not to feel laggy when toggling.        */
+  transition: opacity 800ms ease-in-out;
+  will-change: opacity;
+}
+
+/* Defaults: day is visible, night is hidden. The theme rules below flip
+   these as needed.                                                        */
+.wallpaper__layer--day   { background-image: url("/wallpaper/wallpaper-day.webp");   opacity: 1; }
+.wallpaper__layer--night { background-image: url("/wallpaper/wallpaper-night.webp"); opacity: 0; }
+
+/* Explicit dark choice — fade to night. */
+:root[data-theme="dark"] .wallpaper__layer--day   { opacity: 0; }
+:root[data-theme="dark"] .wallpaper__layer--night { opacity: 1; }
+
+/* No explicit choice → follow the OS preference. */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme]) .wallpaper__layer--day   { opacity: 0; }
+  :root:not([data-theme]) .wallpaper__layer--night { opacity: 1; }
+}
+
+/* Respect users who've asked for reduced motion — snap instantly instead. */
+@media (prefers-reduced-motion: reduce) {
+  .wallpaper__layer { transition: none; }
+}

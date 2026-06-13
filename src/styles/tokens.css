@@ -1,0 +1,403 @@
+/* ============================================================================
+   tokens.css  —  Cascadia OS design tokens
+   ----------------------------------------------------------------------------
+   LIGHT theme  —  "Ocean Breeze" (Elisha's locked palette)
+     Pacific Blue    #0FA3B1   teal — title bars + structural accent
+     Icy Blue        #B5E2FA   pale blue — desktop showthrough + sky
+     Porcelain       #F9F7F3   off-white — window paper
+     Vanilla Custard #EDDEA4   warm pale — sand + secondary accent
+     Tangerine Dream #F7A072   coral — accent for links + active states
+
+   DARK theme  —  "Midnight Bay"
+     Inverts the lighting: deep-ocean window bodies, sand-warm body text on
+     cool chrome, Tangerine-Dream becomes a vivid coral on midnight blue.
+     Same Pacific Blue title bars so brand identity stays consistent.
+
+   Toggle with <html data-theme="light|dark">; default honours OS preference.
+   The accent presets (sunset/kelp/ferry/phosphor) further down let you A/B
+   different accent moods without leaving the chosen theme.
+   ========================================================================== */
+
+:root {
+  /* ============================================================
+     OCEAN BREEZE — LIGHT (default)
+     ============================================================ */
+
+  /* Desktop "ground" — Icy Blue peeks at edges. */
+  --color-desktop:        #B5E2FA;
+
+  /* Window chrome (frames + buttons + taskbar) and the "paper" inside.
+     Chrome is a desaturated cool gray-blue — sits between Icy Blue and
+     Porcelain so neither bleeds into the other.                          */
+  --color-surface:        #D8E2E2;
+  --color-surface-2:      #F9F7F3;
+  --color-surface-sunken: #EAE9E2;
+  --color-surface-hover:  #E8EFEF;   /* button hover face (clearer than brightness) */
+
+  /* Text. */
+  --color-text:           #11202A;
+  --color-text-muted:     #5A6878;
+  --color-text-inverse:   #F9F7F3;
+
+  /* Title bar — deeper Pacific → Pacific Blue. AA-safe for white text. */
+  --color-titlebar-a:     #0A6D7A;
+  --color-titlebar-b:     #0FA3B1;
+  --color-titlebar-text:  #F9F7F3;
+  --color-titlebar-inactive: #8AA2A8;
+
+  /* Accent — deepened Tangerine for AA on Porcelain (4.5:1+). Pure
+     Tangerine Dream is used for backgrounds/buttons where text sits on
+     top.                                                                  */
+  --color-accent:         #C8451A;
+  --color-accent-hover:   #963308;
+  --color-accent-soft:    #FBE1CC;   /* tinted Tangerine bg              */
+  --color-accent-bright:  #F7A072;   /* Tangerine Dream literal          */
+
+  /* Per-kind tint palette — the ONE source for book/film/show/game/album/
+     paper colors. Consumed by the .kind--* chips and the .attn --t-* wash
+     props (components.css) and referenced by name from about.astro's
+     Favorites grid (style="--tint: var(--tint-<kind>)"). Same values in
+     both themes — the tints are identity colors, not surfaces. */
+  --tint-book:  #C8451A;   /* matches the accent terracotta            */
+  --tint-film:  #6B4FA0;   /* violet                                   */
+  --tint-show:  #0F6F8F;   /* pacific teal                             */
+  --tint-game:  #1A8C5A;   /* fir green                                */
+  --tint-album: #D45886;   /* salmonberry pink                         */
+  --tint-paper: #5A6878;   /* graphite blue                            */
+
+  /* Auxiliary signal colors. */
+  --color-warning:        #C97506;
+  --color-success:        #2A7D4F;
+  --color-led:            #F7A072;   /* coral LED                       */
+  --crest-ink:            #22276c;   /* UBC crest ink — true navy (light) */
+
+  /* Wallpaper layers — Ocean Breeze coastal scene. */
+  --wp-sky-top:           #5BC8D8;   /* deep Pacific high up            */
+  --wp-sky-mid:           #B5E2FA;   /* Icy Blue                        */
+  --wp-sky-bottom:        #EDDEA4;   /* Vanilla Custard horizon haze    */
+  --wp-sun:               #F7A072;   /* Tangerine Dream sun             */
+  --wp-mountains-farthest:#A8C8D8;   /* misty distant peaks             */
+  --wp-mountains-far:     #6A8AA0;
+  --wp-mountains-mid:     #3A5E7A;
+  --wp-trees:             #1A4D55;   /* coastal cedars                  */
+  --wp-water:             #6FB8C8;   /* cheerful inlet                  */
+  --wp-water-deep:        #3A8898;
+  --wp-ground:            #C8B888;   /* sand                            */
+  --wp-grid:              #A89868;   /* sand texture darker             */
+  --wp-star:              #F9F7F3;
+  --wp-lighthouse:        #F9F7F3;
+  --wp-lighthouse-red:    #C8451A;
+  --wp-snow:              #F9F7F3;
+
+  /* ============================================================
+     BEVELS
+     ============================================================ */
+  --bevel-light:          #FAFCFC;
+  --bevel-face:           #D8E2E2;
+  --bevel-dark:           #7A8A92;
+  --bevel-darker:         #0D1820;
+
+  /* ============================================================
+     TYPOGRAPHY
+     ============================================================ */
+  /* FINAL FONT STACK — the set Elisha chose, all OFL 1.1 / free.
+     Self-host files live in public/fonts/ (see fonts.css for @font-face).
+
+       --font-display-mega : Sysfont        — giant page titles
+       --font-display      : W95FA          — window titles, headings, buttons
+       --font-body         : W95FA          — paragraphs
+       --font-mono         : Departure Mono — system labels, timestamps, code
+
+     All three faces are self-hosted in public/fonts/; the trailing names are
+     plain system fallbacks for the swap window / a failed font fetch.          */
+  --font-display-mega: "Sysfont", "Courier New", monospace;
+  --font-display:      "W95FA", "Courier New", monospace;
+  --font-body:         "W95FA", "Tahoma", "Geneva", sans-serif;
+  --font-mono:         "Departure Mono", "Courier New", monospace;
+
+  --text-xs:   0.875rem;    /* 14px (↑ from 13) — smallest labels            */
+  --text-sm:   1rem;        /* 16px (↑ from 15) — window titles, item titles */
+  --text-base: 1.1875rem;   /* 19px (↑ from 18) — paragraph body. Sized so the
+                               W95FA PIXEL font (default mode, font-smoothing:
+                               none) reads comfortably AT A GLANCE without
+                               needing the anti-aliased toggle (the a11y
+                               option, not a readability crutch).            */
+  --text-lg:   1.5rem;      /* 24px (↑ from 22) — h3                        */
+  --text-xl:   1.75rem;     /* 28px (↑ from 26) — h2                        */
+  --text-2xl:  2.125rem;    /* 34px (↑ from 32)                             */
+  --text-huge: clamp(2.75rem, 8vw, 6rem);
+
+  --leading-tight: 1.2;
+  --leading-body:  1.55;
+
+  /* ============================================================
+     SPACING — 4px base
+     ============================================================ */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 16px;
+  --space-4: 24px;
+  --space-5: 40px;
+  --space-6: 64px;
+
+  /* ============================================================
+     SIZES / LAYOUT
+     ============================================================ */
+  --safe-area-bottom:     env(safe-area-inset-bottom, 0px);
+  --safe-area-bottom-max: env(safe-area-max-inset-bottom, var(--safe-area-bottom));
+  --taskbar-core-height:  44px;
+  --taskbar-height:       calc(var(--taskbar-core-height) + var(--safe-area-bottom-max));
+  --titlebar-height:  34px;          /* taller — easier to grab            */
+  --sidebar-width:    104px;
+  --window-border:    3px;           /* thicker chrome, more "real"         */
+  --icon-size:        48px;
+  --icon-pixel-size:  32px;
+
+  /* ============================================================
+     MOTION
+     ------------------------------------------------------------
+     Enter vs exit are deliberately asymmetric: enters arrive and
+     settle on --speed/--ease-soft; exits are shorter and accelerate
+     away on --speed-exit/--ease-exit (a leaving element needs less
+     attention). --ease is the steps() hard-cut for pixel/sprite
+     surfaces — never mix the two vocabularies.
+     ============================================================ */
+  --speed-fast: 90ms;
+  --speed:      180ms;
+  --speed-page: 260ms;
+  --speed-exit: 140ms;
+  --ease:       steps(4, end);
+  --ease-soft:  cubic-bezier(0.2, 0.8, 0.2, 1);
+  --ease-exit:  cubic-bezier(0.2, 0, 1, 0.9);
+
+  /* ============================================================
+     DEPTH (z-index)
+     ------------------------------------------------------------
+     The sidebar icons sit ABOVE the window plane: dragging a
+     window left should reveal the icons
+     on top, not bury them. Stickers/page-title stay below windows
+     intentionally so a dragged window crosses over the big page
+     heading — see the comment in desktop.css `.page-title`.
+     ============================================================ */
+  --z-wallpaper: 0;
+  --z-desktop:   1;
+  --z-stickers:  20;
+  --z-window:    100;
+  --z-icons:     200;
+  --z-taskbar:   9000;
+  --z-tweaks:    9500;
+
+  /* ============================================================
+     SHADOWS — hard-edged ONLY. NO blur.
+     ============================================================ */
+  --shadow-hard:    3px 3px 0 rgba(0, 0, 0, 0.35);
+  --shadow-hard-lg: 6px 6px 0 rgba(0, 0, 0, 0.4);
+}
+
+/* ============================================================================
+   DARK THEME — "Midnight Bay"
+   Same Pacific Blue title bars; everything else flips. Warm sand text on
+   cool ocean chrome keeps the Ocean Breeze warmth from disappearing.
+
+   SINGLE SOURCE: every dark value is authored ONCE below as a --dark-*
+   private token. The two activation paths — explicit data-theme="dark" and
+   OS preference with no explicit choice — only REMAP the public names, and a
+   media condition can't share a selector list with :root[data-theme="dark"],
+   so the remap lines appear twice but the VALUES live in one place. Edit a
+   dark color here; never in the remap blocks. (Adding a brand-new dark token
+   still means one private line + one line in each remap block.)
+   ========================================================================== */
+:root {
+  --dark-color-desktop:        #050D18;
+  --dark-color-surface:        #15252E;
+  --dark-color-surface-2:      #1D3540;
+  --dark-color-surface-sunken: #0E1A22;
+  --dark-color-surface-hover:  #233A45;
+
+  --dark-color-text:           #EDE0C8;   /* sand-warm */
+  --dark-color-text-muted:     #8AA0A8;
+  --dark-color-text-inverse:   #EDE0C8;
+
+  --dark-color-titlebar-a:     #0A6D7A;
+  --dark-color-titlebar-b:     #0FA3B1;
+  --dark-color-titlebar-text:  #DCF4F4;
+  --dark-color-titlebar-inactive: #2A3A44;
+
+  --dark-color-accent:         #FF9560;   /* Tangerine, brighter for dark    */
+  --dark-color-accent-hover:   #FFB58A;
+  --dark-color-accent-soft:    #4A2818;
+  --dark-color-accent-bright:  #FFA070;
+
+  --dark-color-warning:        #FBBF24;
+  --dark-color-success:        #4ADE80;
+  --dark-color-led:            #FF6A4A;
+  --dark-crest-ink:            #A3ACE8;   /* UBC crest ink — lightened for dark */
+
+  --dark-wp-sky-top:           #050818;
+  --dark-wp-sky-mid:           #102540;
+  --dark-wp-sky-bottom:        #28384A;
+  --dark-wp-sun:               #FF9560;
+  --dark-wp-mountains-farthest:#28384C;
+  --dark-wp-mountains-far:     #1A2838;
+  --dark-wp-mountains-mid:     #0A1828;
+  --dark-wp-trees:             #050D15;
+  --dark-wp-water:             #0A1825;
+  --dark-wp-water-deep:        #050D15;
+  --dark-wp-ground:            #050810;
+  --dark-wp-grid:              #1A2838;
+  --dark-wp-star:              #DCEEFC;
+  --dark-wp-lighthouse:        #8AA0A8;
+  --dark-wp-lighthouse-red:    #FF9560;
+  --dark-wp-snow:              #5A7484;
+
+  --dark-bevel-light:          #3A5560;
+  --dark-bevel-face:           #15252E;
+  --dark-bevel-dark:           #050D15;
+  --dark-bevel-darker:         #000000;
+
+  --dark-shadow-hard:    3px 3px 0 rgba(0, 0, 0, 0.6);
+  --dark-shadow-hard-lg: 6px 6px 0 rgba(0, 0, 0, 0.7);
+}
+
+/* Explicit dark choice. KEEP IN LOCKSTEP with the media block below — same
+   lines, both pure remaps. */
+:root[data-theme="dark"] {
+  --color-desktop:        var(--dark-color-desktop);
+  --color-surface:        var(--dark-color-surface);
+  --color-surface-2:      var(--dark-color-surface-2);
+  --color-surface-sunken: var(--dark-color-surface-sunken);
+  --color-surface-hover:  var(--dark-color-surface-hover);
+  --color-text:           var(--dark-color-text);
+  --color-text-muted:     var(--dark-color-text-muted);
+  --color-text-inverse:   var(--dark-color-text-inverse);
+  --color-titlebar-a:     var(--dark-color-titlebar-a);
+  --color-titlebar-b:     var(--dark-color-titlebar-b);
+  --color-titlebar-text:  var(--dark-color-titlebar-text);
+  --color-titlebar-inactive: var(--dark-color-titlebar-inactive);
+  --color-accent:         var(--dark-color-accent);
+  --color-accent-hover:   var(--dark-color-accent-hover);
+  --color-accent-soft:    var(--dark-color-accent-soft);
+  --color-accent-bright:  var(--dark-color-accent-bright);
+  --color-warning:        var(--dark-color-warning);
+  --color-success:        var(--dark-color-success);
+  --color-led:            var(--dark-color-led);
+  --crest-ink:            var(--dark-crest-ink);
+  --wp-sky-top:           var(--dark-wp-sky-top);
+  --wp-sky-mid:           var(--dark-wp-sky-mid);
+  --wp-sky-bottom:        var(--dark-wp-sky-bottom);
+  --wp-sun:               var(--dark-wp-sun);
+  --wp-mountains-farthest:var(--dark-wp-mountains-farthest);
+  --wp-mountains-far:     var(--dark-wp-mountains-far);
+  --wp-mountains-mid:     var(--dark-wp-mountains-mid);
+  --wp-trees:             var(--dark-wp-trees);
+  --wp-water:             var(--dark-wp-water);
+  --wp-water-deep:        var(--dark-wp-water-deep);
+  --wp-ground:            var(--dark-wp-ground);
+  --wp-grid:              var(--dark-wp-grid);
+  --wp-star:              var(--dark-wp-star);
+  --wp-lighthouse:        var(--dark-wp-lighthouse);
+  --wp-lighthouse-red:    var(--dark-wp-lighthouse-red);
+  --wp-snow:              var(--dark-wp-snow);
+  --bevel-light:          var(--dark-bevel-light);
+  --bevel-face:           var(--dark-bevel-face);
+  --bevel-dark:           var(--dark-bevel-dark);
+  --bevel-darker:         var(--dark-bevel-darker);
+  --shadow-hard:          var(--dark-shadow-hard);
+  --shadow-hard-lg:       var(--dark-shadow-hard-lg);
+}
+
+/* When the user hasn't chosen, honor OS preference. Pure remap — identical
+   lines to the block above; values live in the --dark-* set. */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme]) {
+    --color-desktop:        var(--dark-color-desktop);
+    --color-surface:        var(--dark-color-surface);
+    --color-surface-2:      var(--dark-color-surface-2);
+    --color-surface-sunken: var(--dark-color-surface-sunken);
+    --color-surface-hover:  var(--dark-color-surface-hover);
+    --color-text:           var(--dark-color-text);
+    --color-text-muted:     var(--dark-color-text-muted);
+    --color-text-inverse:   var(--dark-color-text-inverse);
+    --color-titlebar-a:     var(--dark-color-titlebar-a);
+    --color-titlebar-b:     var(--dark-color-titlebar-b);
+    --color-titlebar-text:  var(--dark-color-titlebar-text);
+    --color-titlebar-inactive: var(--dark-color-titlebar-inactive);
+    --color-accent:         var(--dark-color-accent);
+    --color-accent-hover:   var(--dark-color-accent-hover);
+    --color-accent-soft:    var(--dark-color-accent-soft);
+    --color-accent-bright:  var(--dark-color-accent-bright);
+    --color-warning:        var(--dark-color-warning);
+    --color-success:        var(--dark-color-success);
+    --color-led:            var(--dark-color-led);
+    --crest-ink:            var(--dark-crest-ink);
+    --wp-sky-top:           var(--dark-wp-sky-top);
+    --wp-sky-mid:           var(--dark-wp-sky-mid);
+    --wp-sky-bottom:        var(--dark-wp-sky-bottom);
+    --wp-sun:               var(--dark-wp-sun);
+    --wp-mountains-farthest:var(--dark-wp-mountains-farthest);
+    --wp-mountains-far:     var(--dark-wp-mountains-far);
+    --wp-mountains-mid:     var(--dark-wp-mountains-mid);
+    --wp-trees:             var(--dark-wp-trees);
+    --wp-water:             var(--dark-wp-water);
+    --wp-water-deep:        var(--dark-wp-water-deep);
+    --wp-ground:            var(--dark-wp-ground);
+    --wp-grid:              var(--dark-wp-grid);
+    --wp-star:              var(--dark-wp-star);
+    --wp-lighthouse:        var(--dark-wp-lighthouse);
+    --wp-lighthouse-red:    var(--dark-wp-lighthouse-red);
+    --wp-snow:              var(--dark-wp-snow);
+    --bevel-light:          var(--dark-bevel-light);
+    --bevel-face:           var(--dark-bevel-face);
+    --bevel-dark:           var(--dark-bevel-dark);
+    --bevel-darker:         var(--dark-bevel-darker);
+    --shadow-hard:          var(--dark-shadow-hard);
+    --shadow-hard-lg:       var(--dark-shadow-hard-lg);
+  }
+}
+
+/* ============================================================================
+   FONT RENDERING — exposed via Settings. Default is pixel-perfect (sharp
+   bitmap edges); the smooth variant swaps to a system sans for readers who
+   prefer anti-aliased type. Both modes keep the OS chrome (Sysfont titles,
+   W95FA window chrome) so the desktop metaphor still reads.
+   ========================================================================== */
+
+:root,
+:root[data-smoothing="pixel"] {
+  -webkit-font-smoothing: none;
+  -moz-osx-font-smoothing: unset;
+  font-smooth: never;
+}
+
+:root[data-smoothing="smooth"] {
+  /* Smooth mode is the accessibility option for readers who can't parse bitmap
+     type — so swap EVERY role to a system font, chrome included. Previously only
+     body + mono swapped, which left the W95FA / Sysfont headings + window titles
+     as pixel fonts that the global antialiasing then BLURRED — the "smoothed-out
+     but still pixel" look. All-sans is the consistent, legible result; the
+     default pixel mode keeps the full retro character. */
+  --font-display-mega: ui-sans-serif, system-ui, -apple-system, "Segoe UI", "Helvetica Neue", sans-serif;
+  --font-display: ui-sans-serif, system-ui, -apple-system, "Segoe UI", "Helvetica Neue", sans-serif;
+  --font-body: ui-sans-serif, system-ui, -apple-system, "Segoe UI", "Helvetica Neue", sans-serif;
+  --font-mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  font-smooth: always;
+}
+
+/* ============================================================================
+   REDUCED MOTION
+   ========================================================================== */
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --speed-fast: 0.01ms;
+    --speed:      0.01ms;
+    --speed-page: 0.01ms;
+    --speed-exit: 0.01ms;
+  }
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}

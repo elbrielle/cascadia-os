@@ -1,0 +1,58 @@
+/* ============================================================================
+   tweaks.css  —  the Settings controls (Theme + Font rendering)
+   ----------------------------------------------------------------------------
+   The controls live in the Start menu's "Settings" cascading submenu (markup
+   in Layout.astro, flyout behavior in startmenu.js, state in tweaks.js). This
+   file styles just the two segmented "radio" groups; the submenu chrome itself
+   lives in startmenu.css.
+   ========================================================================== */
+
+.tweaks-group h3 {
+  font-family: var(--font-display);
+  font-size: 10px;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: var(--color-text-muted);
+  margin: 0 0 var(--space-1);
+}
+
+/* --- Segmented radio (Theme + Rendering pickers) ----------------------- */
+.tweaks-radio {
+  display: grid;
+  grid-auto-columns: 1fr;
+  grid-auto-flow: column;
+  gap: 0;
+}
+.tweaks-radio > button {
+  padding: 6px 8px;
+  background: var(--color-surface);
+  color: var(--color-text);
+  border: 2px solid var(--bevel-darker);
+  box-shadow:
+    inset  1px  1px 0 var(--bevel-light),
+    inset -1px -1px 0 var(--bevel-dark);
+  font-family: var(--font-display);
+  font-size: 10px;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  cursor: pointer;
+  text-align: center;
+  /* The just-clicked segment settles into its pressed state with the same
+     90ms steps() hard-cut the rest of the OS chrome uses — pixel vocabulary,
+     not a smooth fade. Side effect, accepted: on a theme swap these segments
+     (and any chrome transitioning a themed color) re-step over 90ms while
+     most of the OS repaints instantly — at steps(4)/90ms that reads as two
+     hard cuts, still in vocabulary. A *long* smooth recolor of the whole OS
+     is what the no-blur identity rejects; don't add one. */
+  transition: background-color var(--speed-fast) var(--ease);
+}
+.tweaks-radio > button + button { margin-left: -2px; }
+
+.tweaks-radio > button:hover { background: var(--color-surface-hover); }
+.tweaks-radio > button.is-active {
+  box-shadow:
+    inset -1px -1px 0 var(--bevel-light),
+    inset  1px  1px 0 var(--bevel-dark);
+  background: var(--color-accent-soft);
+  color: var(--color-text);
+}

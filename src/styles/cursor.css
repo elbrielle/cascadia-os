@@ -1,0 +1,66 @@
+/* ============================================================================
+   cursor.css  —  custom retro pixel cursors (feature #6)
+   ----------------------------------------------------------------------------
+   Swaps the system pointer for pixel-art cursors in public/cursors/ (a Win95
+   arrow + a pointing hand), drawn ink-outlined + white-filled so they read on
+   any background — light wallpaper, dark wallpaper, teal title bars, white
+   paper. Same image-rendering family as the rest of the pixel art.
+
+   Notes:
+   • Scoped to `(hover: hover) and (pointer: fine)` so touch devices are
+     untouched (no pointer to theme there).
+   • `cursor` is an INHERITED property, so the arrow on <html> cascades to
+     everything. The hand + text rules below are written `html :is(…)` so
+     their specificity (≥0,1,2) clears the codebase's existing
+     `.btn` / `.window__btn` / `.taskbar__item { cursor: pointer }` rules
+     (0,1,0–0,1,1) — otherwise clickables would fall back to the system hand
+     and the cursor set would look inconsistent. Add any NEW interactive
+     class here if it sets its own `cursor: pointer`.
+   • `.window__titlebar { cursor: grab }` (window.css) is left alone — it's a
+     drag affordance, not a click target — and still wins over the arrow.
+   • Hotspots: arrow tip at (0,0); hand index-finger tip at ~(10,0).
+   • Allowed by the existing CSP `img-src 'self'`; no _headers change.
+   ========================================================================== */
+
+@media (hover: hover) and (pointer: fine) {
+  html {
+    cursor: url("/cursors/pointer.png") 0 0, auto;
+  }
+
+  /* Clickable things → the pointing hand. */
+  html :is(
+    a[href],
+    button,
+    [role="button"],
+    summary,
+    label[for],
+    select,
+    input[type="submit"],
+    input[type="button"],
+    input[type="checkbox"],
+    input[type="radio"]
+  ) {
+    cursor: url("/cursors/link.png") 10 0, pointer;
+  }
+
+  /* Text-entry fields → keep an I-beam caret, not the arrow. */
+  html :is(
+    input[type="text"],
+    input[type="email"],
+    input[type="search"],
+    input[type="url"],
+    input[type="tel"],
+    input[type="password"],
+    input:not([type]),
+    textarea,
+    [contenteditable="true"]
+  ) {
+    cursor: text;
+  }
+
+  /* Disabled controls → no hand. */
+  html :is(button, [role="button"]):disabled,
+  html [aria-disabled="true"] {
+    cursor: not-allowed;
+  }
+}

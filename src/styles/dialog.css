@@ -1,0 +1,139 @@
+/* ============================================================================
+   dialog.css  —  shared modal / dialog chrome
+   ----------------------------------------------------------------------------
+   A centered, beveled dialog box in the same visual language as a window
+   (titlebar gradient + raised bevel + sunken paper body), but NOT a real
+   draggable .window — windows.js ignores these so they never get a taskbar
+   button or drag handle. Reused by:
+
+     • src/pages/404.astro            — the "illegal operation" error dialog
+     • public/scripts/startmenu.js    — "About Cascadia OS" system-properties
+                                         modal + the Shut Down "safe to turn
+                                         off" message panel
+
+   .os-modal     = full-screen dim backdrop + centering (JS-created modals)
+   .error-screen = center a dialog in the desktop area with NO backdrop
+                   (the 404, where the dialog is the page rather than an
+                   overlay on top of content)
+   ========================================================================== */
+
+.os-modal {
+  position: fixed;
+  inset: 0;
+  z-index: var(--z-tweaks);
+  display: grid;
+  place-items: center;
+  padding: var(--space-3);
+  background: rgba(5, 13, 24, 0.55);
+  animation: os-modal-in var(--speed) var(--ease-soft);
+}
+.os-modal[hidden] { display: none; }
+@keyframes os-modal-in { from { opacity: 0; } to { opacity: 1; } }
+
+/* 404: center the dialog in the desktop area, no dim backdrop. */
+.error-screen {
+  display: grid;
+  place-items: center;
+  width: 100%;
+  min-height: min(60vh, 460px);
+}
+
+.os-dialog {
+  width: min(420px, 100%);
+  background: var(--color-surface);
+  border: var(--window-border) solid var(--bevel-darker);
+  box-shadow:
+    inset  2px  2px 0 var(--bevel-light),
+    inset -2px -2px 0 var(--bevel-dark),
+    var(--shadow-hard-lg);
+  animation: window-pop var(--speed) var(--ease-soft);
+}
+
+/* --- Title bar (mirrors .window__titlebar) ------------------------------- */
+.os-dialog__bar {
+  height: var(--titlebar-height);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+  padding: 0 var(--space-1) 0 var(--space-3);
+  background: linear-gradient(90deg,
+              var(--color-titlebar-a), var(--color-titlebar-b));
+  color: var(--color-titlebar-text);
+  border-bottom: 2px solid var(--bevel-darker);
+  box-shadow: inset 0 1px 0 var(--bevel-light);
+}
+.os-dialog__title {
+  font-family: var(--font-display);
+  font-size: var(--text-sm);
+  font-weight: 700;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  text-shadow: 1px 1px 0 rgba(0, 0, 0, 0.4);
+}
+.os-dialog__close {
+  width: 26px;
+  height: 24px;
+  display: grid;
+  place-items: center;
+  background: var(--color-surface);
+  color: var(--color-text);
+  border: 2px solid var(--bevel-darker);
+  box-shadow:
+    inset  1px  1px 0 var(--bevel-light),
+    inset -1px -1px 0 var(--bevel-dark);
+  font-family: var(--font-display);
+  font-size: 12px;
+  line-height: 1;
+  cursor: pointer;
+  text-decoration: none;
+}
+.os-dialog__close:hover { background: var(--color-surface-hover); }
+.os-dialog__close:active {
+  box-shadow:
+    inset -1px -1px 0 var(--bevel-light),
+    inset  1px  1px 0 var(--bevel-dark);
+}
+
+/* --- Body (mirrors .window__body paper) ---------------------------------- */
+.os-dialog__body {
+  background: var(--color-surface-2);
+  color: var(--color-text);
+  margin: var(--window-border);
+  padding: var(--space-4);
+  box-shadow:
+    inset  1px  1px 0 var(--bevel-dark),
+    inset -1px -1px 0 var(--bevel-light);
+  font-family: var(--font-body);
+  font-size: var(--text-base);
+  line-height: var(--leading-body);
+}
+
+/* Icon + message row — the classic "[icon] message" dialog layout. */
+.os-dialog__row {
+  display: grid;
+  grid-template-columns: 48px 1fr;
+  gap: var(--space-3);
+  align-items: start;
+}
+.os-dialog__icon {
+  width: 48px;
+  height: 48px;
+  image-rendering: pixelated;
+}
+.os-dialog__icon svg,
+.os-dialog__icon img { width: 100%; height: 100%; }
+.os-dialog__message > * + * { margin-top: var(--space-2); }
+.os-dialog__code {
+  font-family: var(--font-mono);
+  font-size: 13px;
+  color: var(--color-text-muted);
+  letter-spacing: 0.5px;
+}
+
+.os-dialog__actions {
+  display: flex;
+  gap: var(--space-2);
+  justify-content: center;
+  margin-top: var(--space-4);
+}

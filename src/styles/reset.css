@@ -1,0 +1,72 @@
+/* ============================================================================
+   reset.css  —  minimal, opinionated reset
+   ========================================================================== */
+
+*, *::before, *::after { box-sizing: border-box; }
+
+html, body { margin: 0; padding: 0; }
+
+/* Desktop default: viewport-locked. The mobile.css breakpoint releases
+   this so the page can scroll naturally on narrow screens. */
+html, body {
+  height: 100%;
+  overflow: hidden;
+  overscroll-behavior: none;
+}
+
+body {
+  line-height: var(--leading-body);
+}
+
+img, svg, video { display: block; max-width: 100%; }
+
+button {
+  font: inherit;
+  color: inherit;
+  background: none;
+  border: 0;
+  cursor: pointer;
+}
+
+a { color: inherit; }
+
+ul, ol { padding: 0; margin: 0; }
+
+h1, h2, h3, h4, h5, h6 { margin: 0; line-height: var(--leading-tight); }
+
+p { margin: 0; }
+
+/* Focus styles — visible in both themes. */
+:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 2px;
+}
+
+/* iOS paints a rounded translucent grey flash over every tapped control —
+   on hard-edged Win95 chrome it breaks the illusion and sits on top of the
+   authored press feedback. Suppress it ONLY on chrome that gives its own
+   instant feedback (an :active bevel/translate, or a state class that flips
+   on tap). Deliberately NOT a global reset: plain prose links have no
+   authored :active and keep the native tap affordance. */
+.window__btn,
+.desktop-icon,
+.taskbar__start,
+.taskbar__item,
+.start-menu__item,
+.start-menu__tray-row--link,
+.shutdown__restart,
+.btn,
+.project-tile,
+.attn__tile,
+.attn__detail-close,
+.fav__folder,
+.fav__cover,
+.os-dialog__close {
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Selection — match the accent. */
+::selection {
+  background: var(--color-accent);
+  color: var(--color-text-inverse);
+}

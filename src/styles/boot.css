@@ -1,0 +1,146 @@
+/* ============================================================================
+   boot.css  —  "Cascadia OS starting up…" splash (feature #8)
+   ----------------------------------------------------------------------------
+   A full-screen splash shown once per session that fades to the desktop —
+   the bookend to the Start-menu Shut Down → Restart gag.
+
+   How it stays non-annoying AND robust:
+   • The overlay is VISIBLE BY DEFAULT in the HTML and covers the viewport from
+     the very first paint, so the desktop never flashes behind it.
+   • A pure-CSS `boot-out` animation (fill: forwards) fades it to
+     opacity:0 + visibility:hidden on its own — so even with JS disabled the
+     splash dismisses itself and the site is fully usable. No-JS = no trap.
+   • boot.js layers on the niceties: skip on first key/click, and a
+     `data-skip` lock so a `transition:persist` splash never replays across
+     view-transition navigations, plus an instant skip on same-session
+     reloads (sessionStorage gate).
+   • prefers-reduced-motion: the global animation squash in tokens.css drives
+     `boot-out` to its end almost instantly → the splash effectively skips.
+   ========================================================================== */
+
+.boot-splash {
+  position: fixed;
+  inset: 0;
+  /* Above taskbar (9000) and tweaks (9500); below the shutdown screen. */
+  z-index: 10000;
+  display: grid;
+  place-items: center;
+  /* Flat terminal black — the texture is the boot-log + scanlines, not a
+     gradient. */
+  background: #03070e;
+  color: var(--color-titlebar-text);
+  overflow: hidden;
+  animation: boot-out 2.6s var(--ease-soft) forwards;
+}
+
+/* CRT scanline overlay — sits over everything, ignores pointer events. */
+.boot-splash::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  pointer-events: none;
+  background: repeating-linear-gradient(
+    0deg, rgba(0, 0, 0, 0.32) 0 1px, transparent 1px 3px);
+  mix-blend-mode: multiply;
+}
+
+/* Faux POST / boot log printed up the left side, behind the centred logo.
+   Real monospace text (not an image) in a dim on-brand teal — "prints"
+   line-by-line via a clip-path step reveal synced to the progress bar. */
+.boot-splash__log {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  margin: 0;
+  padding: clamp(1rem, 4vh, 2.75rem) clamp(1rem, 5vw, 3.25rem);
+  font-family: var(--font-mono);
+  font-size: clamp(10px, 1.55vw, 15px);
+  line-height: 1.85;
+  letter-spacing: 0.5px;
+  white-space: pre;
+  color: #2c6a78;
+  text-shadow: 0 0 6px rgba(15, 163, 177, 0.2);
+  user-select: none;
+  /* reveal lines top → bottom (12 lines) like console output streaming in */
+  animation: boot-log-print 2s steps(12, end) forwards;
+}
+@keyframes boot-log-print {
+  from { clip-path: inset(0 0 100% 0); }
+  to   { clip-path: inset(0 0 0 0); }
+}
+/* brighten the first line (the BIOS banner) a touch for a real-POST feel */
+.boot-splash__log::first-line { color: #3f8a99; }
+
+/* JS lock: set once the boot-out animation finishes (or on a same-session
+   reload / user skip). Guarantees the splash stays gone and never replays. */
+.boot-splash[data-skip] {
+  animation: none !important;
+  opacity: 0 !important;
+  visibility: hidden !important;
+  pointer-events: none !important;
+}
+
+@keyframes boot-out {
+  0%   { opacity: 1; visibility: visible; }
+  80%  { opacity: 1; visibility: visible; }
+  100% { opacity: 0; visibility: hidden; }
+}
+
+.boot-splash__inner {
+  position: relative;
+  z-index: 1; /* above the boot-log (z:0); scanlines (z:2) sit over both */
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-4);
+  padding: var(--space-4);
+  text-align: center;
+}
+
+.boot-splash__logo {
+  font-family: var(--font-display-mega);
+  font-size: clamp(2.5rem, 9vw, 5rem);
+  line-height: 1;
+  letter-spacing: 1px;
+  color: var(--color-accent-bright);
+  text-shadow: 4px 4px 0 #02060d;
+}
+.boot-splash__logo span { color: var(--color-titlebar-b); }
+
+.boot-splash__tag {
+  font-family: var(--font-mono);
+  font-size: var(--text-sm);
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: #8fbecb;
+}
+
+.boot-splash__bar {
+  width: min(280px, 70vw);
+  height: 18px;
+  background: #02060d;
+  border: 2px solid #2a5562;
+  box-shadow: inset 1px 1px 0 #000;
+  padding: 2px;
+}
+.boot-splash__bar-fill {
+  height: 100%;
+  width: 0;
+  background: repeating-linear-gradient(90deg,
+              var(--color-titlebar-b) 0 10px, #0a6d7a 10px 14px);
+  animation: boot-fill 2s steps(20, end) forwards;
+}
+@keyframes boot-fill { from { width: 0; } to { width: 100%; } }
+
+.boot-splash__hint {
+  font-family: var(--font-mono);
+  font-size: 13px;
+  letter-spacing: 1px;
+  color: #5f8794;
+}
+/* Reuse the components.css `blink` keyframes for the trailing cursor. */
+.boot-splash__hint::after {
+  content: "_";
+  animation: blink 1s steps(2, end) infinite;
+}

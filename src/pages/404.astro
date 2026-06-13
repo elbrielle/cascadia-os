@@ -1,0 +1,38 @@
+---
+// ============================================================================
+//  404.astro  —  Win95-style "illegal operation" error dialog
+// ----------------------------------------------------------------------------
+//  Astro emits this to dist/404.html, which Cloudflare Pages serves for any
+//  unmatched route automatically. It renders inside the normal Cascadia OS
+//  shell (wallpaper + sidebar + taskbar) with a centered error dialog popped
+//  up on top — so a dead link still feels like the OS is running. The dialog
+//  reuses the shared .os-dialog chrome (dialog.css); it is intentionally NOT
+//  a real .window (no taskbar button, no drag) — windows.js leaves it alone.
+//  Both the X and the OK button return Home.
+// ============================================================================
+import Layout from "../layouts/Layout.astro";
+---
+
+<Layout title="Error — Cascadia OS" current="">
+  <div class="error-screen">
+    <div class="os-dialog" role="alertdialog" aria-labelledby="err-title" aria-describedby="err-msg">
+      <header class="os-dialog__bar">
+        <span class="os-dialog__title" id="err-title">Cascadia OS</span>
+        <a class="os-dialog__close" href="/" aria-label="Close">×</a>
+      </header>
+      <div class="os-dialog__body">
+        <div class="os-dialog__row">
+          <span class="os-dialog__icon" data-icon="error" aria-hidden="true"></span>
+          <div class="os-dialog__message" id="err-msg">
+            <p>This page has performed an illegal operation and will be closed.</p>
+            <p>The address you requested could not be found on this drive.</p>
+            <p class="os-dialog__code">CASCADIA_404 · 0x000000FE · PAGE_NOT_FOUND</p>
+          </div>
+        </div>
+        <div class="os-dialog__actions">
+          <a class="btn btn--primary" href="/">OK</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</Layout>

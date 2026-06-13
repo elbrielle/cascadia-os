@@ -1,0 +1,360 @@
+/* ============================================================================
+   window.css  —  the draggable window component
+   ----------------------------------------------------------------------------
+   HTML shape (same as your Astro Window.astro):
+
+     <section class="window is-active" data-window="intro">
+       <header class="window__titlebar">
+         <span class="window__title">Introduction</span>
+         <div class="window__controls">
+           <button class="window__btn" data-action="minimize" aria-label="Minimize">_</button>
+           <button class="window__btn" data-action="maximize" aria-label="Maximize">▢</button>
+         </div>
+       </header>
+       <div class="window__body"> ...content... </div>
+     </section>
+
+   CSS makes it look retro; windows.js makes it draggable.
+   ========================================================================== */
+
+.window {
+  /* RELATIVE — windows are block-level items inside their .layout__cell
+     wrappers (see layout.css for the per-page CSS Grid templates). The
+     grid holds each cell's slot, so a minimized window's neighbors don't
+     reflow. JS only adds drag offset as a CSS custom property applied via
+     transform:translate(), which never disturbs the flow.                   */
+  position: relative;
+  background: var(--color-surface);
+  z-index: var(--z-window);
+  display: flex;
+  flex-direction: column;
+
+  /* Sizing — preferred width comes from the per-window <Window width={N}>
+     prop as an inline --preferred-width custom property. We use this
+     pattern: `flex: 1 1 0` lets items grow from zero to share available
+     space evenly, with `max-width` capping each at its preferred width.
+     This means:
+       • Wide viewport: each window takes up to its preferred width, then
+         the extras stay as breathing room on the right.
+       • Narrow viewport: windows shrink proportionally to fit on one row,
+         text reflows inside — the "elongate and thin out" behavior.
+       • Very narrow (below min-width): they wrap to stack, each filling
+         its single-column row up to its preferred width.
+     flex-basis 0 (not auto) is the key difference from what we tried first:
+     the basis is the *minimum line size*, so the wrap decision is "does
+     min fit?" not "does preferred fit?" — yielding shrink-before-wrap.    */
+  --preferred-width: 480px;
+  flex: 1 1 0;
+  min-width: 320px;
+  max-width: min(92vw, var(--preferred-width));
+
+  /* Cap window height to (visible desktop minus taskbar minus a generous
+     page-title allowance). The .window__body already has overflow-y:auto +
+     min-height:0, so once the window is bounded the body scrolls INSIDE
+     instead of the page (which is overflow:hidden) clipping content. The
+     9rem allowance is page-title (max 6rem) + its top/bottom margins +
+     padding — generous enough that the title is never overlapped. Mobile
+     releases this with `max-height: none !important` so windows flow with
+     the page on small screens.                                              */
+  max-height: calc(100dvh - var(--taskbar-height) - 9rem);
+
+  /* Drag delta lives in these custom properties (default 0,0). windows.js
+     updates them on pointermove; reset removes them.                        */
+  transform: translate(var(--drag-x, 0px), var(--drag-y, 0px));
+  /* will-change is intentionally NOT set here — it lives on .window.is-dragging
+     so idle windows don't each hold a live compositor layer the whole session
+     (will-change is a transient hint, applied just before motion, not at rest).
+     mobile.css also keeps .window's will-change auto so the bottom sheet pins. */
+
+  /* Raised outer bevel: light top-left, dark bottom-right. Inset bevels
+     are 2px (vs 1px) to match the thicker window border so chrome reads
+     as a substantial, grabbable frame.                                     */
+  border: var(--window-border) solid var(--bevel-darker);
+  box-shadow:
+    inset  2px  2px 0 var(--bevel-light),
+    inset -2px -2px 0 var(--bevel-dark),
+    var(--shadow-hard-lg);
+
+  /* "Window open" pop on mount. After the animation completes the JS sets
+     `data-mounted` on the element, and the rule below switches the
+     animation-name off so subsequent class changes (e.g. removing
+     .is-opening after a restore-from-taskbar) don't re-trigger this pop.
+     Without the override, removing .is-opening would revert animation-name
+     to window-pop and the browser would replay it — visible as a brief
+     opacity-0 blink each time a minimized window is restored.            */
+  animation: window-pop var(--speed) var(--ease-soft);
+  transition:
+    top    var(--speed) var(--ease-soft),
+    left   var(--speed) var(--ease-soft),
+    width  var(--speed) var(--ease-soft),
+    height var(--speed) var(--ease-soft);
+}
+
+@keyframes window-pop {
+  /* Drag offsets composed so this mount animation NEVER snaps a
+     manually-positioned window back to (0,0).                            */
+  0%   { transform: translate(var(--drag-x, 0px), calc(var(--drag-y, 0px) + 8px)) scale(0.88); opacity: 0; }
+  60%  { transform: translate(var(--drag-x, 0px), var(--drag-y, 0px))             scale(1.03); opacity: 1; }
+  100% { transform: translate(var(--drag-x, 0px), var(--drag-y, 0px))             scale(1);    opacity: 1; }
+}
+
+/* After the initial pop completes JS stamps `data-mounted` on the window;
+   this rule then disables window-pop so it doesn't replay when the
+   animation-name changes (e.g. when .is-opening ends and the animation
+   property reverts to the base rule's window-pop). The more-specific
+   .is-opening / .is-closing rules still win and run their own
+   animations. */
+.window[data-mounted] { animation-name: none; }
+
+/* Minimize: scale down + slide toward the taskbar + fade.
+   The keyframes preserve the user's --drag-x / --drag-y offsets so a
+   manually-positioned window animates from where it actually sits — not
+   from (0,0) — avoiding the "snap-to-default then animate" flash.       */
+.window.is-closing {
+  /* Exit pair (--speed-exit/--ease-exit): shorter than the open/restore
+     enters and accelerating away — symmetric enter/exit is the un-tuned
+     default this deliberately avoids. Restore (.is-opening) stays on the
+     enter pair: it's conceptually an arrival. */
+  animation: window-close var(--speed-exit) var(--ease-exit) forwards;
+  pointer-events: none;
+}
+@keyframes window-close {
+  0%   { transform: translate(var(--drag-x, 0px), var(--drag-y, 0px))                            scale(1);   opacity: 1; }
+  100% { transform: translate(var(--drag-x, 0px), calc(var(--drag-y, 0px) + 60vh))               scale(0.1); opacity: 0; }
+}
+
+/* Restore: pops back FROM the taskbar to the user's dragged position. */
+.window.is-opening {
+  animation: window-open var(--speed) var(--ease-soft);
+}
+@keyframes window-open {
+  0%   { transform: translate(var(--drag-x, 0px), calc(var(--drag-y, 0px) + 60vh))               scale(0.1);  opacity: 0; }
+  60%  { transform: translate(var(--drag-x, 0px), var(--drag-y, 0px))                            scale(1.03); opacity: 1; }
+  100% { transform: translate(var(--drag-x, 0px), var(--drag-y, 0px))                            scale(1);    opacity: 1; }
+}
+
+/* --- Title bar: drag handle + name + controls ---------------------------- */
+.window__titlebar {
+  height: var(--titlebar-height);
+  /* CRITICAL: never let the bar shrink. The window is a flex column (title bar +
+     body); without this, a content-heavy window that hits its max-height squeezes
+     the title bar from 34px down to ~24px (flex-shrink defaults to 1) — which is
+     exactly why some windows' bars looked slimmer and their buttons sat nearly
+     edge-to-edge while a shorter window's bar stayed roomy. Pinning shrink to 0
+     keeps EVERY bar a uniform 34px; the body (min-height:0 + overflow-y:auto)
+     absorbs the shrinking and scrolls instead. */
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+  padding: 0 var(--space-2) 0 var(--space-3);
+  background: linear-gradient(90deg,
+              var(--color-titlebar-a),
+              var(--color-titlebar-b));
+  color: var(--color-titlebar-text);
+  border-bottom: 2px solid var(--bevel-darker);
+  cursor: grab;
+  user-select: none;
+  /* Make the title-bar feel like a "lid" with its own raised bevel — gives
+     a clearer drag affordance without needing a separate grab region.       */
+  box-shadow: inset 0 1px 0 var(--bevel-light);
+  /* Let the hover brighten settle instead of snapping (felt, not seen). */
+  transition: filter var(--speed-fast) var(--ease-soft);
+}
+
+.window__titlebar:hover { filter: brightness(1.08); }
+
+/* Unfocused: dim the title bar so the active window stands out.           */
+.window:not(.is-active) .window__titlebar {
+  background: var(--color-titlebar-inactive);
+  color: var(--color-text-inverse);
+  opacity: 0.85;
+}
+.window:not(.is-active) .window__titlebar:hover {
+  opacity: 1;
+  filter: brightness(1.05);
+}
+
+/* Active window gets a stronger drop shadow so it visibly "lifts" forward. */
+.window.is-active {
+  box-shadow:
+    inset  2px  2px 0 var(--bevel-light),
+    inset -2px -2px 0 var(--bevel-dark),
+    8px 8px 0 rgba(0, 0, 0, 0.45);
+}
+
+/* Moved windows get a faint "I've been touched" hint — a slightly stronger
+   border. Double-click the title bar to reset position and clear this.     */
+.window[data-moved="1"] {
+  border-color: var(--bevel-darker);
+}
+
+.window__title {
+  font-family: var(--font-display);
+  font-size: var(--text-sm);
+  font-weight: 700;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  text-shadow: 1px 1px 0 rgba(0, 0, 0, 0.4);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* --- Window control buttons (minimize, maximize) ------------------------- */
+.window__controls {
+  display: flex;
+  gap: 2px;
+}
+
+.window__btn {
+  /* 22px tall in the now-uniform 34px bar (see flex-shrink:0 above) sits with an
+     even ~6px gap top + bottom on every window. flex-shrink:0 so the button
+     itself is never squeezed either. */
+  flex-shrink: 0;
+  width: 26px;
+  height: 22px;
+  display: grid;
+  place-items: center;
+  background: var(--color-surface);
+  color: var(--color-text);
+  border: 2px solid var(--bevel-darker);
+  box-shadow:
+    inset  1px  1px 0 var(--bevel-light),
+    inset -1px -1px 0 var(--bevel-dark);
+  font-family: var(--font-display);
+  font-size: 12px;
+  line-height: 1;
+  padding: 0;
+  cursor: pointer;
+  /* Ease ONLY the hover color (smooth curve — it's a color affordance, not a
+     pixel object). The :active bevel inset below must stay un-transitioned:
+     the instant "button sinks" hard-cut is the canonical Win95 press. */
+  transition: background var(--speed-fast) var(--ease-soft);
+  /* Anchor for the ::before hit-area extender below. */
+  position: relative;
+}
+
+/* Invisible hit-area extender: the 22px bevel stays 22px visually, but the
+   clickable region reaches 24px tall (WCAG 2.5.8 minimum). mobile.css widens
+   this same pseudo to ~44px for touch. NOTE the insets anchor to the PADDING
+   box, which sits 2px inside the border — so every value here is "desired
+   overhang + 2px". -3px vertical = 1px beyond the bevel (22 → 24px hit);
+   -2px horizontal = flush with the bevel edge, so the 2px gap between the
+   two buttons stays unclaimed. */
+.window__btn::before {
+  content: "";
+  position: absolute;
+  inset: -3px -2px;
+}
+
+.window__btn:hover { background: var(--color-surface-hover); }
+
+.window__btn:active {
+  box-shadow:
+    inset -1px -1px 0 var(--bevel-light),
+    inset  1px  1px 0 var(--bevel-dark);
+}
+
+/* --- Body: the "paper" content area -------------------------------------- */
+.window__body {
+  /* Fill the window — width comes from the .window flex item's resolved
+     width, not from a fixed prop. Content reflows when narrow.              */
+  width: auto;
+  background: var(--color-surface-2);
+  color: var(--color-text);
+  padding: var(--space-4) var(--space-4) var(--space-3);
+  margin: var(--window-border);
+  font-family: var(--font-body);
+  font-size: var(--text-base);
+  line-height: var(--leading-body);
+  /* Sunken inner bevel so paper looks recessed.                            */
+  box-shadow:
+    inset  1px  1px 0 var(--bevel-dark),
+    inset -1px -1px 0 var(--bevel-light);
+  /* Scroll happens INSIDE the window, not on the page.
+     flex:1 + min-height:0 lets the body shrink to fit inside the window's
+     bounded max-height; overflow-y:auto adds the scrollbar; overscroll
+     contain stops scroll chaining to the (locked) body.                    */
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+  overscroll-behavior: contain;
+}
+
+.window__body > * + * { margin-top: var(--space-3); }
+
+/* Retro scrollbar — only shows when a window's body actually overflows, so a
+   clipped list (e.g. Build Log's recent posts) reads as "scroll for more,"
+   not as a broken cut-off. Styling ::-webkit-scrollbar also forces classic
+   (always-visible) scrollbars on macOS, which otherwise hides overlay bars
+   until you scroll — killing the affordance. Firefox uses the standardized
+   thin props; WebKit/Blink get the full Win95 beveled track + thumb.        */
+.window__body {
+  scrollbar-width: thin;
+  scrollbar-color: var(--bevel-dark) var(--color-surface-sunken);
+}
+.window__body::-webkit-scrollbar { width: 15px; }
+.window__body::-webkit-scrollbar-track {
+  background: var(--color-surface-sunken);
+  box-shadow:
+    inset  1px  1px 0 var(--bevel-dark),
+    inset -1px -1px 0 var(--bevel-light);
+}
+.window__body::-webkit-scrollbar-thumb {
+  background: var(--color-surface);
+  border: 2px solid var(--bevel-darker);
+  box-shadow:
+    inset  1px  1px 0 var(--bevel-light),
+    inset -1px -1px 0 var(--bevel-dark);
+}
+.window__body::-webkit-scrollbar-thumb:hover { background: var(--color-surface-hover); }
+
+/* --- States --------------------------------------------------------------- */
+/* Plain `is-minimized` (no animation in progress) — hide instantly.
+   JS adds .is-closing first, waits for animation, THEN sets is-minimized. */
+.window.is-minimized:not(.is-closing) { display: none; }
+
+.window.is-maximized {
+  position: fixed;
+  top:  var(--space-2) !important;
+  left: calc(var(--sidebar-width) + var(--space-2)) !important;
+  width:  calc(100vw - var(--sidebar-width) - var(--space-4)) !important;
+  height: calc(100vh - var(--taskbar-height) - var(--space-4));
+  max-width: none;
+  max-height: none !important;
+  /* Clear drag delta while maximized — translate of 0 so the window sits
+     square inside the desktop area.                                         */
+  transform: translate(0, 0) !important;
+}
+
+.window.is-maximized .window__body { flex: 1 1 auto; }
+
+.window.is-dragging  .window__titlebar { cursor: grabbing; }
+.window.is-dragging  {
+  /* IMPORTANT — two subtleties:
+     1. Compose the drag translate WITH the scale on a single transform
+        declaration. If we set `transform: scale(1.01)` alone it would
+        override the .window rule's `translate(var(--drag-x), ...)` and
+        the window wouldn't visibly move until release.
+     2. Do NOT set `animation: none` here. Toggling the animation property
+        between values (even between "none" and an already-finished
+        animation name) causes the mount animation to RESTART when the
+        class is removed on dragend — which makes the window snap and pop
+        every release. The window-pop animation has already played by the
+        time dragging happens, so leaving it alone is the right call.       */
+  transform:
+    translate(var(--drag-x, 0px), var(--drag-y, 0px))
+    scale(1.01);
+  /* Promote to a compositor layer ONLY while dragging — the canonical transient
+     will-change usage. The base .window omits it (see note there) so idle
+     windows aren't each pinned to a live layer for the whole session. */
+  will-change: transform;
+  box-shadow:
+    inset  2px  2px 0 var(--bevel-light),
+    inset -2px -2px 0 var(--bevel-dark),
+    12px 12px 0 rgba(0, 0, 0, 0.5);
+  transition: none;
+}

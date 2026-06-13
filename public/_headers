@@ -1,0 +1,91 @@
+# ============================================================================
+#  public/_headers  —  Cloudflare Pages response headers
+# ----------------------------------------------------------------------------
+#  Cloudflare Pages serves this file as part of the deploy. The rule under
+#  `/*` applies to every response. Files in `public/` are copied verbatim to
+#  the dist root, so `dist/_headers` ends up beside `dist/index.html` where
+#  Pages picks it up automatically.
+#
+#  When you change anything in here:
+#    1. Build locally (`npm run build`) and confirm `dist/_headers` exists.
+#    2. Push the branch — Cloudflare runs a preview deploy.
+#    3. `curl -I https://<branch>.<project>.pages.dev/` to confirm every
+#       header is on the response.
+#    4. `curl -I https://<branch>.<project>.pages.dev/api/hits` and confirm
+#       `X-Content-Type-Options: nosniff` is there too — Pages layers this
+#       file's `/*` block onto Function responses at the edge; the Functions
+#       themselves only set content-type + cache-control, so this check is
+#       what proves the platform glob still covers /api/*.
+#    5. Open the preview URL in a browser, click through every route, and
+#       watch the DevTools Console for CSP violations.
+#  Rollback is a one-line revert; Cloudflare redeploys in ~2 minutes.
+#
+#  Format: indent the headers under the path block. Order doesn't matter to
+#  Cloudflare, but the CSP token order below is roughly "what blocks all"
+#  → "what loads what" → "where can it talk to" → fix-ups, which is easier
+#  to scan than the alphabetical version.
+# ============================================================================
+
+/*
+  # Clickjacking — both forms because legacy UAs only honor X-Frame-Options
+  # and modern UAs prefer frame-ancestors. 'none' = no one can embed us.
+  X-Frame-Options: DENY
+
+  # Stop browsers from guessing a different MIME type from response sniffing.
+  # Combined with proper Content-Type from Cloudflare = no script-as-image
+  # tricks.
+  X-Content-Type-Options: nosniff
+
+  # Strip the referer down to scheme+host on cross-origin nav so off-site
+  # pages can't see which sub-path the user came from.
+  Referrer-Policy: strict-origin-when-cross-origin
+
+  # HSTS: enforce HTTPS for a year. NO includeSubDomains, NO preload —
+  # preload is a one-way door for 12+ months and would lock out any future
+  # subdomain that needs HTTP (e.g. an HTTP-only CDN or email gateway).
+  # Revisit only if every *.elishalucero.com is permanently HTTPS-safe.
+  Strict-Transport-Security: max-age=31536000
+
+  # Cross-origin isolation, conservative pair: COOP prevents a malicious
+  # cross-origin window from grabbing references to ours; CORP blocks other
+  # sites from loading our static assets via <img>/<script>. We deliberately
+  # do NOT set Cross-Origin-Embedder-Policy — COEP would force every
+  # off-origin resource (Goodreads book covers, future embeds) to opt in via
+  # CORP, which they don't, so the page would silently fail to load images.
+  Cross-Origin-Opener-Policy: same-origin
+  Cross-Origin-Resource-Policy: same-origin
+
+  # Permissions-Policy: disable every powerful API the portfolio doesn't
+  # use. Both `interest-cohort=()` (FLoC, original Chrome spelling) and
+  # `browsing-topics=()` (the current Privacy Sandbox successor) are
+  # included so the opt-out works across browser versions.
+  Permissions-Policy: accelerometer=(), bluetooth=(), browsing-topics=(), camera=(), geolocation=(), gyroscope=(), interest-cohort=(), magnetometer=(), microphone=(), midi=(), payment=(), serial=(), usb=()
+
+  # Content-Security-Policy
+  # ----------------------
+  # default-src 'self'         everything below inherits this fallback
+  # base-uri 'self'            block injected <base> redirecting relative URLs
+  # object-src 'none'          no <object>/<embed>/<applet> ever
+  # frame-ancestors 'none'     same as X-Frame-Options DENY, modern form
+  # form-action <web3forms>    the only place <form action=> may point
+  # img-src 'self' https: data:
+  #     - 'self' for /images/, /wallpaper/, /scripts/
+  #     - https: blanket because Goodreads rotates book-cover CDN hosts;
+  #       a precise allowlist breaks silently every few months.
+  #     - data: for any inline SVG-as-img cases.
+  # font-src 'self'            all fonts ship from /fonts/ (self-hosted)
+  # style-src 'self' 'unsafe-inline'
+  #     'unsafe-inline' covers ~20 inline `style="..."` attribute uses
+  #     (CSS-custom-prop pass-throughs). Browser support for hashing
+  #     attribute styles via style-src-attr is uneven; the risk is low
+  #     because none of those styles render user-controlled content.
+  # script-src 'self' 'sha256-…' 'sha256-…'
+  #     NO 'unsafe-inline'. The two SHA-256 tokens pin the only two inline
+  #     scripts that exist (Layout.astro nav-sync + contact.astro form
+  #     handler). Edit either → rerun `node scripts/compute-csp-hashes.cjs`
+  #     and update these tokens.
+  # connect-src 'self' <web3forms>
+  #     Covers fetch() in the contact form handler.
+  # upgrade-insecure-requests
+  #     Browser auto-rewrites any leaked http:// → https:// before request.
+  Content-Security-Policy: default-src 'self'; base-uri 'self'; object-src 'none'; frame-ancestors 'none'; form-action https://api.web3forms.com; img-src 'self' https: data:; font-src 'self'; style-src 'self' 'unsafe-inline'; script-src 'self' 'sha256-vtgAhUJLbMgaG++309rF9L6JOOPMqJ5Je/FOwKIpw9I=' 'sha256-uv/cyGE1G6S2eMzv3yG2M0X6p1WuQMJT+3ceqSR5arI='; connect-src 'self' https://api.web3forms.com; upgrade-insecure-requests

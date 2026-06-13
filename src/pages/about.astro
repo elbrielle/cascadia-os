@@ -1,0 +1,144 @@
+---
+import Layout from "../layouts/Layout.astro";
+import Window from "../components/Window.astro";
+import { getFavorites, groupByCategory } from "../lib/favorites.js";
+
+// Phase C: the About page leads with the README and presents the all-time
+// Favorites as a Windows/Finder-style explorer (folders → cover grid → detail).
+// attention.log is now Home-only (see src/pages/index.astro); About no longer
+// renders it. Build-time data: getFavorites() reads the live /api/favorites and
+// is resilient ([] on any failure → empty state), groupByCategory() drops empty
+// categories and orders them per src/lib/favorites.js CATEGORIES.
+const favorites = await getFavorites();
+const groups = groupByCategory(favorites);
+
+// Per-category tint: the folder swatch + the cover's wash (so a missing or
+// edge-transparent cover still reads). The actual colors live ONCE as the
+// --tint-* tokens in src/styles/tokens.css; this just emits a var() reference
+// per kind (with a neutral fallback for any kind the palette doesn't know).
+const tintVar = (kind) => `--tint: var(--tint-${kind}, #888)`;
+---
+
+<Layout title="Elisha Lucero — About" pageTitle="About" current="about">
+
+  <div class="layout__cell about__readme">
+  <Window id="bio" title="README — Elisha Lucero" width={520}>
+    <h2>README.txt</h2>
+    <p>
+      I am an educator, learning content designer, and technical builder with a
+      B.A. in Cognitive Systems; my academic background at the University of
+      British Columbia bridged computer science and cognitive science to study
+      how cognition can be modeled in machine learning and intelligent systems.
+    </p>
+    <p>
+      Across these roles, I keep coming back to the same design problem: the
+      systems we're entrenched in shape the models we build to navigate the
+      world, constraining the choices we notice and thus the actions we take.
+      I seek to build curricula and tools that make such constraints visible
+      enough for people to see where a system ends and their agency begins.
+    </p>
+    <p>
+      I design career readiness and technology curriculum that moves students
+      from guided exploration into real project work across robotics, electronics,
+      digital fabrication, immersive media, and applied computing. I also build
+      tools to rectify systems that feel too brittle, slow, or indifferent to
+      how people move throughout their day.
+    </p>
+  </Window>
+  </div>
+
+  <div class="layout__cell about__favorites">
+  <Window id="favorites" title="Favorites" width={720}>
+    {groups.length === 0 ? (
+      <p class="fav__empty">Favorites are being curated — check back soon.</p>
+    ) : (
+      <div class="fav" data-fav>
+        {/* A toggle-button group, NOT the ARIA tab pattern — tabs would owe
+            roving tabindex + arrow keys + tabpanel wiring (audit #8). Each
+            button keeps its static name; only aria-pressed flips. */}
+        <div class="fav__side" role="group" aria-label="Favorite categories">
+          {groups.map((g, i) => (
+            <button
+              class:list={["fav__folder", { "is-active": i === 0 }]}
+              type="button"
+              data-cat={g.key}
+              data-label={g.label}
+              aria-pressed={i === 0 ? "true" : "false"}
+              style={tintVar(g.key)}
+            >
+              <span class="fav__folder-ic" aria-hidden="true"></span>
+              {g.label}
+              <span class="fav__folder-ct">{g.items.length}</span>
+            </button>
+          ))}
+        </div>
+
+        <div class="fav__body">
+          <select class="fav__select" data-fav-select aria-label="Favorite category">
+            {groups.map((g, i) => (
+              <option value={g.key} selected={i === 0}>{g.label}</option>
+            ))}
+          </select>
+          <div class="fav__bar">
+            <span class="fav__path" data-fav-path>{`C:\\Favorites\\${groups[0].label}`}</span>
+          </div>
+          <div class="fav__content">
+            <div class="fav__grids">
+              {groups.map((g, i) => (
+                <div class="fav__grid" data-cat={g.key} hidden={i !== 0}>
+                  {g.items.map((it) =>
+                    it.kind === "paper" ? (
+                      <button
+                        class="fav__cover fav__cover--doc"
+                        type="button"
+                        data-id={it.id}
+                        data-kind={it.kind}
+                        data-title={it.title}
+                        data-detail={it.detail}
+                        data-note={it.note}
+                        data-link={it.link}
+                        style={tintVar(it.kind)}
+                        aria-label={it.title}
+                      >
+                        <span class="fav__cover-fold" aria-hidden="true"></span>
+                        <span class="fav__cover-t">{it.title}</span>
+                        <span class="fav__cover-ext">.pdf</span>
+                      </button>
+                    ) : (
+                      <button
+                        class="fav__cover"
+                        type="button"
+                        data-id={it.id}
+                        data-kind={it.kind}
+                        data-title={it.title}
+                        data-detail={it.detail}
+                        data-note={it.note}
+                        data-link={it.link}
+                        data-image={it.image}
+                        style={tintVar(it.kind)}
+                        aria-label={it.title}
+                      >
+                        {it.image && (
+                          <img
+                            class="fav__cover-img"
+                            src={it.image}
+                            alt={`Cover of ${it.title}`}
+                            loading="lazy"
+                          />
+                        )}
+                        <span class="fav__cover-t">{it.title}</span>
+                      </button>
+                    )
+                  )}
+                </div>
+              ))}
+            </div>
+            <div class="fav__detail" data-fav-detail hidden></div>
+          </div>
+        </div>
+      </div>
+    )}
+  </Window>
+  </div>
+
+</Layout>

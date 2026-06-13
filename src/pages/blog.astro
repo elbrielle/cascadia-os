@@ -1,0 +1,45 @@
+---
+import Layout from "../layouts/Layout.astro";
+import Window from "../components/Window.astro";
+import { getPosts, getTags, formatDate, makeTagSizer, SUBSTACK_FEED_URL } from "../lib/substack.js";
+
+const posts = await getPosts();
+const tags = await getTags();
+const tagSize = makeTagSizer(tags); // shared tag-cloud sizing (see substack.js)
+---
+
+<Layout title="Elisha Lucero — Blog" pageTitle="Blog" current="blog">
+
+  <div class="layout__cell blog__posts">
+  <Window id="posts" title="Posts" width={560}>
+    <a class="rss-corner" data-icon="rss" href={SUBSTACK_FEED_URL} target="_blank" rel="noopener" aria-label="Subscribe via RSS"></a>
+    <h2>All posts</h2>
+    <p style="font-size: var(--text-sm); color: var(--color-text-muted);">
+      Notes on the rabbit holes I fall through. Pulled from my Substack.
+    </p>
+    <ul class="panel-list">
+      {posts.map((post) => (
+        <li class="panel post">
+          <span class="post__date">{formatDate(post.date)}</span>
+          <a class="post__title" href={post.link} target="_blank" rel="noopener">{post.title}</a>
+          {post.excerpt && (
+            <p style="font-size: var(--text-sm); color: var(--color-text-muted);">{post.excerpt}</p>
+          )}
+          <a class="btn" href={post.link} target="_blank" rel="noopener">Read on Substack →</a>
+        </li>
+      ))}
+    </ul>
+  </Window>
+  </div>
+
+  <div class="layout__cell blog__tags">
+  <Window id="tags" title="Tags" width={360}>
+    <div class="tag-cloud">
+      {tags.map((t) => (
+        <a class="tag" href={`/blog/tagged/${t.slug}/`} style={`font-size: ${tagSize(t.count ?? 1)}px;`}>{t.name}</a>
+      ))}
+    </div>
+  </Window>
+  </div>
+
+</Layout>

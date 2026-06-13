@@ -1,0 +1,399 @@
+/* ============================================================================
+   desktop.css  —  the "OS shell": wallpaper, icons, page title, taskbar
+   ========================================================================== */
+
+body {
+  font-family: var(--font-body);
+  font-size: var(--text-base);
+  color: var(--color-text);
+  background-color: var(--color-desktop);
+  /* Wallpaper, sidebar, and taskbar are position:fixed; padding reserves
+     the regions inside body so the page title + <main> lay out in the
+     usable desktop area (right of sidebar, above taskbar). Flex column so
+     the title takes its natural row and <main> flexes into the remaining
+     space. <main> itself is a CSS Grid container with per-page named
+     cells (see layout.css) so windows stay in fixed slots even when one
+     is minimized. Mobile drops the per-page grid to a single column.       */
+  padding-left:   var(--sidebar-width);
+  padding-bottom: var(--taskbar-height);
+  display: flex;
+  flex-direction: column;
+}
+
+/* --- 0. WALLPAPER  ------------------------------------------------------- */
+/*  Inline SVG element with id="wallpaper", positioned-fixed behind all
+    content. Its colors come from --wp-* tokens, so theme switches re-paint
+    it automatically (no asset swap needed).                                */
+.wallpaper {
+  position: fixed;
+  inset: 0;
+  width: 100vw;
+  height: 100vh;
+  z-index: var(--z-wallpaper);
+  pointer-events: none;
+}
+
+/* --- 1. DESKTOP ICONS (left sidebar) ------------------------------------ */
+.desktop-icons {
+  position: fixed;
+  top: var(--space-3);
+  left: 0;
+  width: var(--sidebar-width);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-3);
+  z-index: var(--z-icons);
+  padding-top: var(--space-2);
+}
+
+.desktop-icon {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-1);
+  width: 88px;
+  padding: var(--space-1);
+  text-decoration: none;
+  color: var(--color-titlebar-text);
+  text-align: center;
+  cursor: pointer;
+  border: 2px solid transparent;
+  transition: transform var(--speed-fast) var(--ease);
+}
+
+.desktop-icon__img {
+  width: var(--icon-size);
+  height: var(--icon-size);
+  display: grid;
+  place-items: center;
+  image-rendering: pixelated;
+}
+.desktop-icon__img svg,
+.desktop-icon__img img {
+  width: 100%;
+  height: 100%;
+  image-rendering: pixelated;
+}
+
+.desktop-icon__label {
+  font-family: var(--font-display);
+  font-size: 10px;
+  letter-spacing: 0.5px;
+  background: rgba(0, 0, 0, 0.55);
+  color: #fff;
+  padding: 2px 6px;
+  text-shadow: 1px 1px 0 rgba(0, 0, 0, 0.6);
+  text-transform: uppercase;
+}
+
+.desktop-icon:hover .desktop-icon__label,
+.desktop-icon:focus-visible .desktop-icon__label,
+.desktop-icon.is-active .desktop-icon__label {
+  background: var(--color-accent);
+}
+.desktop-icon.is-active .desktop-icon__img {
+  outline: 2px dashed var(--color-accent);
+  outline-offset: 3px;
+}
+.desktop-icon:hover { transform: translate(-1px, -1px); }
+.desktop-icon:active { transform: translate(1px, 1px); }
+
+.desktop-icon:focus-visible {
+  border-style: dotted;
+  border-color: #fff;
+  outline: none;
+}
+
+/* --- Visitor hit counter — LCD style in the taskbar tray (Web 1.0 vibe).
+   Lives next to the clock; sized to the 30px tray-control height. --------- */
+.hit-counter {
+  height: 30px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 0 var(--space-2);
+  background: #000;
+  border: var(--window-border) solid var(--bevel-darker);
+  box-shadow:
+    inset  1px  1px 0 var(--bevel-darker),
+    inset -1px -1px 0 #222;
+}
+.hit-counter__label {
+  color: var(--color-warning);
+  font-family: var(--font-display);
+  font-size: 8px;
+  letter-spacing: 1px;
+  text-shadow: none;
+  text-transform: uppercase;
+}
+.hit-counter__digits {
+  font-family: var(--font-mono);
+  font-size: 15px;
+  line-height: 1;
+  color: var(--color-success);
+  text-shadow: 0 0 4px var(--color-success);
+  letter-spacing: 0.5px;
+  white-space: nowrap;
+}
+.hit-counter__digits.is-rolling {
+  color: var(--color-warning);
+  text-shadow: 0 0 4px var(--color-warning);
+}
+
+/* --- Systray — personal flair badges, a recessed well in the taskbar tray.
+   Static images (no JS): Pride = RD pixel art (pixelated); UBC = brand SVG
+   (smooth, like the site's other real brand assets). Sized to the 30px
+   tray-control height; on mobile it hides and relocates into the Start menu
+   (mobile.css + startmenu.css). ------------------------------------------- */
+.systray {
+  height: 30px;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 0 var(--space-2);
+  background: var(--color-surface-sunken);
+  border: var(--window-border) solid var(--bevel-darker);
+  box-shadow:
+    inset  1px  1px 0 var(--bevel-dark),
+    inset -1px -1px 0 var(--bevel-light);
+}
+.systray__badge {
+  height: 22px;
+  width: auto;
+  display: block;
+  image-rendering: auto; /* UBC crest = real brand asset, not pixel art */
+}
+.systray__badge--pixel {
+  image-rendering: pixelated; /* RD flag = pixel art, keep it crisp */
+  border: 1px solid var(--bevel-darker);
+}
+.systray__badge--crest {
+  /* Inlined crest: its navy strokes are `currentColor`, so the ink follows the
+     theme via --crest-ink (true navy on light, pale blue on dark); the gold sun
+     is baked in. No backing plate — it sits bare beside the flag at full size. */
+  width: auto;
+  height: 26px;
+  color: var(--crest-ink);
+}
+/* The systray UBC crest links to its program page (cogsys.ubc.ca). The wrapper
+   keeps the crest's size + centring; it only adds the interactive affordances. */
+.systray__badge-link {
+  display: inline-flex;
+  align-items: center;
+  cursor: pointer;
+}
+.systray__badge-link:hover { filter: brightness(1.12); }
+.systray__badge-link:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 1px;
+}
+/* The taskbar systray hides on mobile (mobile.css, ≤720px) along with the
+   visitor counter + clock — all three relocate into the Start-menu tray. */
+
+/* Off-screen holder for the inline SVG sprite (the UBC crest <symbol> in
+   Layout.astro) so the taskbar systray and the mobile Start-menu tray can both
+   reference it. Absolutely positioned at 0×0 so it never affects layout. */
+.svg-defs {
+  position: absolute;
+  width: 0;
+  height: 0;
+  overflow: hidden;
+}
+
+/* --- 2. THE GIANT PAGE TITLE -------------------------------------------- */
+/* In normal flow at the top of body — takes its natural vertical space, so
+   the windows-grid below starts cleanly beneath it. Lower z-index than the
+   windows so when a window is dragged upward it visually crosses over the
+   title (drag uses transform:translate, which ignores parent overflow).    */
+.page-title {
+  position: relative;
+  z-index: var(--z-stickers);
+  margin: var(--space-3) 0 var(--space-3) var(--space-4);
+  pointer-events: none;
+  font-family: var(--font-display-mega);
+  font-size: var(--text-huge);
+  line-height: 1;
+  color: var(--color-accent);
+  /* Pixel-art outline: 8 surrounding offsets in cream (inverse text color)
+     give a chunky cream stroke that reads on both the dusk light wallpaper
+     and the midnight dark wallpaper. The 6px dark drop completes the depth. */
+  text-shadow:
+    -3px -3px 0 var(--color-text-inverse),
+     0   -3px 0 var(--color-text-inverse),
+     3px -3px 0 var(--color-text-inverse),
+    -3px  0   0 var(--color-text-inverse),
+     3px  0   0 var(--color-text-inverse),
+    -3px  3px 0 var(--color-text-inverse),
+     0    3px 0 var(--color-text-inverse),
+     3px  3px 0 var(--color-text-inverse),
+     6px  6px 0 var(--bevel-darker);
+  transform: rotate(-1deg);
+  transform-origin: left top;
+  letter-spacing: -2px;
+  /* Smooth-ish entry whenever the title text changes via page swap. */
+  animation: title-pop var(--speed-page) var(--ease-soft);
+}
+@keyframes title-pop {
+  0%   { transform: rotate(-3deg) translateY(-8px); opacity: 0; }
+  60%  { transform: rotate( 0deg) translateY(0);    opacity: 1; }
+  100% { transform: rotate(-1deg) translateY(0);    opacity: 1; }
+}
+
+/* --- 3. TASKBAR  -------------------------------------------------------- */
+.taskbar {
+  position: fixed;
+  bottom: calc(var(--safe-area-bottom) - var(--safe-area-bottom-max));
+  left: 0;
+  right: 0;
+  height: var(--taskbar-height);
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+  padding: var(--space-1) var(--space-2) calc(var(--space-1) + var(--safe-area-bottom-max));
+  background: var(--color-surface);
+  border-top: var(--window-border) solid var(--bevel-light);
+  box-shadow:
+    inset  0  1px 0 var(--bevel-light),
+    inset  0 -1px 0 var(--bevel-dark);
+  z-index: var(--z-taskbar);
+  font-family: var(--font-display);
+}
+
+.taskbar__start {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  height: 30px;
+  padding: 0 var(--space-2);
+  background: var(--color-surface);
+  border: var(--window-border) solid var(--bevel-darker);
+  box-shadow:
+    inset  1px  1px 0 var(--bevel-light),
+    inset -1px -1px 0 var(--bevel-dark);
+  font-family: var(--font-display);
+  font-size: 10px;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: var(--color-text);
+}
+.taskbar__start:hover { background: var(--color-surface-hover); }
+.taskbar__start:active {
+  box-shadow:
+    inset -1px -1px 0 var(--bevel-light),
+    inset  1px  1px 0 var(--bevel-dark);
+}
+.taskbar__start-led {
+  width: 8px;
+  height: 8px;
+  background: var(--color-led);
+  border: 1px solid var(--bevel-darker);
+}
+
+.taskbar__items {
+  display: flex;
+  gap: var(--space-1);
+  flex: 1;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+.taskbar__items::-webkit-scrollbar { display: none; }
+
+.taskbar__item {
+  height: 30px;
+  padding: 0 var(--space-2);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--color-surface);
+  border: var(--window-border) solid var(--bevel-darker);
+  box-shadow:
+    inset  1px  1px 0 var(--bevel-light),
+    inset -1px -1px 0 var(--bevel-dark);
+  font-family: var(--font-display);
+  font-size: 10px;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  color: var(--color-text);
+  white-space: nowrap;
+  cursor: pointer;
+  min-width: 110px;
+}
+
+.taskbar__item:hover { background: var(--color-surface-hover); }
+
+.taskbar__item.is-active {
+  box-shadow:
+    inset -1px -1px 0 var(--bevel-light),
+    inset  1px  1px 0 var(--bevel-dark);
+  background: var(--color-surface-sunken);
+}
+.taskbar__item.is-active::before {
+  content: "";
+  width: 8px;
+  height: 8px;
+  background: var(--color-accent);
+  border: 1px solid var(--bevel-darker);
+  flex-shrink: 0;
+}
+
+.taskbar__item.is-minimized {
+  color: var(--color-text-muted);
+  font-style: italic;
+}
+
+/* The minimize "thunk" — windows.js adds .is-receiving at the exact frame
+   the window-close animation lands in the bar, so the button acknowledges
+   the window arriving in it. 0% and 100% share one authentic pressed frame
+   (the .is-active inset values): the press HOLDS for the full beat and
+   releases as a hard cut when the animation ends. Deliberately not a
+   pressed→raised tween — interpolated box-shadows render as blended
+   in-between bevels, the exact smear the steps() pixel vocabulary exists to
+   avoid. With both keyframes identical the timing function is inert;
+   steps(1, end) just says so honestly. Reduced motion: --speed-fast is
+   squashed to 0.01ms globally, which collapses the press to nothing. */
+@keyframes taskbar-thunk {
+  0%, 100% {
+    box-shadow:
+      inset -1px -1px 0 var(--bevel-light),
+      inset  1px  1px 0 var(--bevel-dark);
+    background: var(--color-surface-sunken);
+  }
+}
+.taskbar__item.is-receiving {
+  animation: taskbar-thunk var(--speed-fast) steps(1, end);
+}
+
+.taskbar__clock {
+  height: 30px;
+  padding: 0 var(--space-2);
+  display: flex;
+  align-items: center;
+  background: #000;
+  color: var(--color-success);
+  border: var(--window-border) solid var(--bevel-darker);
+  box-shadow:
+    inset  1px  1px 0 var(--bevel-darker),
+    inset -1px -1px 0 #222;
+  font-family: var(--font-mono);
+  font-size: 16px;
+  letter-spacing: 1px;
+  text-shadow: 0 0 4px var(--color-success);
+}
+
+/* --- 4. FILE-PATH CRUMB — tiny mono text in the bottom-right corner.    */
+.crumb {
+  position: fixed;
+  right: var(--space-3);
+  bottom: calc(var(--taskbar-height) + var(--space-2));
+  z-index: var(--z-stickers);
+  font-family: var(--font-mono);
+  font-size: 14px;
+  letter-spacing: 1px;
+  color: var(--color-titlebar-text);
+  background: rgba(0, 0, 0, 0.6);
+  padding: 2px 8px;
+  pointer-events: none;
+  text-shadow: 1px 1px 0 rgba(0,0,0,0.8);
+}
+.crumb::before { content: "▸ "; color: var(--color-accent); }

@@ -1,0 +1,260 @@
+/* ============================================================================
+   mobile.css  —  responsive layer for ≤720px viewports
+   ----------------------------------------------------------------------------
+   At small sizes the OS-window metaphor breaks (no drag affordance, windows
+   would clip), so we shift to a stacked layout: sidebar narrows, windows go
+   static and stack full-width, taskbar items scroll horizontally, draggable
+   chrome is hidden. The visual language (bevels, title bars, pixel fonts) is
+   preserved so it still reads as the same OS.
+   ========================================================================== */
+
+@media (max-width: 720px) {
+  :root {
+    --sidebar-width: 76px;
+    --taskbar-core-height: 40px;
+    --titlebar-height: 26px;
+  }
+
+  /* Release the desktop's viewport lock so the page can flow vertically
+     and the user can scroll past stacked windows naturally.                */
+  html, body {
+    height: auto;
+    overflow: visible;
+    overscroll-behavior: auto;
+  }
+
+  body {
+    padding-left: var(--sidebar-width);
+    padding-right: var(--space-2);
+    min-height: 100dvh;
+  }
+  /* Stack windows vertically (single column) on narrow viewports. The
+     parent grid defaults to `grid-template-columns: 1fr` (single column),
+     and the per-page templates in layout.css only kick in above a desktop
+     breakpoint — so mobile naturally stacks. height auto here just lets
+     the grid grow with content.                                             */
+  main[data-pages] {
+    height: auto;
+    min-height: auto;
+  }
+
+  /* --- Sidebar shrinks --- */
+  .desktop-icons {
+    top: var(--space-1);
+    gap: var(--space-2);
+  }
+  .desktop-icon {
+    width: 70px;
+    gap: 2px;
+  }
+  .desktop-icon__img { width: 38px; height: 38px; }
+  .desktop-icon__label { font-size: 9px; }
+
+  /* The taskbar tray widgets — badges, visitor counter, clock — don't fit the
+     cramped mobile taskbar, so hide all three here; they relocate into the
+     Start menu (see .start-menu__tray in startmenu.css). The clock is hidden
+     just below with the other desktop-only chrome. */
+  .hit-counter,
+  .systray { display: none; }
+
+  /* --- Page title scales --- */
+  .page-title {
+    margin: var(--space-2) 0 var(--space-2) var(--space-3);
+    font-size: clamp(2.5rem, 14vw, 4.5rem);
+    letter-spacing: -1px;
+  }
+
+  /* --- Hide desktop-only chrome --- */
+  .crumb,
+  .taskbar__clock,
+  .taskbar__start span:not(.taskbar__start-led) {
+    display: none;
+  }
+  .taskbar__start {
+    padding: 0 6px;
+  }
+
+  /* --- WINDOWS go static-stacked, full-width --- */
+  main[data-pages] {
+    /* Inherits display:grid from Layout.astro; just force a single-column
+       template (in case any per-page rule in layout.css would apply at
+       this breakpoint) and tighten the padding for narrow viewports.       */
+    grid-template-columns: 1fr;
+    gap: var(--space-3);
+    padding: 0 var(--space-2) var(--space-3);
+  }
+  .layout__cell {
+    /* Make sure cells use the full mobile width and don't try to align to
+       a desktop column. Also clears any flex constraints when desktop CSS
+       isn't in scope.                                                       */
+    width: 100%;
+    min-width: 0;
+  }
+  .window {
+    position: relative;
+    width: 100% !important;
+    max-width: 100% !important;
+    min-width: 0;
+    max-height: none !important;
+    /* Mobile: clear any drag delta the user may have set on a wider window;
+       the layout is fully CSS-driven here.                                  */
+    transform: none !important;
+    /* Keep .window off a containing-block hint so the attention.log bottom
+       sheet (.attn__detail, position:fixed) pins to the VIEWPORT, not the
+       window. The desktop drag hint now lives on .window.is-dragging (never
+       applied on mobile — drag is disabled), so this is defensive rather than
+       load-bearing: it guards the sheet against any future will-change here. */
+    will-change: auto;
+    /* Stops the window-pop animation translateY from breaking flow. */
+    animation: window-pop-mobile var(--speed) var(--ease-soft);
+  }
+  @keyframes window-pop-mobile {
+    0%   { opacity: 0; transform: scale(0.95); }
+    100% { opacity: 1; transform: scale(1); }
+  }
+  .window__body {
+    width: auto !important;
+    max-width: 100%;
+    /* Stacked windows flow with the page on mobile; no internal scroll. */
+    flex: 0 0 auto;
+    min-height: 0;
+    overflow-y: visible;
+    overflow-x: hidden;
+    overscroll-behavior: auto;
+  }
+  .window.is-maximized {
+    height: auto;
+  }
+
+  /* Drag handles and maximize affordances don't make sense on touch — hide
+     the maximize button; keep minimize so users can collapse anything they
+     don't want to scroll past. */
+  .window__btn[data-action="maximize"] { display: none; }
+  .window__titlebar { cursor: default; }
+
+  /* The surviving minimize button is a 26×22px visual in a 26px titlebar —
+     far under the ~44px touch guideline, in the hardest-to-reach corner.
+     Widen the window.css hit-area pseudo to 48×44px; the visible bevel and
+     the titlebar rhythm don't change. (Maximize is display:none here, so
+     there's no neighbor to overlap.) -13px = 11px true overhang past the
+     2px border (insets anchor to the padding box — see window.css). */
+  .window__btn::before {
+    inset: -13px;
+  }
+  /* The overhang reaches past the 26px titlebar into .window__body, which is
+     position:relative and later in tree order — without a lift it wins the
+     hit-test and claws back the bottom ~half of the target. The overhang ends
+     5px into the body box, whose 24px top padding (window.css) keeps anything
+     interactive well clear (nearest is the .rss-corner link, 3px below). */
+  .window__btn { z-index: 1; }
+
+  /* The Intro avatar shouldn't squeeze the text. */
+  .intro-grid {
+    grid-template-columns: 1fr;
+    text-align: center;
+  }
+  .intro-grid > div { text-align: left; }
+  .avatar { margin: 0 auto; }
+
+  /* --- attention.log detail → bottom sheet ------------------------------- */
+  /*  On desktop the detail is a sticky bar pinned inside the window. On a phone
+      that bar sat at the end of a long section, so a tap auto-scrolled the page
+      down to it — easy to miss and jarring. Here the SAME element becomes a
+      sheet fixed to the viewport bottom that slides up on tap, over a backdrop;
+      attention-grid.js toggles .is-open + the backdrop's [hidden]. (.window
+      clears will-change above so this fixed element pins to the viewport.) */
+  .attn__detail {
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: calc(var(--taskbar-core-height) + var(--safe-area-bottom));
+    margin: 0;
+    z-index: var(--z-tweaks);
+    transform: translateY(calc(100% + var(--taskbar-core-height) + var(--safe-area-bottom-max)));
+    visibility: hidden;
+    pointer-events: none;
+    transition:
+      transform var(--speed) var(--ease-soft),
+      visibility 0s linear var(--speed);
+    border-top: 3px solid var(--bevel-darker);
+    box-shadow: 0 -6px 0 rgba(0, 0, 0, 0.4);
+    max-height: 72vh;
+    max-height: min(72svh, calc(100dvh - var(--taskbar-core-height) - var(--safe-area-bottom) - var(--space-4)));
+    overflow-y: auto;
+    padding-right: 46px;          /* clearance for the close button */
+  }
+  .attn__detail.is-open {
+    transform: translateY(0);
+    visibility: visible;
+    pointer-events: auto;
+    transition:
+      transform var(--speed) var(--ease-soft),
+      visibility 0s linear 0s;
+  }
+  .attn__detail-close {
+    display: grid;
+    place-items: center;
+    position: absolute;
+    top: var(--space-2);
+    right: var(--space-2);
+    width: 30px;
+    height: 28px;
+    padding: 0;
+    background: var(--color-surface);
+    color: var(--color-text);
+    border: 2px solid var(--bevel-darker);
+    box-shadow:
+      inset  1px  1px 0 var(--bevel-light),
+      inset -1px -1px 0 var(--bevel-dark);
+    font-family: var(--font-display);
+    font-size: 15px;
+    line-height: 1;
+  }
+  .attn__detail-close:active {
+    box-shadow:
+      inset -1px -1px 0 var(--bevel-light),
+      inset  1px  1px 0 var(--bevel-dark);
+  }
+  .attn__backdrop {
+    display: block;
+    position: fixed;
+    inset: 0 0 calc(var(--taskbar-core-height) + var(--safe-area-bottom)) 0;
+    z-index: calc(var(--z-tweaks) - 1);
+    background: rgba(5, 13, 24, 0.5);
+  }
+  .attn__backdrop[hidden] { display: none; }
+
+  /* --- Taskbar items wrap to horizontal scroll --- */
+  .taskbar { padding: 0 var(--space-1); gap: 2px; }
+  .taskbar__items {
+    gap: 2px;
+    -webkit-overflow-scrolling: touch;
+  }
+  .taskbar__item { min-width: 80px; font-size: 9px; padding: 0 6px; }
+
+  /* --- Touch heights where mobile nav actually happens ---
+     The taskbar is the window switcher and the Start menu is the only path
+     to Settings + the relocated systray, but desktop.css sizes their rows
+     30–38px. Grow the hit boxes toward the 44px guideline: taskbar buttons
+     to 36px, Start-menu rows to a full 44px. NOTE: 36px deliberately
+     overflows the taskbar's 29px flex content box (40px core − 3px border-top
+     − 4px+4px padding) — the centered buttons eat the padding and clear the
+     top bevel by ~0.5px, verified visually. Re-check if the taskbar's
+     border/padding ever change. Labels stay their size; flex centering keeps
+     content aligned. */
+  .taskbar__item,
+  .taskbar__start { height: 36px; }
+  .start-menu__item { min-height: 44px; }
+
+  /* --- Form fields wider for touch --- */
+  .form-grid input, .form-grid textarea { font-size: 16px; /* prevents iOS zoom */ }
+}
+
+/* --- Very small (phone portrait) --- */
+@media (max-width: 420px) {
+  :root { --sidebar-width: 64px; }
+  .desktop-icon { width: 60px; }
+  .desktop-icon__img { width: 32px; height: 32px; }
+  .desktop-icon__label { font-size: 8px; letter-spacing: 0.5px; }
+  .page-title { font-size: clamp(2rem, 16vw, 3.5rem); }
+}

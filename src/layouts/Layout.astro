@@ -1,0 +1,394 @@
+---
+// ============================================================================
+//  Layout.astro  —  the Cascadia OS shell (wallpaper, icons, taskbar, scripts)
+// ----------------------------------------------------------------------------
+//  Props:
+//    title     — browser tab text
+//    pageTitle — the giant on-screen heading (the "Home"/"About" word)
+//    current   — which nav id is active (home/about/work/blog/contact)
+//  Real Astro routes + <ClientRouter /> view transitions handle navigation;
+//  the inline scripts at the end of <body> self-register an `astro:page-load`
+//  listener so they run on the initial load AND after every view-transition
+//  swap (see each script for details).
+// ============================================================================
+import { ClientRouter } from "astro:transitions";
+import "../styles/tokens.css";
+import "../styles/fonts.css";
+import "../styles/reset.css";
+import "../styles/wallpaper.css";
+import "../styles/desktop.css";
+import "../styles/window.css";
+import "../styles/layout.css";
+import "../styles/components.css";
+import "../styles/favorites.css";
+import "../styles/tweaks.css";
+import "../styles/dialog.css";
+import "../styles/startmenu.css";
+import "../styles/boot.css";
+import "../styles/cursor.css";
+import "../styles/mobile.css";
+import { BUILD_SHA, BUILD_DATE } from "../lib/build-info.js";
+import { SUBSTACK_FEED_URL } from "../lib/substack.js";
+
+const {
+  title = "Elisha Lucero — Cascadia OS",
+  pageTitle = "",
+  current = "",
+  description = "Elisha Lucero is a tech educator, curriculum designer, and technical builder creating classroom tools, curriculum, and opinion essays.",
+} = Astro.props;
+
+// Absolute URLs for social cards (og:/twitter:) — Astro.site is the configured
+// production domain, so these resolve correctly even when shared off-domain.
+// ?v=N busts the social-scraper cache (LinkedIn/Slack/X/FB key OG images by URL
+// and cache them hard) — bump it whenever og-image.png is re-baked.
+const ogImage = new URL("/images/og-image.png?v=3", Astro.site).href;
+const canonical = new URL(Astro.url.pathname, Astro.site).href;
+
+const nav = [
+  { id: "home", label: "Home", href: "/", icon: "home" },
+  { id: "about", label: "About", href: "/about/", icon: "about" },
+  { id: "work", label: "Work", href: "/work/", icon: "work" },
+  { id: "blog", label: "Blog", href: "/blog/", icon: "blog" },
+  { id: "contact", label: "Contact", href: "/contact/", icon: "contact" },
+];
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="description" content={description} />
+
+    <!-- LCP preloads — both assets are CSS-discovered (background-image /
+         @font-face) so without these the browser can't start fetching them
+         until the stylesheet is parsed. These sit ABOVE the bundled-CSS link
+         Astro appends to <head>. The wallpaper pair is media-conditioned so
+         each visitor PRELOADS exactly one layer — the OS-matching layer starts
+         early at high priority; wallpaper.css still paints both for its
+         cross-fade, the other at normal priority, same as today. crossorigin
+         on the font is required even same-origin or it's fetched twice. -->
+    <link rel="preload" as="image" href="/wallpaper/wallpaper-day.webp" fetchpriority="high" media="(prefers-color-scheme: light)" />
+    <link rel="preload" as="image" href="/wallpaper/wallpaper-night.webp" fetchpriority="high" media="(prefers-color-scheme: dark)" />
+    <link rel="preload" as="font" type="font/woff2" href="/fonts/sysfont.woff2" crossorigin />
+
+    <link rel="icon" type="image/x-icon" href="/images/favicon.ico" sizes="any" />
+    <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32.png" />
+    <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16.png" />
+    <link rel="apple-touch-icon" href="/images/apple-touch-icon.png" />
+    <link rel="canonical" href={canonical} />
+    <!-- Feed-reader auto-discovery for the Substack blog feed (the visible RSS
+         icon on /blog/ is the human path; this is the machine path). -->
+    <link rel="alternate" type="application/rss+xml" title="Elisha Lucero — Blog" href={SUBSTACK_FEED_URL} />
+
+    <!-- Open Graph / Twitter cards — the avatar banner that link unfurlers
+         (LinkedIn, Slack, iMessage, X, Facebook) pull in. og-image.png is a
+         1200×630 Cascadia-OS card baked under public/images/. -->
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="Elisha Lucero" />
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+    <meta property="og:url" content={canonical} />
+    <meta property="og:image" content={ogImage} />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content="Elisha Lucero — tech educator, curriculum designer, and technical builder" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content={title} />
+    <meta name="twitter:description" content={description} />
+    <meta name="twitter:image" content={ogImage} />
+    <title>{title}</title>
+    <!-- Astro view transitions: intercepts same-origin link clicks and swaps
+         the DOM with the browser View Transitions API, so navigating between
+         /blog/ and /blog/tagged/<slug>/ cross-fades instead of hard-reloading.
+         Re-runs the inline scripts via the astro:page-load event. -->
+    <ClientRouter />
+  </head>
+  <body data-build={BUILD_SHA} data-build-date={BUILD_DATE}>
+    <style is:global>
+      /* <main> is a CSS Grid with per-page named cells (.layout__cell). Each
+         window lives inside its own cell, and the cell — not the window —
+         holds the layout slot. That way, hiding a window via display:none
+         on minimize doesn't reflow neighbors: the grid keeps the cells in
+         place. Drag transforms still apply to the window inside the cell,
+         so windows remain freely draggable on top of their grid position.
+         Per-page grid templates are defined in layout.css inside a desktop
+         media query; below that breakpoint the grid collapses to a single
+         column and cells stack naturally. */
+      main[data-pages] {
+        position: relative;
+        flex: 1 1 auto;
+        min-height: 0;
+        display: grid;
+        gap: var(--space-4) var(--space-3);
+        padding: 0 var(--space-3) var(--space-3) var(--space-3);
+        align-content: start;
+        align-items: start;
+        grid-template-columns: 1fr;
+      }
+    </style>
+
+    <!-- BOOT SPLASH — shown once per session, then fades to the desktop.
+         Visible by default so the desktop never flashes behind it; a pure-CSS
+         `boot-out` animation dismisses it even with JS off. boot.js adds the
+         session gate + skip-on-input. transition:persist keeps the (already
+         dismissed) node from replaying as you navigate. See boot.css. -->
+    <div class="boot-splash" data-boot aria-hidden="true" transition:persist>
+      <pre class="boot-splash__log" aria-hidden="true">&gt; CASCADIA BIOS v95 · Ocean Breeze build
+&gt; POST ............................. OK
+&gt; CPU  : Salish 686 @ 95 MHz ....... OK
+&gt; RAM  : 65,536 KB ................. OK
+&gt; video: detecting adapter ........ VESA
+&gt; mount /dev/cedar ................ OK
+&gt; mount /vol/puget-sound .......... OK
+&gt; net  : inlet uplink ............. OK
+&gt; init window manager ............. OK
+&gt; spawn taskbar ................... OK
+&gt; restore desktop icons ........... OK
+&gt; Cascadia OS ready.</pre>
+      <div class="boot-splash__inner">
+        <div class="boot-splash__logo">Cascadia <span>OS</span></div>
+        <div class="boot-splash__tag">Ocean Breeze build · v95</div>
+        <div class="boot-splash__bar"><div class="boot-splash__bar-fill"></div></div>
+        <div class="boot-splash__hint">Starting up</div>
+      </div>
+    </div>
+
+    <!-- WALLPAPER — two stacked image layers (day + night) cross-fade via
+         opacity in wallpaper.css when the theme toggles. Both layers are
+         always in the DOM so the browser can transition between them.
+         transition:persist keeps the layer divs (and their loaded images)
+         alive across view-transition page swaps — no re-decode on nav.   -->
+    <div class="wallpaper" aria-hidden="true" transition:persist>
+      <div class="wallpaper__layer wallpaper__layer--day"></div>
+      <div class="wallpaper__layer wallpaper__layer--night"></div>
+    </div>
+
+    <!-- DESKTOP ICONS (left sidebar nav) — persisted shell. The `is-active`
+         class on the current item is updated by the small inline script at
+         the end of the body whenever a navigation finishes, so the highlight
+         follows the URL even though the nav element itself never re-renders. -->
+    <nav class="desktop-icons" aria-label="Desktop" transition:persist data-current={current}>
+      {nav.map((item) => (
+        <a
+          class:list={["desktop-icon", current === item.id && "is-active"]}
+          data-nav-id={item.id}
+          href={item.href}
+          aria-current={current === item.id ? "page" : undefined}
+        >
+          <span class="desktop-icon__img" data-icon={item.icon} aria-hidden="true"></span>
+          <span class="desktop-icon__label">{item.label}</span>
+        </a>
+      ))}
+    </nav>
+
+    <!-- File-path crumb (bottom-right flavour) — persisted shell. -->
+    <span class="crumb" transition:persist>/home/elisha/cascadia</span>
+
+    {pageTitle && <h1 class="page-title" transition:name="page-title">{pageTitle}</h1>}
+
+    <main class:list={["layout__grid", current && `page-${current}`]} data-pages>
+      <slot />
+    </main>
+
+    <!-- TASKBAR — persisted shell. Theme toggle + clock + hit counter all
+         live here, and their JS bindings need to survive page navigations. -->
+    <footer class="taskbar" role="navigation" aria-label="Taskbar" transition:persist>
+      <button
+        class="taskbar__start"
+        id="start-button"
+        type="button"
+        aria-haspopup="true"
+        aria-expanded="false"
+        aria-controls="start-menu"
+        aria-label="Cascadia OS menu"
+      >
+        <span class="taskbar__start-led" aria-hidden="true"></span>
+        <span>Cascadia&nbsp;OS</span>
+      </button>
+
+      <!-- START MENU popup. Behaviour + a11y live in startmenu.js. Settings is
+           a Win95-style cascading submenu (flyout) holding the Theme + Font
+           controls; tweaks.js binds those segmented controls + owns the state. -->
+      <div class="start-menu" id="start-menu" role="menu" aria-label="Start menu" hidden>
+        <div class="start-menu__banner" aria-hidden="true">Cascadia<span> OS</span></div>
+        <ul class="start-menu__list">
+          <li class="start-menu__sub" role="none">
+            <button
+              class="start-menu__item start-menu__item--parent"
+              id="start-settings"
+              role="menuitem"
+              type="button"
+              aria-haspopup="true"
+              aria-expanded="false"
+              aria-controls="settings-submenu"
+            >
+              <span class="start-menu__icon" data-icon="settings" aria-hidden="true"></span>
+              <span>Settings</span>
+              <span class="start-menu__arrow" aria-hidden="true">▸</span>
+            </button>
+            <div class="start-menu__submenu" id="settings-submenu" role="group" aria-label="Settings" hidden>
+              <div class="tweaks-group">
+                <h3>Theme</h3>
+                <div class="tweaks-radio" data-tweak-group="theme">
+                  <button type="button" data-tweak-value="system">System</button>
+                  <button type="button" data-tweak-value="light">Light</button>
+                  <button type="button" data-tweak-value="dark">Dark</button>
+                </div>
+              </div>
+              <div class="tweaks-group">
+                <h3>Font rendering</h3>
+                <div class="tweaks-radio" data-tweak-group="smoothing">
+                  <button type="button" data-tweak-value="pixel">Pixel</button>
+                  <button type="button" data-tweak-value="smooth">Anti-aliased</button>
+                </div>
+              </div>
+            </div>
+          </li>
+          <li role="none">
+            <button class="start-menu__item" role="menuitem" type="button" data-start-about>
+              <span class="start-menu__icon" data-icon="info" aria-hidden="true"></span>
+              <span>About Cascadia OS</span>
+            </button>
+          </li>
+          <li class="start-menu__sep" role="separator"></li>
+          <li role="none">
+            <button class="start-menu__item" role="menuitem" type="button" data-start-shutdown>
+              <span class="start-menu__icon" data-icon="power" aria-hidden="true"></span>
+              <span>Shut Down…</span>
+            </button>
+          </li>
+
+          <!-- Mobile-only system tray. On a phone the taskbar hides the badges,
+               the visitor counter, and the clock to stay minimal, so they
+               relocate here as a labeled status strip (desktop hides this whole
+               block via CSS). The crest is <use>d from the sprite in the
+               taskbar; the counter + clock reuse the [data-hits]/[data-clock]
+               hooks, and system.js updates every copy so they stay in sync. -->
+          <li class="start-menu__sep start-menu__sep--tray" role="separator"></li>
+          <li class="start-menu__tray" role="none">
+            <div class="start-menu__tray-row">
+              <span class="start-menu__tray-badge">
+                <img class="systray__badge systray__badge--pixel" src="/images/badges/pride.png" width="37" height="22" alt="" />
+              </span>
+              <span class="start-menu__tray-name start-menu__tray-name--pride">Love is Love</span>
+            </div>
+            <a
+              class="start-menu__tray-row start-menu__tray-row--link"
+              href="https://cogsys.ubc.ca/"
+              target="_blank" rel="noopener"
+              title="UBC · Cognitive Systems — cogsys.ubc.ca"
+              aria-label="UBC Cognitive Systems"
+            >
+              <span class="start-menu__tray-badge">
+                <svg class="systray__badge systray__badge--crest" viewBox="0 0 192.756 192.756" aria-hidden="true" focusable="false"><use href="#ubc-crest" /></svg>
+              </span>
+              <span class="start-menu__tray-name">UBC · Cognitive Systems</span>
+            </a>
+            <div class="start-menu__tray-status">
+              <span class="start-menu__lcd">
+                <span class="start-menu__lcd-label">Visitors</span>
+                <span class="hit-counter__digits" data-hits>0000000</span>
+              </span>
+              <span class="start-menu__lcd">
+                <span class="start-menu__lcd-label">Clock</span>
+                <span class="start-menu__lcd-time" data-clock>--:--</span>
+              </span>
+            </div>
+          </li>
+        </ul>
+      </div>
+
+      <div class="taskbar__items" data-taskbar-items></div>
+
+      <!-- SVG sprite — the UBC crest defined ONCE here, then referenced via
+           <use> by both the taskbar systray and the mobile Start-menu tray, so
+           the path data isn't duplicated. It lives in the persisted footer so
+           the reference survives page swaps; currentColor flows through <use>,
+           so the --crest-ink theming works wherever the crest is used. No inline
+           script tags, so the CSP hash list stays at two. -->
+      <svg class="svg-defs" aria-hidden="true" focusable="false" width="0" height="0">
+        <symbol id="ubc-crest" viewBox="0 0 192.756 192.756">
+          <g fill-rule="evenodd" clip-rule="evenodd"><path fill="#fff" fill-opacity="0" d="M0 0h192.756v192.756H0V0z"/><path d="M145.656 26.548l-1.326 4.861h-.441c-1.326-1.326-2.693-2.544-3.977-3.094-1.818-.777-3.094-1.326-4.863-1.326-3.535 0-6.188 1.326-8.838 4.419-2.652 3.094-3.979 6.63-3.979 10.607s1.189 7.176 3.535 10.165c2.518 3.203 5.746 4.861 9.281 4.861 1.77 0 3.045-.548 4.863-1.326 1.283-.55 2.65-1.326 4.418-2.21h.885l-.885 4.42c-1.768.884-3.549 1.106-5.303 1.326-1.809.225-3.535.442-5.746.442-4.861 0-8.852-.868-12.375-3.094-4.871-3.076-7.07-7.955-7.07-14.584 0-5.304 2.1-9.853 6.188-13.259 3.869-3.226 8.838-4.862 14.584-4.862 1.768 0 3.535 0 5.305.442 1.768.444 3.535 1.329 5.744 2.212zM78.921 46.878c0 3.534-1.224 6.739-3.978 9.281-2.993 2.763-6.629 3.978-11.049 3.978-3.978 0-7.514-.884-11.049-2.651-3.536-1.768-5.304-3.978-5.304-7.072V24.338h7.955v23.424c0 2.65.755 4.526 2.21 6.188 1.646 1.881 3.536 2.652 6.188 2.652h.884c2.21 0 4.595-.628 6.629-2.209 1.973-1.535 3.094-3.536 3.094-5.746V24.338h4.42v22.54zM47.542 75.164c7.071 0 7.955-3.535 16.353-3.535s9.723 3.535 16.353 3.535c7.071 0 7.955-3.535 16.353-3.535 8.397 0 9.723 3.535 16.352 3.535 6.631 0 7.955-3.535 16.354-3.535 8.396 0 9.281 3.535 16.352 3.535v-7.955c-7.07 0-7.955-3.535-16.352-3.535-8.398 0-9.723 3.535-16.354 3.535-6.629 0-7.955-3.535-16.352-3.535s-9.281 3.535-16.353 3.535c-6.629 0-7.955-3.535-16.353-3.535s-9.281 3.535-16.353 3.535v7.955z" fill="currentColor"/><path d="M96.599 165.766c30.938-9.723 38.45-26.959 48.616-48.615l-22.541 16.354 12.818-28.729-20.773 22.982 9.725-35.357-16.354 29.17 4.42-36.683-12.375 32.705-3.536-41.103-3.978 41.102-12.374-32.705 4.861 36.683L68.313 92.4l10.165 35.357-21.214-22.982 12.817 28.729-22.098-16.354c10.165 21.657 17.237 38.893 48.616 48.616z" fill="#d2b22c"/><path d="M47.542 101.24c7.071 0 7.955-3.094 16.353-3.094h3.978l-2.21-7.956h-1.768c-8.397 0-9.281 3.535-16.353 3.094v7.956zm27.843-.885c1.326.441 3.094.885 4.862.885h.442l-1.326-7.956c-3.978 0-6.188-1.326-9.723-2.652l5.745 9.723zm12.817-.882c1.326-.443 2.652-.885 4.42-1.326l.442-7.956c-3.094.884-5.304 1.768-7.513 2.651l2.651 6.631zm12.374-1.327c1.77.441 3.094.883 4.42 1.326l2.652-7.072c-2.652-.442-4.42-1.768-7.955-2.209l.883 7.955zm11.934 3.094h.441c1.768 0 3.537 0 4.861-.443l5.305-9.722c-3.535.884-5.305 2.21-9.723 2.21l-.884 7.955zm12.375-3.094h4.42c8.396 0 9.281 3.094 16.352 3.094v-7.956c-7.07 0-7.955-3.094-16.352-3.094h-1.768l-2.652 7.956zM47.542 87.981c7.071 0 7.955-3.094 16.353-3.094 7.955 0 9.281 2.651 15.027 3.094l-.884-7.955c-4.861-.442-6.629-3.094-14.143-3.094-8.397 0-9.281 3.535-16.353 3.535v7.514zm36.24 0c3.536-.884 5.304-2.652 9.723-3.094l.884-7.955c-6.188.884-7.955 3.094-13.259 3.535l2.652 7.514zm15.47-3.094c4.861.442 6.629 2.21 10.164 3.094l2.652-7.514c-5.305-.441-7.072-3.094-13.701-3.535l.885 7.955zm15.025 3.094c5.746 0 7.072-3.094 15.027-3.094 8.396 0 9.281 3.094 16.352 3.094v-7.955c-7.07 0-7.955-3.094-16.352-3.094-7.514 0-9.281 2.651-14.143 3.094l-.884 7.955z" fill="currentColor"/><path d="M96.599 178.582c11.932-3.535 24.307-8.396 34.473-16.793 7.07-5.746 13.258-12.818 17.236-20.773 6.188-11.49 8.396-23.865 8.396-37.125V14.173H36.05v89.717c.442 13.26 2.21 25.635 8.397 37.125 3.978 7.955 10.165 15.027 17.236 20.773 10.166 8.398 22.541 13.259 34.916 16.794zM38.703 16.825v87.065c0 36.242 20.33 61.875 57.896 72.041 37.125-10.166 57.897-35.799 57.897-72.041V16.825H38.703z" fill="currentColor"/><path d="M95.715 42.459h-4.42v14.143h3.978c4.031 0 6.629-2.777 6.629-7.071 0-3.476-2.955-7.072-6.187-7.072zm.884 16.794H83.782V24.78h16.794c2.652 0 5.305.884 7.072 2.21 1.768 1.768 3.094 3.536 3.094 5.746 0 1.768-1.326 3.536-3.094 4.861-2.209 1.768-4.42 2.652-7.072 3.094v.442c3.094 0 5.746.442 7.955 2.209 1.77 1.326 3.094 3.094 3.094 5.746s-1.324 5.304-3.535 7.071c-2.209 2.21-5.303 3.094-8.838 3.094h-2.653zm-2.21-31.821h-3.094v12.375h3.978c3.291 0 6.188-2.809 6.188-6.629 0-3.822-3.955-5.746-7.072-5.746z" fill="currentColor"/></g>
+        </symbol>
+      </svg>
+
+      <!-- SYSTRAY — personal flair badges, hidden on the cramped mobile taskbar
+           (they relocate into the Start menu there; see .start-menu__tray). Pride
+           = RD pixel-art PNG (pixelated); UBC = the crest <use>d from the sprite
+           above, so its navy ink follows the theme via --crest-ink and the gold
+           sun stays constant. Native <title> tooltip on hover. No inline script
+           tags, so the CSP hash list stays at two. -->
+      <div class="systray" aria-label="Badges">
+        <img
+          class="systray__badge systray__badge--pixel"
+          src="/images/badges/pride.png"
+          width="37" height="22"
+          alt="Progress Pride flag" title="Love is Love"
+        />
+        <a
+          class="systray__badge-link"
+          href="https://cogsys.ubc.ca/"
+          target="_blank" rel="noopener"
+          title="UBC · Cognitive Systems"
+          aria-label="UBC Cognitive Systems"
+        >
+          <svg class="systray__badge systray__badge--crest" viewBox="0 0 192.756 192.756" aria-hidden="true" focusable="false">
+            <use href="#ubc-crest" />
+          </svg>
+        </a>
+      </div>
+
+      <div class="hit-counter" aria-label="Visitor counter">
+        <span class="hit-counter__label">Visitors</span>
+        <span class="hit-counter__digits" data-hits>0000000</span>
+      </div>
+      <div class="taskbar__clock" data-clock aria-label="Clock">--:--</div>
+    </footer>
+
+    <!-- SCRIPTS (served from public/). Each one self-registers an
+         `astro:page-load` listener internally — that event fires both on
+         the initial document load AND after every view-transition swap, so
+         the scripts don't need `data-astro-rerun` (which would stack up
+         duplicate listeners on each re-run). The shell scripts (tweaks,
+         system) bind to persisted elements; the content-area scripts
+         (icons, windows) re-mount on every page-load to attach handlers
+         to the freshly-rendered <main>.                                     -->
+    <script is:inline src="/scripts/icons.js"></script>
+    <script is:inline src="/scripts/tweaks.js"></script>
+    <script is:inline src="/scripts/system.js"></script>
+    <script is:inline src="/scripts/windows.js"></script>
+    <script is:inline src="/scripts/startmenu.js"></script>
+    <script is:inline src="/scripts/context-menu.js"></script>
+    <script is:inline src="/scripts/boot.js"></script>
+    <script is:inline src="/scripts/explorer.js"></script>
+    <script is:inline src="/scripts/favorites-explorer.js"></script>
+    <script is:inline src="/scripts/attention-grid.js"></script>
+
+    <!-- Sidebar nav active-state sync. Since .desktop-icons is persisted,
+         its `is-active` class doesn't change naturally on nav — this updates
+         it from the freshly-swapped <main>'s current-page hint.            -->
+    <script is:inline>
+      document.addEventListener("astro:after-swap", () => {
+        const nav = document.querySelector(".desktop-icons");
+        if (!nav) return;
+        // The new <main> root keeps `current` available via the layout's
+        // body class — but the simpler signal is the URL itself.
+        const path = location.pathname;
+        const idFromPath =
+          path === "/" || path === ""           ? "home"
+          : path.startsWith("/about")           ? "about"
+          : path.startsWith("/work")            ? "work"
+          : path.startsWith("/blog")            ? "blog"
+          : path.startsWith("/contact")         ? "contact"
+          :                                       null;
+        nav.querySelectorAll(".desktop-icon").forEach((el) => {
+          const isActive = el.dataset.navId === idFromPath;
+          el.classList.toggle("is-active", isActive);
+          if (isActive) el.setAttribute("aria-current", "page");
+          else el.removeAttribute("aria-current");
+        });
+      });
+    </script>
+  </body>
+</html>

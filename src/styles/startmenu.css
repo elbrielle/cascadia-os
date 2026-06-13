@@ -1,0 +1,378 @@
+/* ============================================================================
+   startmenu.css  —  the Cascadia OS Start menu + its dialogs (feature #2)
+   ----------------------------------------------------------------------------
+   The taskbar Start button opens a classic Win95-style popup: a vertical
+   "Cascadia OS" banner down the left edge, then a menu list. Behaviour +
+   a11y live in public/scripts/startmenu.js.
+
+   Also styles the two things the menu launches:
+     • .sysprops  — the "About Cascadia OS" System-Properties spec list
+                    (rendered inside the shared .os-dialog from dialog.css)
+     • .shutdown  — the Shut Down → CRT-power-off → "safe to turn off" screen
+   ========================================================================== */
+
+/* --- The popup ----------------------------------------------------------- */
+.start-menu {
+  position: fixed;
+  left: var(--space-2);
+  bottom: calc(var(--taskbar-height) + 4px);
+  z-index: var(--z-taskbar);
+  width: 250px;
+  display: flex;
+  background: var(--color-surface);
+  border: var(--window-border) solid var(--bevel-darker);
+  box-shadow:
+    inset  1px  1px 0 var(--bevel-light),
+    inset -1px -1px 0 var(--bevel-dark),
+    var(--shadow-hard-lg);
+  animation: start-menu-in var(--speed) var(--ease-soft);
+}
+.start-menu[hidden] { display: none; }
+@keyframes start-menu-in {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* --- Right-click desktop context menu (audit #16) -----------------------
+   Reuses the .start-menu chrome (bevel + start-menu-in keyframe + reduced-
+   motion handling) but anchors at the click point instead of the taskbar.
+   context-menu.js sets inline left/top (clamped to the viewport); these
+   rules just unset the taskbar anchor and let it size to its content.
+   Behaviour + a11y live in public/scripts/context-menu.js. */
+.context-menu.start-menu {
+  left: auto;
+  bottom: auto;
+  top: 0;
+  width: auto;
+  min-width: 168px;
+}
+
+/* Vertical brand banner down the left edge (reads bottom-to-top, Win95-style). */
+.start-menu__banner {
+  flex: 0 0 34px;
+  writing-mode: vertical-rl;
+  transform: rotate(180deg);
+  text-align: center;
+  padding: var(--space-2) 0;
+  background: linear-gradient(0deg,
+              var(--color-titlebar-a), var(--color-titlebar-b));
+  color: var(--color-titlebar-text);
+  font-family: var(--font-display);
+  font-size: var(--text-sm);
+  font-weight: 700;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  text-shadow: 1px 1px 0 rgba(0, 0, 0, 0.4);
+}
+.start-menu__banner span { color: var(--color-accent-bright); }
+
+.start-menu__list {
+  flex: 1;
+  list-style: none;
+  margin: 0;
+  padding: var(--space-1);
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.start-menu__item {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-2);
+  background: transparent;
+  border: 2px solid transparent;
+  color: var(--color-text);
+  font-family: var(--font-display);
+  font-size: var(--text-sm);
+  letter-spacing: 0.5px;
+  text-align: left;
+  cursor: pointer;
+}
+.start-menu__item:hover,
+.start-menu__item:focus-visible,
+.start-menu__item:active {
+  background: var(--color-accent);
+  color: var(--color-text-inverse);
+  outline: none;
+}
+.start-menu__icon {
+  width: 22px;
+  height: 22px;
+  flex: 0 0 22px;
+  display: inline-grid;
+  place-items: center;
+  image-rendering: pixelated;
+}
+.start-menu__icon svg,
+.start-menu__icon img { width: 100%; height: 100%; }
+
+/* --- Settings cascading submenu (Win95-style flyout) --------------------- */
+.start-menu__sub { position: relative; }
+.start-menu__arrow {
+  margin-left: auto;
+  font-size: 11px;
+  line-height: 1;
+}
+/* Keep the parent row highlighted while its submenu is open. */
+.start-menu__item[aria-expanded="true"] {
+  background: var(--color-accent);
+  color: var(--color-text-inverse);
+}
+.start-menu__submenu {
+  position: absolute;
+  left: calc(100% + 4px);
+  top: -2px;
+  z-index: 1;
+  min-width: 210px;
+  padding: var(--space-2);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  background: var(--color-surface);
+  border: var(--window-border) solid var(--bevel-darker);
+  box-shadow:
+    inset  1px  1px 0 var(--bevel-light),
+    inset -1px -1px 0 var(--bevel-dark),
+    var(--shadow-hard-lg);
+}
+.start-menu__submenu[hidden] { display: none; }
+
+/* Narrow screens have no room for a side flyout — drop it inline beneath the
+   Settings row (accordion) instead. */
+@media (max-width: 520px) {
+  .start-menu__submenu {
+    position: static;
+    min-width: 0;
+    margin-top: 2px;
+    padding: var(--space-2) var(--space-1) var(--space-1);
+    border: none;
+    border-top: 1px solid var(--bevel-dark);
+    box-shadow: none;
+  }
+}
+
+.start-menu__sep {
+  height: 0;
+  margin: var(--space-1);
+  border-top: 1px solid var(--bevel-dark);
+  border-bottom: 1px solid var(--bevel-light);
+}
+
+/* --- "About Cascadia OS" spec list (inside .os-dialog) ------------------- */
+.sysprops {
+  margin: var(--space-3) 0 0;
+  display: grid;
+  gap: 4px;
+}
+.sysprops > div {
+  display: grid;
+  grid-template-columns: 96px 1fr;
+  gap: var(--space-2);
+  align-items: baseline;
+}
+.sysprops dt {
+  font-family: var(--font-display);
+  font-size: 10px;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: var(--color-accent);
+}
+.sysprops dd {
+  margin: 0;
+  font-family: var(--font-mono);
+  font-size: 14px;
+  color: var(--color-text);
+}
+/* The Processor value links to UBC Cognitive Systems (cogsys.ubc.ca). */
+.sysprops__link {
+  color: var(--color-accent);
+  text-decoration: underline;
+}
+.sysprops__link:hover { filter: brightness(1.12); }
+
+/* --- Shut Down → CRT power-off → "safe to turn off" screen --------------- */
+.shutdown {
+  position: fixed;
+  inset: 0;
+  z-index: 10010; /* above the boot splash (10000) */
+  background: #000;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+}
+/* The CRT collapse: a full-screen pane that snaps to a horizontal line, then
+   to a center dot, then fades — the classic monitor power-off. */
+.shutdown__crt {
+  position: absolute;
+  inset: 0;
+  margin: auto;
+  width: 100vw;
+  height: 100vh;
+  background: #cfe8f0;
+  transform-origin: center;
+  animation: crt-off 700ms var(--ease-soft) forwards;
+}
+@keyframes crt-off {
+  0%   { transform: scale(1, 1);        opacity: 1; }
+  35%  { transform: scale(1, 0.012);    opacity: 1; }
+  70%  { transform: scale(0.04, 0.012); opacity: 0.9; }
+  100% { transform: scale(0, 0);        opacity: 0; }
+}
+
+.shutdown__msg {
+  position: relative;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  padding: var(--space-4);
+}
+.shutdown__msg[hidden] { display: none; }
+.shutdown__safe {
+  font-family: var(--font-mono);
+  font-size: clamp(1rem, 3.5vw, 1.6rem);
+  letter-spacing: 1px;
+  color: #fbbf24; /* amber CRT text */
+  text-shadow: 0 0 8px rgba(251, 191, 36, 0.5);
+}
+.shutdown__restart {
+  align-self: center;
+  padding: 8px 22px;
+  font-family: var(--font-display);
+  font-size: var(--text-sm);
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: #050d18;
+  background: var(--color-accent-bright);
+  border: var(--window-border) solid #02060d;
+  box-shadow:
+    inset  1px  1px 0 rgba(255, 255, 255, 0.4),
+    inset -1px -1px 0 rgba(0, 0, 0, 0.4);
+  text-decoration: none;
+  cursor: pointer;
+}
+.shutdown__restart:hover { filter: brightness(1.08); }
+.shutdown__restart:active {
+  box-shadow:
+    inset -1px -1px 0 rgba(255, 255, 255, 0.4),
+    inset  1px  1px 0 rgba(0, 0, 0, 0.4);
+}
+
+/* --- Mobile system tray (relocated from the taskbar) ---------------------
+   On a phone the taskbar hides its badges, visitor counter, and clock to stay
+   minimal (mobile.css). They reappear here at the foot of the Start menu as a
+   labeled status strip — touch has no hover tooltips, so each badge gets a
+   visible label. Hidden on desktop, where the taskbar tray shows them. ----- */
+.start-menu__tray,
+.start-menu__sep--tray { display: none; }
+
+@media (max-width: 720px) {
+  .start-menu__sep--tray { display: block; }
+
+  .start-menu__tray {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    padding: 2px var(--space-1) var(--space-1);
+  }
+
+  /* Badge rows — a fixed badge column so the labels line up under each other. */
+  .start-menu__tray-row {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    padding: 4px var(--space-1);
+    font-family: var(--font-display);
+    font-size: var(--text-sm);
+    letter-spacing: 0.5px;
+    color: var(--color-text);
+  }
+  /* The UBC row links to cogsys.ubc.ca (the Pride row stays static). Keep the
+     menu text colour (not default link blue); add hover/active/focus feedback. */
+  .start-menu__tray-row--link {
+    text-decoration: none;
+    cursor: pointer;
+  }
+  .start-menu__tray-row--link:hover { background: var(--color-surface-hover); }
+  .start-menu__tray-row--link:active { background: var(--color-surface-sunken); }
+  .start-menu__tray-row--link:focus-visible {
+    outline: 2px solid var(--color-accent);
+    outline-offset: -2px;
+  }
+  .start-menu__tray-badge {
+    flex: 0 0 38px;
+    height: 28px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center; /* centre flag + crest on a common axis */
+  }
+  /* Reuse the systray badge classes (incl. --crest's --crest-ink theme colour);
+     just resize for the menu. Flag = pixel art; crest = smooth brand line-art.
+     The crest carries built-in viewBox padding, so it's sized up to ~match the
+     flag's visual weight (its visible shield is inset within the svg box). */
+  .start-menu__tray-badge .systray__badge--pixel { height: 18px; }
+  .start-menu__tray-badge .systray__badge--crest { height: 28px; }
+  .start-menu__tray-name { flex: 1; min-width: 0; }
+  /* The Pride badge's caption ("Love is Love") in rainbow gradient text. A thin
+     dark pixel-edge (drop-shadow) keeps the pale yellow/green bands legible on
+     the light theme; it's near-invisible on the dark surface but harmless. The
+     @supports guard falls back to a solid accent colour on the rare engine that
+     lacks background-clip:text, so the text is never invisible. */
+  .start-menu__tray-name--pride { color: var(--color-accent); }
+  @supports ((-webkit-background-clip: text) or (background-clip: text)) {
+    .start-menu__tray-name--pride {
+      background-image: linear-gradient(90deg,
+        #e40303 0%, #ff8c00 22%, #ffd300 40%, #008026 60%, #004dff 80%, #750787 100%);
+      -webkit-background-clip: text;
+      background-clip: text;
+      -webkit-text-fill-color: transparent;
+      color: transparent;
+      filter:
+        drop-shadow( 0.6px 0     0 var(--bevel-darker))
+        drop-shadow(-0.6px 0     0 var(--bevel-darker))
+        drop-shadow( 0     0.6px 0 var(--bevel-darker))
+        drop-shadow( 0    -0.6px 0 var(--bevel-darker));
+    }
+  }
+
+  /* Live readouts, styled like the taskbar's black-LCD widgets (green glow). */
+  .start-menu__tray-status {
+    display: flex;
+    gap: var(--space-1);
+    margin-top: 2px;
+    padding: 0 var(--space-1);
+  }
+  .start-menu__lcd {
+    flex: 1 1 0;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+    padding: 5px 6px;
+    background: #000;
+    border: var(--window-border) solid var(--bevel-darker);
+    box-shadow:
+      inset  1px  1px 0 var(--bevel-darker),
+      inset -1px -1px 0 #222;
+  }
+  .start-menu__lcd-label {
+    font-family: var(--font-display);
+    font-size: 8px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    color: var(--color-warning);
+  }
+  /* Reuse the hit-counter LCD digits (green + is-rolling animation); trim size. */
+  .start-menu__lcd .hit-counter__digits { font-size: 14px; }
+  .start-menu__lcd-time {
+    font-family: var(--font-mono);
+    font-size: 14px;
+    line-height: 1;
+    letter-spacing: 0.5px;
+    color: var(--color-success);
+    text-shadow: 0 0 4px var(--color-success);
+  }
+}

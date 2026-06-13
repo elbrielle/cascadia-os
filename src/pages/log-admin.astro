@@ -1,0 +1,204 @@
+---
+// /log-admin  —  private curation UI: Attention Log + Favorites
+// ----------------------------------------------------------------------------
+// Protected by Cloudflare Access; noindex + unlinked from the site.
+// Deliberately NOT wrapped in the OS Layout — this is a utility tool, not a
+// portfolio page, so it skips the taskbar / sidebar / boot shell.
+//
+// Two tabs share this page:
+//   • Attention Log — the live "currently into" feed (KV key "published"):
+//     Film/TV + Book search, the Trakt review inbox, and Goodreads sync.
+//   • Favorites — all-time picks (KV key "favorites"): Book / Film-TV / Game /
+//     Music / Article search, grouped by category. Writes via ?list=favorites.
+//
+// All behavior lives in the external public/scripts/log-admin.js so the CSP
+// inline-script hash list (exactly two) never grows. Styles are an is:global
+// block (allowed by style-src 'self' 'unsafe-inline'); same-origin fetches are
+// covered by connect-src 'self'; poster images by img-src https: — no header
+// changes needed.
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="robots" content="noindex, nofollow" />
+    <title>Curation — admin</title>
+  </head>
+  <body>
+    <main class="admin">
+      <header class="admin__bar">
+        <h1>curation — admin</h1>
+        <div class="admin__actions">
+          <button id="publish" type="button">Push to site</button>
+          <span id="status" class="admin__status" role="status" aria-live="polite"></span>
+        </div>
+      </header>
+
+      <nav class="tabs" aria-label="Lists">
+        <button class="tab is-active" type="button" data-tab="attention" aria-selected="true">Attention Log</button>
+        <button class="tab" type="button" data-tab="favorites" aria-selected="false">Favorites</button>
+      </nav>
+
+      <!-- ATTENTION LOG tab ------------------------------------------------ -->
+      <div data-panel="attention">
+        <div class="tab-tools">
+          <button id="sync-goodreads" type="button">Sync Goodreads</button>
+        </div>
+
+        <section class="card">
+          <h2>Add something</h2>
+          <form id="search-form" class="search" autocomplete="off">
+            <select id="kind" aria-label="Type">
+              <option value="screen">Film / TV</option>
+              <option value="book">Book</option>
+              <option value="game">Game</option>
+              <option value="album">Music</option>
+              <option value="paper">Article</option>
+            </select>
+            <input id="q" type="search" placeholder="Search a title…" aria-label="Search a title" />
+            <button type="submit">Search</button>
+          </form>
+          <ul id="results" class="rows" aria-live="polite"></ul>
+        </section>
+
+        <section class="card">
+          <h2>Review inbox <span id="inbox-count" class="muted"></span></h2>
+          <p class="muted">
+            Recently watched on Trakt (fed by Plex). Publish the ones worth showing, or dismiss.
+          </p>
+          <ul id="suggestions" class="rows" aria-live="polite"></ul>
+        </section>
+
+        <section class="card">
+          <h2>Published <span id="count" class="muted"></span></h2>
+          <p class="muted">
+            These are what the site shows. Add a note, then hit “Push to site” to publish.
+          </p>
+          <ul id="published" class="rows"></ul>
+        </section>
+      </div>
+
+      <!-- FAVORITES tab ---------------------------------------------------- -->
+      <div data-panel="favorites" hidden>
+        <section class="card">
+          <h2>Add a favorite</h2>
+          <form id="fav-search-form" class="search" autocomplete="off">
+            <select id="fav-kind" aria-label="Type">
+              <option value="book">Book</option>
+              <option value="screen">Film / TV</option>
+              <option value="game">Game</option>
+              <option value="album">Music</option>
+              <option value="paper">Article</option>
+            </select>
+            <input id="fav-q" type="search" placeholder="Search a title (or paste a DOI)…" aria-label="Search a title" />
+            <button type="submit">Search</button>
+          </form>
+          <ul id="fav-results" class="rows" aria-live="polite"></ul>
+        </section>
+
+        <section class="card">
+          <h2>Favorites <span id="fav-count" class="muted"></span></h2>
+          <p class="muted">
+            All-time picks, grouped by category. Add a note, then hit “Push to site” to publish.
+          </p>
+          <ul id="fav-list" class="rows"></ul>
+        </section>
+      </div>
+    </main>
+
+    <script is:inline src="/scripts/log-admin.js"></script>
+
+    <style is:global>
+      :root {
+        --bg: #0b5e63;
+        --panel: #cdd3d1;
+        --ink: #10201f;
+        --muted: #5c6a68;
+        --accent: #0f6f8f;
+        --line: #9aa4a2;
+        --hi: #ffffff;
+        --lo: #6b7472;
+      }
+      * { box-sizing: border-box; }
+      body {
+        margin: 0;
+        padding: 24px 16px 48px;
+        font: 15px/1.5 system-ui, -apple-system, Segoe UI, sans-serif;
+        color: var(--ink);
+        background: var(--bg);
+      }
+      .admin { max-width: 760px; margin: 0 auto; display: flex; flex-direction: column; gap: 16px; }
+      .admin__bar {
+        display: flex; align-items: center; justify-content: space-between;
+        gap: 12px; flex-wrap: wrap; color: #eafdff;
+      }
+      .admin__bar h1 { margin: 0; font-size: 18px; letter-spacing: 0.02em; }
+      .admin__actions { display: flex; align-items: center; gap: 10px; }
+      .admin__status { font-size: 13px; min-height: 1em; color: #d6fbff; }
+      .admin__status[data-kind="ok"] { color: #c8ffd0; }
+      .admin__status[data-kind="err"] { color: #ffd2d2; }
+
+      /* List tabs */
+      .tabs { display: flex; gap: 6px; }
+      .tab {
+        padding: 8px 16px; cursor: pointer; font: inherit;
+        background: var(--panel); color: var(--ink);
+        border: 2px solid var(--hi); border-right-color: var(--lo); border-bottom-color: var(--lo);
+      }
+      .tab.is-active {
+        background: var(--accent); color: #fff;
+        border: 2px solid var(--lo); border-right-color: var(--hi); border-bottom-color: var(--hi);
+      }
+      .tab-tools { display: flex; justify-content: flex-end; }
+      [data-panel] { display: flex; flex-direction: column; gap: 16px; }
+      [hidden] { display: none !important; }
+
+      .card {
+        background: var(--panel);
+        border: 2px solid var(--hi);
+        border-right-color: var(--lo);
+        border-bottom-color: var(--lo);
+        padding: 16px;
+      }
+      .card h2 { margin: 0 0 10px; font-size: 15px; }
+      .muted { color: var(--muted); font-weight: 400; font-size: 13px; }
+
+      .search { display: flex; gap: 8px; flex-wrap: wrap; }
+      .search #q, .search #fav-q { flex: 1; min-width: 180px; }
+
+      input, select, button, textarea { font: inherit; }
+      input, select {
+        padding: 6px 8px; background: #fff; color: var(--ink);
+        border: 2px solid var(--lo); border-right-color: var(--hi); border-bottom-color: var(--hi);
+      }
+      button {
+        padding: 6px 12px; cursor: pointer; background: var(--panel); color: var(--ink);
+        border: 2px solid var(--hi); border-right-color: var(--lo); border-bottom-color: var(--lo);
+      }
+      button:active { border-color: var(--lo); border-right-color: var(--hi); border-bottom-color: var(--hi); }
+      button:disabled { opacity: 0.6; cursor: default; }
+
+      .rows { list-style: none; margin: 12px 0 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }
+      .row { display: flex; gap: 10px; align-items: flex-start; background: #fff; border: 1px solid var(--line); padding: 8px; }
+      .row img, .thumb--empty { width: 46px; height: 69px; flex: none; object-fit: cover; background: #e7eceb; }
+      .row__meta { flex: 1; min-width: 0; }
+      .row__title { font-weight: 600; }
+      .row__sub { font-size: 13px; color: var(--muted); }
+      .row__note { width: 100%; margin-top: 6px; }
+      .row__rm { align-self: center; color: #9a1414; background: transparent; border: none; padding: 2px 6px; }
+      /* Favorites category divider inside the saved list */
+      .group {
+        font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em;
+        color: var(--muted); padding: 8px 2px 2px; margin-top: 4px; border-bottom: 1px solid var(--line);
+      }
+      .group:first-child { margin-top: 0; }
+      .chip {
+        font-size: 11px; text-transform: uppercase; letter-spacing: 0.04em;
+        padding: 1px 6px; border-radius: 2px; color: #fff; background: var(--accent);
+      }
+      .empty { color: var(--muted); font-size: 14px; }
+    </style>
+  </body>
+</html>

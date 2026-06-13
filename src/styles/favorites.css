@@ -1,0 +1,308 @@
+/* ============================================================================
+   favorites.css  —  the About page "Favorites" explorer (Phase C)
+   ----------------------------------------------------------------------------
+   A Windows/Finder-style explorer: a folder sidebar (one per category) → a grid
+   of cover "icons" → a detail pane with Elisha's review. Supports real cover
+   art and a mobile drill-in (folder row → grid → full-width detail w/ back).
+
+   Markup (built at build time in about.astro, hydrated by
+   public/scripts/favorites-explorer.js):
+     .fav                      flex row (sidebar + body); column on mobile
+       .fav__side              folder list (sidebar); chip row on mobile
+         .fav__folder          one per non-empty category (--tint per category)
+       .fav__body
+         .fav__bar > .fav__path     the "C:\Favorites\Books" address bar
+         .fav__content         flex row (grids + detail)
+           .fav__grids > .fav__grid[data-cat]   one grid per category (one shown)
+             .fav__cover       a cover tile (image, or --doc document tile)
+           .fav__detail        the review pane (populated by JS on cover click)
+
+   Tints mirror the mockup / src/lib/favorites.js CATEGORIES order.
+   ========================================================================== */
+
+.fav {
+  display: flex;
+  gap: var(--space-2);
+  min-height: 360px;
+}
+
+/* ---- sidebar (folders) -------------------------------------------------- */
+.fav__side {
+  flex: 0 0 140px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: var(--space-2);
+  background: var(--color-surface);
+  border: 2px solid var(--bevel-dark);
+  box-shadow: inset 1px 1px 0 var(--bevel-dark), inset -1px -1px 0 var(--bevel-light);
+}
+/* Mobile category picker — a retro combo box that replaces the folder sidebar
+   on narrow screens, so categories never require a horizontal scroll. Hidden on
+   desktop, where the full sidebar is shown instead. The native dropdown popup is
+   good touch UX; the closed field is styled like a classic sunken combo. */
+.fav__select {
+  display: none;
+  width: 100%;
+  font-family: var(--font-display);
+  font-size: var(--text-sm);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--color-text);
+  background: var(--color-surface);
+  border: 2px solid var(--bevel-dark);
+  border-right-color: var(--bevel-light);
+  border-bottom-color: var(--bevel-light);
+  box-shadow: inset 1px 1px 0 var(--bevel-dark);
+  padding: 8px 10px;
+}
+.fav__folder {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 8px;
+  cursor: pointer;
+  text-align: left;
+  font-family: var(--font-display);
+  font-size: var(--text-sm);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--color-text);
+  background: transparent;
+  border: 1px solid transparent;
+}
+.fav__folder:hover { background: var(--color-surface-hover); }
+.fav__folder.is-active {
+  background: var(--color-accent);
+  color: #fff;
+  border-color: var(--bevel-darker);
+}
+.fav__folder-ic {
+  width: 14px;
+  height: 12px;
+  flex: none;
+  background: var(--tint, var(--color-accent));
+  border: 1px solid var(--bevel-darker);
+}
+.fav__folder-ct {
+  margin-left: auto;
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  opacity: 0.8;
+}
+
+/* ---- body (address bar + content) --------------------------------------- */
+.fav__body {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+.fav__bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 5px 10px;
+  font-family: var(--font-mono);
+  font-size: var(--text-sm);
+  color: var(--color-text-muted);
+  background: var(--color-surface);
+  border: 1px solid var(--bevel-dark);
+  box-shadow: inset 1px 1px 0 var(--bevel-dark), inset -1px -1px 0 var(--bevel-light);
+}
+.fav__content {
+  flex: 1;
+  display: flex;
+  gap: var(--space-2);
+  min-height: 0;
+}
+.fav__grids { flex: 1; min-width: 0; }
+.fav__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(96px, 1fr));
+  gap: var(--space-2);
+  align-content: start;
+}
+.fav__grid[hidden] { display: none; }
+
+/* ---- cover tile --------------------------------------------------------- */
+.fav__cover {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  aspect-ratio: 3 / 4;
+  overflow: hidden;
+  cursor: pointer;
+  padding: 0;
+  text-align: left;
+  color: #fff;
+  background: #888;
+  border: 2px solid var(--bevel-darker);
+  box-shadow: var(--shadow-hard, 3px 3px 0 rgba(0, 0, 0, 0.35));
+}
+/* Tint wash sits under the art so a missing/edge-transparent cover still reads. */
+.fav__cover::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  background: linear-gradient(150deg, var(--tint, #555) 0%, rgba(0, 0, 0, 0.35) 120%);
+}
+.fav__cover-img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  z-index: 0;
+}
+/* Scrim on the tile (not the title box) so the title stays legible over art. */
+.fav__cover::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 60%;
+  z-index: 1;
+  background: linear-gradient(to top, rgba(0, 0, 0, 0.72), transparent);
+  pointer-events: none;
+}
+.fav__cover--doc::after { content: none; }
+.fav__cover-t {
+  position: relative;
+  z-index: 2;
+  font-family: var(--font-display);
+  font-size: var(--text-xs);
+  line-height: 1.15;
+  letter-spacing: 0.3px;
+  padding: 6px;
+  text-transform: uppercase;
+  text-shadow: 1px 1px 0 rgba(0, 0, 0, 0.6);
+}
+.fav__cover:hover { filter: brightness(1.08); transform: translate(-1px, -1px); }
+.fav__cover.is-sel { outline: 2px solid var(--color-accent); outline-offset: 1px; }
+
+/* Albums are the one square (1:1) category — book/film/show/game art is all
+   portrait, so the 3/4 tile fits those. Drop the crop for the Music grid AND the
+   album detail cover so the full square sleeve shows instead of being cropped
+   top/bottom. (Detail cover gets .fav__detail-cover--square from the JS, mirroring
+   how papers get .fav__cover--doc.) */
+.fav__grid[data-cat="album"] .fav__cover,
+.fav__detail-cover.fav__detail-cover--square {
+  aspect-ratio: 1 / 1;
+}
+
+/* paper = document tile, no artwork */
+.fav__cover--doc {
+  background: var(--color-surface-2);
+  color: var(--color-text);
+  border-color: var(--bevel-dark);
+}
+.fav__cover--doc::before {
+  background: repeating-linear-gradient(0deg, transparent 0 16px, rgba(0, 0, 0, 0.05) 16px 17px);
+}
+.fav__cover--doc .fav__cover-t { color: var(--color-text); text-shadow: none; }
+.fav__cover--doc .fav__cover-t::before { content: none; }
+.fav__cover-fold {
+  position: absolute;
+  top: 0;
+  right: 0;
+  border-width: 0 14px 14px 0;
+  border-style: solid;
+  border-color: transparent var(--color-surface) transparent transparent;
+  filter: drop-shadow(-1px 1px 0 var(--bevel-dark));
+  z-index: 2;
+}
+.fav__cover-ext {
+  position: relative;
+  z-index: 2;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--color-accent);
+  padding: 0 6px 4px;
+}
+
+/* ---- detail pane -------------------------------------------------------- */
+.fav__detail {
+  flex: 0 0 208px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: var(--space-3);
+  background: var(--color-surface-sunken);
+  border: 1px solid var(--bevel-dark);
+  box-shadow: inset 1px 1px 0 var(--bevel-dark), inset -1px -1px 0 var(--bevel-light);
+}
+.fav__detail[hidden] { display: none; }
+.fav__detail-cover {
+  position: relative;
+  width: 120px;
+  aspect-ratio: 3 / 4;
+  align-self: center;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  color: #fff;
+  background: #888;
+  border: 2px solid var(--bevel-darker);
+  box-shadow: var(--shadow-hard, 3px 3px 0 rgba(0, 0, 0, 0.35));
+}
+.fav__detail-cover::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(150deg, var(--tint, #555) 0%, rgba(0, 0, 0, 0.35) 120%);
+}
+.fav__detail-img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+/* reuse doc-tile look for paper detail covers */
+.fav__detail-cover.fav__cover--doc { background: var(--color-surface-2); color: var(--color-text); }
+.fav__detail-title {
+  font-family: var(--font-display);
+  font-size: var(--text-base);
+  text-transform: uppercase;
+  color: var(--color-accent);
+  letter-spacing: 0.5px;
+}
+.fav__detail-sub { font-family: var(--font-mono); font-size: var(--text-xs); color: var(--color-text-muted); }
+.fav__detail-note { font-size: var(--text-sm); font-style: italic; line-height: 1.5; }
+.fav__detail-link { font-size: var(--text-sm); align-self: start; }
+/* Back button: mobile drill-in only (hidden on desktop, where grid+detail coexist). */
+.fav__detail-back {
+  display: none;
+  align-self: start;
+  font-family: var(--font-display);
+  font-size: var(--text-sm);
+  padding: 6px 10px;
+  cursor: pointer;
+  color: var(--color-text);
+  background: var(--color-surface);
+  border: 2px solid var(--bevel-darker);
+  box-shadow: inset 1px 1px 0 var(--bevel-light), inset -1px -1px 0 var(--bevel-dark);
+}
+
+.fav__empty { color: var(--color-text-muted); font-size: var(--text-sm); }
+
+/* ---- narrow-width drill-in (dropdown → grid → full-width detail) --------
+   Below 75em the three panes (sidebar + grid + detail) can't coexist without
+   crushing the grid to a single column, so fall back to the drill-in layout —
+   a category dropdown + full-width grid + tap-to-open full-width detail. This
+   covers phones AND the narrow-desktop range (~992–1200px). The 3-pane only
+   shows at ≥75em, where there's genuine room for it.                          */
+@media (max-width: 74.99em) {
+  .fav { flex-direction: column; }
+  /* Folder sidebar → a dropdown so categories never need a horizontal scroll. */
+  .fav__side { display: none; }
+  .fav__select { display: block; }
+  .fav__content { flex-direction: column; }
+  /* Tapping a cover drills into a full-width detail; the grid hides. */
+  .fav__detail { flex: none; }
+  .fav .fav__detail { display: none; }
+  .fav.is-detail-open .fav__grids { display: none; }
+  .fav.is-detail-open .fav__detail { display: flex; }
+  .fav.is-detail-open .fav__detail-back { display: inline-block; }
+  .fav__detail-cover { width: 140px; }
+}
