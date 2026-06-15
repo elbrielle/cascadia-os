@@ -1,0 +1,31 @@
+---
+// ============================================================================
+//  TagsWindow.astro  —  the blog "Tags" tag-cloud window
+// ----------------------------------------------------------------------------
+//  Shared by /blog/ and /blog/tagged/<slug>/ (the markup was duplicated across
+//  both — audit #21). Owns the tag-cloud sizing via makeTagSizer so callers
+//  don't each compute it.
+//
+//  Props:
+//    tags       — the tag list (from getTags()).
+//    activeSlug — optional: the currently-viewed tag's slug; that chip gets
+//                 `is-active`. Omit on the main /blog/ index (no active tag).
+// ============================================================================
+import Window from "./Window.astro";
+import { makeTagSizer } from "../lib/substack.js";
+
+const { tags, activeSlug = null } = Astro.props;
+const tagSize = makeTagSizer(tags); // shared tag-cloud sizing (see substack.js)
+---
+
+<Window id="tags" title="Tags" width={360}>
+  <div class="tag-cloud">
+    {tags.map((t) => (
+      <a
+        class:list={["tag", activeSlug && t.slug === activeSlug && "is-active"]}
+        href={`/blog/tagged/${t.slug}/`}
+        style={`font-size: ${tagSize(t.count ?? 1)}px;`}
+      >{t.name}</a>
+    ))}
+  </div>
+</Window>

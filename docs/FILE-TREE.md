@@ -9,15 +9,18 @@ only files an agent reads or edits are listed.
 ```
 .
 ├── README.md                   Human-facing run/deploy overview + integrations table
-├── astro.config.mjs            Astro config: output:"static", site, trailingSlash:"ignore"
-├── package.json                Deps (astro ^6, rss-parser) + scripts (dev/build/preview)
+├── astro.config.mjs            Astro config: static output, site, trailingSlash:"always", @astrojs/sitemap
+├── package.json                Deps (astro ^6, @astrojs/sitemap, rss-parser) + scripts (dev/build/preview)
 ├── public/
 │   ├── _headers                Cloudflare response headers — CSP (2 inline-script hashes!), HSTS, etc.
+│   ├── robots.txt              Welcomes crawlers, points at sitemap-index.xml, disallows /log-admin + /api/
 │   ├── scripts/                Browser JS — ALL external (keeps CSP hash list at 2)
 │   │   ├── boot.js               Boot/splash screen (once-per-session gate)
 │   │   ├── windows.js            Draggable/min/max windows (pointer + CSS transform)
+│   │   ├── scrollbar.js          Custom Win95 scrollbar — real-DOM bar (macOS won't draw native arrows/grip)
 │   │   ├── icons.js              Pixel-art SVG icons (nav + project tiles)
-│   │   ├── startmenu.js          Win95 Start menu (Settings, About, Shut Down)
+│   │   ├── startmenu.js          Win95 Start menu (Settings, About, Shut Down) + openCredits() for the context menu
+│   │   ├── context-menu.js       Right-click desktop menu (Refresh / View source / Credits / Properties)
 │   │   ├── system.js             Taskbar clock + KV visitor counter (reads /api/hits)
 │   │   ├── tweaks.js             Settings panel: theme + font toggles (localStorage)
 │   │   ├── explorer.js           Work page: Win95 Explorer folder tree (loaded by work.astro)
@@ -33,6 +36,7 @@ only files an agent reads or edits are listed.
 │   │                            Contains 1 of the 2 CSP-hashed inline scripts (nav-sync).
 │   ├── components/
 │   │   ├── Window.astro         The reusable draggable window chrome.
+│   │   ├── TagsWindow.astro     Blog tag-cloud window (shared by /blog + /blog/tagged; owns makeTagSizer)
 │   │   └── AttentionLog.astro   attention.log icon grid + detail bar: reading/watched (synced) + games/music/articles (manual), Home-only [#44,#58,#59]
 │   ├── pages/                   One file per route (Astro file-based routing)
 │   │   ├── index.astro            Home (intro + Build Log + attention.log featured panel) [PR #44]
@@ -63,6 +67,7 @@ only files an agent reads or edits are listed.
 │       ├── hits.js              GET /api/hits — KV visitor counter (bound HITS)
 │       ├── attention.js         GET /api/attention — PUBLIC read of KV `published` (build reads this)
 │       ├── favorites.js         GET /api/favorites — PUBLIC read of KV `favorites` (Favorites feature) [PR #45]
+│       ├── _http.js             (shared, non-route) jsonResponse() + readArray() — imported by public + admin routes
 │       └── admin/              GATED by Cloudflare Access (the curation API). KV bound ATTENTION.
 │           ├── search.js         GET  — search proxy: TMDB (film/TV), Google Books, IGDB (games), iTunes+Deezer (music), Crossref (papers) [PR #45]
 │           ├── item.js           POST/DELETE — upsert/remove; ?list=favorites|published routes to either KV key [PR #45]

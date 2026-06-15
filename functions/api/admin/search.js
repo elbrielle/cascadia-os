@@ -2,10 +2,10 @@
    functions/api/admin/search.js  —  Pages Function: title search proxy
    (GET /api/admin/search?q=...&kind=screen|book|game|album|paper)
    ----------------------------------------------------------------------------
-   GATED: lives under /api/admin/*, which Cloudflare Access protects at the edge.
-   Proxies TMDB (film/TV) and Open Library (books) so the TMDB key stays
-   server-side and never reaches the browser. Returns a normalized candidate
-   list the admin UI renders.
+   GATED: lives under /api/admin/*, which Cloudflare Access protects at the edge
+   (see docs/attention-log-admin-spec.md, Setup A). Proxies TMDB (film/TV) and
+   Open Library (books) so the TMDB key stays server-side and never reaches the
+   browser. Returns a normalized candidate list the admin UI renders.
 
    `kind`:  "screen" → TMDB multi-search (movies + TV)
             "book"   → Google Books Volumes API (keyless), falling back to Open
@@ -25,6 +25,7 @@ const TWITCH_TOKEN = "https://id.twitch.tv/oauth2/token";
 const ITUNES = "https://itunes.apple.com/search";
 const DEEZER = "https://api.deezer.com";
 const CROSSREF = "https://api.crossref.org/works";
+const CROSSREF_MAIL = "eli311.lucero@gmail.com"; // Crossref "polite pool" — public, not a secret
 const DOI_RE = /^10\.\d{4,9}\/\S+$/i;
 const UA = "elishalucero.com (Cascadia OS portfolio admin)";
 
@@ -51,7 +52,7 @@ export async function onRequestGet({ env, request }) {
       case "book":  results = await searchBooks(q, env); break;
       case "game":  results = await searchGames(q, env); break;
       case "album": results = await searchAlbums(q); break;
-      case "paper": results = await searchPapers(q, env); break;
+      case "paper": results = await searchPapers(q); break;
       default:      results = await searchScreen(q, env.TMDB_API_KEY); break;
     }
     return json({ results });
@@ -350,27 +351,19 @@ async function fillMissingYears(items) {
 // --- Research articles (Crossref, keyless) -----------------------------------
 // Accepts a pasted DOI (→ /works/{doi}) or free-text (→ bibliographic query).
 // Papers have no cover art anywhere, so `image` is always null; the UI renders
-// them as document tiles. A contact address puts us in Crossref's faster
-// "polite pool"; set the CROSSREF_MAIL env binding to opt in. When it's unset
-// we omit the mailto entirely and Crossref serves us from its anonymous pool —
-// slower under load, but fully functional.
-async function searchPapers(q, env) {
-  const mail = (env && env.CROSSREF_MAIL) || "";
-  const politeQuery = mail ? `&mailto=${encodeURIComponent(mail)}` : "";
-  const politeDoi = mail ? `?mailto=${encodeURIComponent(mail)}` : "";
+// them as document tiles. mailto puts us in Crossref's faster "polite pool".
+async function searchPapers(q) {
   const cleaned = q.replace(/^\s*https?:\/\/(dx\.)?doi\.org\//i, "").trim();
   const isDoi = DOI_RE.test(cleaned);
   const url = isDoi
-    ? `${CROSSREF}/${cleaned}${politeDoi}`
+    ? `${CROSSREF}/${cleaned}?mailto=${encodeURIComponent(CROSSREF_MAIL)}`
     : `${CROSSREF}?query.bibliographic=${encodeURIComponent(
         q
-      )}&rows=8&select=DOI,title,author,issued,container-title${politeQuery}`;
+      )}&rows=8&select=DOI,title,author,issued,container-title&mailto=${encodeURIComponent(
+        CROSSREF_MAIL
+      )}`;
   const r = await fetchUpstream(url, {
-    headers: {
-      "User-Agent": mail
-        ? `elishalucero.com (mailto:${mail})`
-        : "elishalucero.com",
-    },
+    headers: { "User-Agent": `elishalucero.com (mailto:${CROSSREF_MAIL})` },
   });
   if (!r.ok) throw new Error("crossref " + r.status);
   const data = await r.json();

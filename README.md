@@ -29,6 +29,12 @@ npm run build   # builds the static site into dist/
 - The Content Security Policy lives in `public/_headers` and pins a hash of the two inline scripts on the site. If you edit either one, rebuild and run `node scripts/compute-csp-hashes.cjs`, then paste the new hashes into `public/_headers`. Forget that step and the browser quietly blocks the script, which is an annoying thing to track down.
 - The build pulls posts and reading data over the network. If a source is down, that section renders empty instead of failing the build, so a flaky connection never blocks a deploy.
 
+## Credits
+
+**Inspiration.** [Nic Chan](https://www.nicchan.me/) (nicchan.me). The desktop-OS portfolio concept, the two-column window layout, and the view-transition page motion were the foundations for me to branch off from.
+
+**Type.** Sysfont, Alina Sava's revival of Susan Kare's Chicago. W95FA, a Windows 95 system-font revival. [Departure Mono](https://departuremono.com/) by Helena Zhang.
+
 ## License
 
 MIT. See [LICENSE](LICENSE).

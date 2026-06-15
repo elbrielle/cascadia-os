@@ -107,6 +107,11 @@
   font-family: var(--font-body);
   font-size: var(--text-base);
   line-height: var(--leading-body);
+  /* Scroll-safety: a tall dialog (e.g. the multi-entry Credits) scrolls its
+     body instead of clipping the OK button off a short viewport. No effect on
+     short dialogs — only engages when content exceeds the cap. */
+  max-height: 72svh;
+  overflow-y: auto;
 }
 
 /* Icon + message row — the classic "[icon] message" dialog layout. */
@@ -137,3 +142,29 @@
   justify-content: center;
   margin-top: var(--space-4);
 }
+
+/* --- Credits list (right-click desktop → Credits) ------------------------
+   Stacked label-over-text entries so the longer attribution lines wrap cleanly
+   (unlike the inline .sysprops dl). Sized down to --text-sm so several entries
+   fit the 420px dialog without scrolling. All tokens → both themes. */
+.credits {
+  margin-top: var(--space-3);
+  display: grid;
+  gap: var(--space-3);
+  font-size: var(--text-sm);
+  line-height: 1.5;
+}
+.credits dt {
+  font-family: var(--font-display);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: var(--color-accent);
+  margin-bottom: 2px;
+}
+.credits dd { margin: 0; }
+.credits a {
+  color: var(--color-accent);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+.credits a:hover { color: var(--color-accent-hover); }

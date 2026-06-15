@@ -1,11 +1,11 @@
 ---
 import Layout from "../layouts/Layout.astro";
 import Window from "../components/Window.astro";
-import { getPosts, getTags, formatDate, makeTagSizer, SUBSTACK_FEED_URL } from "../lib/substack.js";
+import TagsWindow from "../components/TagsWindow.astro";
+import { getPosts, getTags, formatDate, SUBSTACK_FEED_URL } from "../lib/substack.js";
 
 const posts = await getPosts();
 const tags = await getTags();
-const tagSize = makeTagSizer(tags); // shared tag-cloud sizing (see substack.js)
 ---
 
 <Layout title="Elisha Lucero — Blog" pageTitle="Blog" current="blog">
@@ -33,13 +33,7 @@ const tagSize = makeTagSizer(tags); // shared tag-cloud sizing (see substack.js)
   </div>
 
   <div class="layout__cell blog__tags">
-  <Window id="tags" title="Tags" width={360}>
-    <div class="tag-cloud">
-      {tags.map((t) => (
-        <a class="tag" href={`/blog/tagged/${t.slug}/`} style={`font-size: ${tagSize(t.count ?? 1)}px;`}>{t.name}</a>
-      ))}
-    </div>
-  </Window>
+  <TagsWindow tags={tags} />
   </div>
 
 </Layout>

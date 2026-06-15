@@ -10,11 +10,13 @@
 
    Menu items (see the ITEMS array for the live set):
      • Refresh       — location.reload()
+     • View source   — opens the public GitHub repo in a new tab
      • Properties    — the SAME System Properties dialog the Start menu opens,
                        via window.CascadiaStartMenu.openAbout (lifted out of
                        startmenu.js's init closure so the markup isn't duplicated).
-   "View source → the GitHub repo" is omitted while the repo is private (it would
-   404 for visitors); re-add it once the repo is public (see the ITEMS comment).
+     • Credits       — attribution for the work the site builds on (Nic Chan +
+                       the fonts/art), via window.CascadiaStartMenu.openCredits
+                       (same .os-dialog chrome as Properties).
 
    It reuses the Start menu's chrome — the .start-menu / .start-menu__list /
    .start-menu__item classes and the `start-menu-in` keyframe — so it inherits
@@ -40,16 +42,21 @@
   // The menu items, in order. `run` fires on activation; the menu is always
   // closed first so focus is restored before the action runs.
   //
-  // "View source" is intentionally OMITTED while the GitHub repo is private — a
-  // link there 404s for every visitor. Re-add this entry once the repo is public:
-  //   { label: "View source", run: function () {
-  //       window.open("https://github.com/elbrielle/Portfolio-Site", "_blank", "noopener");
-  //   } },
+  // "View source" opens the public showcase repo in a new tab. The "noopener"
+  // window feature keeps the opened tab from reaching back through window.opener.
   var ITEMS = [
     { label: "Refresh", run: function () { location.reload(); } },
+    { label: "View source", run: function () {
+        window.open("https://github.com/elbrielle/cascadia-os", "_blank", "noopener");
+    } },
     { label: "Properties", run: function () {
         if (window.CascadiaStartMenu && window.CascadiaStartMenu.openAbout) {
           window.CascadiaStartMenu.openAbout();
+        }
+    } },
+    { label: "Credits", run: function () {
+        if (window.CascadiaStartMenu && window.CascadiaStartMenu.openCredits) {
+          window.CascadiaStartMenu.openCredits();
         }
     } },
   ];

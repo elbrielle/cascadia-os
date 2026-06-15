@@ -46,9 +46,20 @@ function cleanTitle(t = "") {
 }
 
 // Strip Goodreads' RSS tracking params from book links so the URL we render
-// is the canonical share URL.
+// is the canonical share URL. Parse with URL so the query string is rebuilt
+// correctly (the old regex could leave an orphaned leading "&" + no "?" when a
+// utm_ param led the query). Falls back to the original string if l isn't a
+// valid absolute URL.
 function cleanLink(l = "") {
-  return l.replace(/[?&]utm_[^&]+/g, "").replace(/\?$/, "");
+  try {
+    const u = new URL(l);
+    for (const k of [...u.searchParams.keys()]) {
+      if (k.startsWith("utm_")) u.searchParams.delete(k);
+    }
+    return u.toString();
+  } catch {
+    return l;
+  }
 }
 
 async function fetchShelf(shelf, limit = 4) {
@@ -84,8 +95,9 @@ export function getCurrentlyReading(limit = 4) {
   return fetchShelf("currently-reading", limit);
 }
 
-// Hook for the still-open "recently read" decision. Kept ready-to-wire —
-// intentionally NOT dead code — even though no page renders the "read" shelf yet.
+// Hook for the still-open "recently read" decision (PROJECT-STATUS → Open
+// decisions → Goodreads shelves). Kept ready-to-wire — intentionally NOT dead
+// code — even though no page renders the "read" shelf yet.
 export function getRecentlyRead(limit = 4) {
   return fetchShelf("read", limit);
 }

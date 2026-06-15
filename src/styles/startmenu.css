@@ -94,7 +94,7 @@
 .start-menu__item:focus-visible,
 .start-menu__item:active {
   background: var(--color-accent);
-  color: var(--color-text-inverse);
+  color: var(--color-on-accent);
   outline: none;
 }
 .start-menu__icon {
@@ -118,7 +118,7 @@
 /* Keep the parent row highlighted while its submenu is open. */
 .start-menu__item[aria-expanded="true"] {
   background: var(--color-accent);
-  color: var(--color-text-inverse);
+  color: var(--color-on-accent);
 }
 .start-menu__submenu {
   position: absolute;
@@ -142,6 +142,17 @@
 /* Narrow screens have no room for a side flyout — drop it inline beneath the
    Settings row (accordion) instead. */
 @media (max-width: 520px) {
+  /* Cap the menu height + scroll INTERNALLY — but only here. With the submenu
+     dropped inline (accordion, below), the menu grows vertically and can run off
+     the top of a short viewport, so it needs a scroll. This is scoped to the
+     accordion breakpoint ON PURPOSE: above 520px the submenu is a side flyout
+     (position:absolute, OUTSIDE the box), and any overflow on .start-menu forces
+     overflow-x to non-visible and CLIPS that flyout (the Settings menu would look
+     dead on desktop). Mirrors the .os-dialog__body scroll-safety (dialog.css). */
+  .start-menu {
+    max-height: calc(100dvh - var(--taskbar-height) - var(--space-3));
+    overflow-y: auto;
+  }
   .start-menu__submenu {
     position: static;
     min-width: 0;

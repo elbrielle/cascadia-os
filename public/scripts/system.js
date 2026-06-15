@@ -6,7 +6,13 @@
    keeps a little life. Pure decoration; resets are harmless.
    ========================================================================== */
 
-document.addEventListener("DOMContentLoaded", () => {
+// Bind via astro:page-load (the lifecycle every other shell script uses) rather
+// than DOMContentLoaded, with a run-once guard so a view-transition swap can't
+// stack a second clock interval / ambient ticker. The clock + LCD live in the
+// persisted taskbar, so binding ONCE (not per swap) is correct.
+document.addEventListener("astro:page-load", () => {
+  if (window.__cascadiaSystemBound) return;
+  window.__cascadiaSystemBound = true;
 
   /* ------- CLOCK(S) ------------------------------------------------------- */
   // One in the taskbar (desktop) + one in the Start-menu tray (mobile); keep

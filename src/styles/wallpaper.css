@@ -13,8 +13,8 @@
    (1920×1080 pixel-art — 640px art-res, Bayer-dithered, ~36-colour
    token-snapped palette, ~40–52 KB each). `image-rendering: pixelated`
    on the layers keeps the pixel grid crisp when CSS scales them up on
-   larger/hi-dpi screens (instead of blurring the blocks). Pipeline:
-   scripts/pixelate-wallpaper.py.
+   larger/hi-dpi screens (instead of blurring the blocks). Pipeline +
+   rationale: docs/PROJECT-STATUS.md.
    ========================================================================== */
 
 .wallpaper {
@@ -33,7 +33,10 @@
   /* The cross-fade. 800ms feels like a "soft sunset" — long enough to read
      as a transition, short enough not to feel laggy when toggling.        */
   transition: opacity 800ms ease-in-out;
-  will-change: opacity;
+  /* No resting will-change: opacity already composites cheaply, and the fade
+     only fires on a theme toggle — a permanent hint would keep two full-
+     viewport GPU layers promoted all session for nothing (same reasoning as
+     the .window fix in window.css). It's a transient hint, not a resting one. */
 }
 
 /* Defaults: day is visible, night is hidden. The theme rules below flip

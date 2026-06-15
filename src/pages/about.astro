@@ -23,27 +23,34 @@ const tintVar = (kind) => `--tint: var(--tint-${kind}, #888)`;
 
   <div class="layout__cell about__readme">
   <Window id="bio" title="README — Elisha Lucero" width={520}>
-    <h2>README.txt</h2>
-    <p>
-      I am an educator, learning content designer, and technical builder with a
-      B.A. in Cognitive Systems; my academic background at the University of
-      British Columbia bridged computer science and cognitive science to study
-      how cognition can be modeled in machine learning and intelligent systems.
-    </p>
-    <p>
-      Across these roles, I keep coming back to the same design problem: the
-      systems we're entrenched in shape the models we build to navigate the
-      world, constraining the choices we notice and thus the actions we take.
-      I seek to build curricula and tools that make such constraints visible
-      enough for people to see where a system ends and their agency begins.
-    </p>
-    <p>
-      I design career readiness and technology curriculum that moves students
-      from guided exploration into real project work across robotics, electronics,
-      digital fabrication, immersive media, and applied computing. I also build
-      tools to rectify systems that feel too brittle, slow, or indifferent to
-      how people move throughout their day.
-    </p>
+    <div class="readme">
+      <header class="readme__head">
+        <h2 class="readme__name">README.txt</h2>
+      </header>
+      <hr class="readme__rule" aria-hidden="true" />
+      <div class="readme__body">
+        <p>
+          I am an educator, learning content designer, and technical builder with a
+          B.A. in Cognitive Systems; my academic background at the University of
+          British Columbia bridged computer science and cognitive science to study
+          how cognition can be modeled in machine learning and intelligent systems.
+        </p>
+        <p>
+          Across these roles, I keep coming back to the same design problem: the
+          systems we're entrenched in shape the models we build to navigate the
+          world, constraining the choices we notice and thus the actions we take.
+          I seek to build curricula and tools that make such constraints visible
+          enough for people to see where a system ends and their agency begins.
+        </p>
+        <p>
+          I design career readiness and technology curriculum that moves students
+          from guided exploration into real project work across robotics, electronics,
+          digital fabrication, immersive media, and applied computing. I also build
+          tools to rectify systems that feel too brittle, slow, or indifferent to
+          how people move throughout their day.
+        </p>
+      </div>
+    </div>
   </Window>
   </div>
 

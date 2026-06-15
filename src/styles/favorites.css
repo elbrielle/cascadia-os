@@ -2,7 +2,8 @@
    favorites.css  —  the About page "Favorites" explorer (Phase C)
    ----------------------------------------------------------------------------
    A Windows/Finder-style explorer: a folder sidebar (one per category) → a grid
-   of cover "icons" → a detail pane with Elisha's review. Supports real cover
+   of cover "icons" → a detail pane with Elisha's review. Ported from
+   design-references/favorites-mockup.html (Approach 1), adapted for real cover
    art and a mobile drill-in (folder row → grid → full-width detail w/ back).
 
    Markup (built at build time in about.astro, hydrated by
@@ -74,7 +75,7 @@
 .fav__folder:hover { background: var(--color-surface-hover); }
 .fav__folder.is-active {
   background: var(--color-accent);
-  color: #fff;
+  color: var(--color-on-accent);
   border-color: var(--bevel-darker);
 }
 .fav__folder-ic {
@@ -125,6 +126,24 @@
   align-content: start;
 }
 .fav__grid[hidden] { display: none; }
+
+/* Desktop: the explorer FILLS the window and only the cover grid scrolls, so the
+   folder sidebar + the detail pane stay put at full height instead of riding the
+   whole window-body scroll. Achieved by making the favorites window body a flex
+   column that .fav flexes to fill (height:100% won't resolve cleanly against a
+   flex-item parent), then scrolling .fav__grids internally. scrollbar.js detects
+   the grid's overflow-y:auto and moves the custom Win95 bar onto it; .fav__content
+   is the positioned host it pins to, and padding-right reserves the bar's gutter.
+   Scoped to >=75em — below that the mobile drill-in (folder → grid → detail) keeps
+   riding the body scroll, untouched. */
+@media (min-width: 75em) {
+  .window__body:has(> .fav) { display: flex; flex-direction: column; }
+  .fav { flex: 1 1 auto; min-height: 0; }
+  .fav__body { min-height: 0; }
+  .fav__content { position: relative; }
+  .fav__grids { overflow-y: auto; min-height: 0; padding-right: 20px; }
+  .fav__detail { overflow-y: auto; min-height: 0; }
+}
 
 /* ---- cover tile --------------------------------------------------------- */
 .fav__cover {

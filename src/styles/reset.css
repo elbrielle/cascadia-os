@@ -41,6 +41,13 @@ p { margin: 0; }
   outline: 2px solid var(--color-accent);
   outline-offset: 2px;
 }
+/* Edge-anchored chrome (the bottom-fixed taskbar) — INSET the ring so the 2px
+   accent outline stays on-screen instead of clipping off the viewport / chrome
+   edge. Same inset-ring idiom as the form inputs + folder heads. */
+.taskbar__start:focus-visible,
+.taskbar__item:focus-visible {
+  outline-offset: -2px;
+}
 
 /* iOS paints a rounded translucent grey flash over every tapped control —
    on hard-edged Win95 chrome it breaks the illusion and sits on top of the
@@ -68,5 +75,5 @@ p { margin: 0; }
 /* Selection — match the accent. */
 ::selection {
   background: var(--color-accent);
-  color: var(--color-text-inverse);
+  color: var(--color-on-accent);
 }
