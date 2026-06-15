@@ -1,0 +1,9 @@
+# elishalucero.com — Cascadia OS
+# Public portfolio: welcome to crawl. The Access-gated admin and the JSON API
+# endpoints are not content, so they're disallowed.
+User-agent: *
+Allow: /
+Disallow: /log-admin
+Disallow: /api/
+
+Sitemap: https://elishalucero.com/sitemap-index.xml

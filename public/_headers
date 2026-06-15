@@ -89,3 +89,12 @@
   # upgrade-insecure-requests
   #     Browser auto-rewrites any leaked http:// → https:// before request.
   Content-Security-Policy: default-src 'self'; base-uri 'self'; object-src 'none'; frame-ancestors 'none'; form-action https://api.web3forms.com; img-src 'self' https: data:; font-src 'self'; style-src 'self' 'unsafe-inline'; script-src 'self' 'sha256-vtgAhUJLbMgaG++309rF9L6JOOPMqJ5Je/FOwKIpw9I=' 'sha256-uv/cyGE1G6S2eMzv3yG2M0X6p1WuQMJT+3ceqSR5arI='; connect-src 'self' https://api.web3forms.com; upgrade-insecure-requests
+
+# Astro fingerprints /_astro/ filenames with a content hash (e.g.
+# Layout.Bw89FH-O.css), so a content change ships a NEW filename — these can be
+# cached forever. The /* security headers above still layer onto these responses;
+# this just makes the immutable contract explicit (Cloudflare Pages otherwise
+# applies a shorter default). NOT applied to /fonts/ or /wallpaper/ — those have
+# fixed filenames, so immutable caching would serve a stale asset after an update.
+/_astro/*
+  Cache-Control: public, max-age=31536000, immutable

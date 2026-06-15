@@ -60,7 +60,11 @@
     document.querySelectorAll("[data-tweak-group]").forEach((g) => {
       const key = g.dataset.tweakGroup;
       g.querySelectorAll("[data-tweak-value]").forEach((b) => {
-        b.classList.toggle("is-active", b.dataset.tweakValue === state[key]);
+        const on = b.dataset.tweakValue === state[key];
+        b.classList.toggle("is-active", on);
+        // Expose the selected value to assistive tech, not just visually (the
+        // .is-active bevel). Mirrors the Favorites switcher (favorites-explorer.js).
+        b.setAttribute("aria-pressed", on ? "true" : "false");
       });
     });
   }

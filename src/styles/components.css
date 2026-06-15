@@ -82,11 +82,14 @@
   box-shadow:
     inset -1px -1px 0 var(--bevel-light),
     inset  1px  1px 0 var(--bevel-dark);
+  /* Content sinks 1px with the bevel (hard-cut — .btn transitions filter, not
+     transform), so the press reads as physical like real Win95 buttons. */
+  transform: translate(1px, 1px);
 }
 
 .btn--primary {
   background: var(--color-accent);
-  color: var(--color-text-inverse);
+  color: var(--color-on-accent);
   border-color: var(--bevel-darker);
 }
 .btn--primary:hover { background: var(--color-accent-hover); }
@@ -201,22 +204,6 @@
   to { opacity: 0; }
 }
 
-/* --- Stat row (the "now playing / now building" widgets) -------------- */
-.stat-row {
-  display: grid;
-  grid-template-columns: auto 1fr;
-  gap: var(--space-2);
-  font-family: var(--font-mono);
-  font-size: 14px;
-  color: var(--color-text-muted);
-  letter-spacing: 0.5px;
-  align-items: baseline;
-}
-.stat-row__key {
-  color: var(--color-accent);
-  text-transform: uppercase;
-}
-
 /* --- RSS pixel glyph in the Build Log corner -------------------------- */
 .rss-corner {
   position: absolute;
@@ -232,99 +219,17 @@
 .rss-corner:hover { transform: scale(1.1); filter: brightness(1.06); }
 .rss-corner svg { width: 100%; height: 100%; display: block; }
 .window__body { position: relative; }
+/* When the custom Win95 scrollbar is present (scrollbar.js stamps .has-cscroll)
+   it overlays the body's right gutter — the 16px bar would collide with the RSS
+   glyph at right:8px. Nudge the glyph left of the bar. Only when the bar exists:
+   on touch/no-JS there's no .has-cscroll, so the corner keeps its tight 8px. */
+.window__body.has-cscroll .rss-corner { right: 28px; }
 
-/* --- Book list (About → attention.log, Goodreads currently-reading) ---- */
-.book-list {
-  list-style: none;
-  padding: 0;
-  margin: 0;
-  display: grid;
-  gap: var(--space-2);
-}
-.book {
-  display: grid;
-  grid-template-columns: 48px 1fr;
-  gap: var(--space-3);
-  align-items: start;
-  padding: var(--space-2);
-  background: var(--color-surface-sunken);
-  border: 1px solid var(--bevel-dark);
-  box-shadow:
-    inset  1px  1px 0 var(--bevel-dark),
-    inset -1px -1px 0 var(--bevel-light);
-}
-.book__cover-link {
-  display: block;
-  line-height: 0;
-}
-.book__cover {
-  width: 48px;
-  height: auto;
-  display: block;
-  border: 2px solid var(--bevel-darker);
-  box-shadow: var(--shadow-hard);
-  image-rendering: auto; /* covers are photos, not pixel-art */
-}
-.book__meta {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-  min-width: 0;
-}
-.book__title {
-  font-family: var(--font-display);
-  font-size: var(--text-sm);
-  letter-spacing: 0.5px;
-  text-transform: uppercase;
-  color: var(--color-accent);
-  text-decoration: underline;
-  text-decoration-thickness: 2px;
-  text-underline-offset: 2px;
-  word-break: break-word;
-}
-.book__title:hover { color: var(--color-accent-hover); }
-.book__author {
-  font-family: var(--font-mono);
-  font-size: 14px;
-  color: var(--color-text-muted);
-  letter-spacing: 0.5px;
-}
-
-/* --- attention.log: recently-watched (Trakt) -------------------------- */
-/*  Poster (TMDB, optional) + a colored kind chip — Film vs TV. Same sunken
-    panel chrome as .book so the two lists read as one feed. Rows render fine
-    with OR without a poster (no TMDB key → just the chip + title). */
-.watch-list {
-  list-style: none;
-  padding: 0;
-  margin: 0;
-  display: grid;
-  gap: var(--space-2);
-}
-.watch {
-  display: flex;
-  gap: var(--space-3);
-  align-items: flex-start;
-  padding: var(--space-2);
-  background: var(--color-surface-sunken);
-  border: 1px solid var(--bevel-dark);
-  box-shadow:
-    inset  1px  1px 0 var(--bevel-dark),
-    inset -1px -1px 0 var(--bevel-light);
-}
-.watch__poster-link {
-  display: block;
-  line-height: 0;
-  flex: 0 0 auto;
-}
-.watch__poster {
-  width: 46px;
-  height: auto; /* posters are 2:3 — let height follow */
-  display: block;
-  border: 2px solid var(--bevel-darker);
-  box-shadow: var(--shadow-hard);
-  image-rendering: auto; /* real artwork, not pixel art */
-}
+/* --- attention.log detail bar (built by attention-grid.js) ----------- */
+/*  The Home attention.log is a JS icon-grid; clicking a tile reveals a detail
+    bar. These .watch__* + .kind* classes style that bar. The old server-
+    rendered .book-list / .watch-list / poster-row CSS was dropped when the
+    grid shipped (#59); these survivors are what the bar still uses. */
 .watch__meta {
   display: flex;
   flex-direction: column;
@@ -384,6 +289,10 @@
   --t-game: var(--tint-game);  --t-album: var(--tint-album); --t-paper: var(--tint-paper);
 }
 .attn > * + * { margin-top: var(--space-3); }
+/* The section headers (<h2>) are large (text-xl); give the cover grid extra air
+   below its header so the title doesn't crowd the covers — the uniform * + * gap
+   reads tight under the big uppercase heading. */
+.attn h2 + .attn__grid { margin-top: var(--space-4); }
 /* Intro is a single punchy line; scale it up with the window but keep it on
    ONE line down to the narrowest phones (min term ≈ current size, vw term sized
    so "what's got my attention" never wraps in the narrow mobile column). */
@@ -429,7 +338,7 @@
 .attn__cap {
   font-family: var(--font-display); font-size: var(--text-xs); line-height: 1.15;
   letter-spacing: 0.3px; text-transform: uppercase; color: var(--color-text);
-  display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+  display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden;
 }
 .attn__tile:hover .attn__cov { filter: brightness(1.08); transform: translate(-1px, -1px); }
 .attn__tile.is-sel .attn__cov { outline: 2px solid var(--color-accent); outline-offset: 1px; }
@@ -465,6 +374,15 @@
 .kind--game { background: var(--tint-game); }
 .kind--album { background: var(--tint-album); }
 .kind--paper { background: var(--tint-paper); }
+/* White text on fir-green / salmonberry-pink fails WCAG AA at the 9px chip size
+   (4.25:1 / 3.79:1). Override just those two with the midnight deep-ink, which
+   clears AA (4.59:1 / 5.14:1), rather than darkening --tint-game / --tint-album
+   — those tokens also feed the cover placeholders via --t-game / --t-album, so
+   the change would bleed past the chips. The other four kinds keep #fff (all
+   pass, lowest is book at 4.86:1). Tints are fixed in both themes, so this holds
+   in light + dark alike. */
+.kind--game,
+.kind--album { color: #050D18; }
 
 /* --- Tag cloud (Blog → Tags window) ----------------------------------- */
 .tag-cloud {
@@ -492,7 +410,7 @@
 }
 /* Active state — set on /blog/tagged/<slug>/ for the tag matching the route. */
 .tag.is-active {
-  color: var(--color-text-inverse);
+  color: var(--color-on-accent);
   background: var(--color-accent);
   padding: 0 6px;
   border-bottom-color: transparent;
@@ -538,7 +456,7 @@
 }
 .filter-pill__clear:hover {
   background: var(--color-accent);
-  color: var(--color-text-inverse);
+  color: var(--color-on-accent);
 }
 
 /* --- Pixel link rows (Contact / project links) ------------------------ */
@@ -694,11 +612,10 @@
   overflow-wrap: anywhere;
 }
 
-/* --- Work-item card (Work → Client Work) ------------------------------ */
-.work-item {
-  border-left: 6px solid var(--accent, var(--color-accent));
-  padding-left: var(--space-3);
-}
+/* --- Work-item card (Work → Client Work) ------------------------------
+   Each card is `.panel work-item`, so it already wears the full Win95 sunken
+   bevel from .panel (all four sides). The category colour is carried by the
+   work-item__icon + the h3 title — not a one-sided coloured left "spine". */
 .work-item__header {
   display: grid;
   grid-template-columns: 24px 1fr;
@@ -965,4 +882,66 @@
   font-size: 14px;
   line-height: 1.7;
   color: var(--color-text);
+}
+
+/* --- README (About → #bio) -------------------------------------------------
+   Frames Elisha's bio like a 90s README.TXT: a filename header with a small
+   document glyph, then an in-theme dashed divider that echoes resume.doc's
+   .resume__rule so it reads as the SAME OS. The bio prose is unchanged — this
+   is chrome only. The comfortable reading measure comes from window.css's
+   `.readme__body > p` cap. */
+.readme__head {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-2);
+}
+.readme__name {
+  margin: 0;
+}
+/* Small document glyph before the filename — mono so it renders crisply even
+   if the display face lacks the box-drawing char; accent so it reads as a file
+   marker, not text. Decorative, hidden from the accessibility tree. */
+.readme__name::before {
+  content: "▤ ";
+  font-family: var(--font-mono);
+  color: var(--color-accent);
+  -webkit-text-fill-color: var(--color-accent);
+}
+.readme__rule {
+  border: 0;
+  /* text-muted (not bevel-dark) so the dashes stay legible on BOTH papers —
+     bevel-dark is near-black on the dark Midnight Bay paper and disappears. */
+  border-top: 2px dashed var(--color-text-muted);
+  margin: var(--space-2) 0 var(--space-3);
+}
+.readme__body > p + p { margin-top: var(--space-3); }
+/* Retro ▸ marker in front of each paragraph — gives the README a bulleted feel
+   with ZERO rewording, reusing the ul.cli triangle idiom (components.css top).
+   Hanging indent so wrapped lines align under the text, not the marker. */
+.readme__body > p {
+  position: relative;
+  padding-left: 24px;
+}
+.readme__body > p::before {
+  content: "▸";
+  position: absolute;
+  left: 4px;
+  color: var(--color-accent);
+  font-weight: 700;
+}
+
+/* --- Contact form status line -------------------------------------------
+   The submit-status text (.form-status) renders on the window paper, where the
+   global light warning amber (--color-warning #C97506) only reaches 3.25:1 on
+   the error path, below WCAG AA. Re-point the variable LOCALLY to a darker amber
+   that clears AA on the paper (5.18:1). The handler sets `color: var(--color-
+   warning)` inline, so it picks this up with no script edit (CSP gate untouched).
+   This is deliberately NOT a global darken: the other --color-warning consumers
+   (the hit-counter + Start-menu LCD labels) sit on a #000 LCD, where a darker
+   amber would LOWER contrast (6.03:1 -> ~4.3:1) — they keep #C97506. Dark theme's
+   #FBBF24 already passes on the dark paper (7.7:1), so restore it there. */
+.form-status { --color-warning: #A84F08; }
+:root[data-theme="dark"] .form-status { --color-warning: var(--dark-color-warning); }
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme]) .form-status { --color-warning: var(--dark-color-warning); }
 }

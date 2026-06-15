@@ -216,13 +216,68 @@
       if (ok) ok.focus();
     }
 
-    // Expose openAbout so the right-click context menu's Properties item can
-    // open the SAME System Properties dialog without duplicating its markup.
-    // Defined here inside init() so it keeps its closures over `btn` (focus
-    // return) and `setShellInert` (focus trap). Mirrors the existing
-    // window.CascadiaWindows / CascadiaIcons / CascadiaTweaks convention.
+    /* ----- Credits (right-click desktop → Credits) ----------------------- */
+    // Reuses the SAME .os-dialog chrome + focus-trap + close machinery as
+    // openAbout. Proper attribution for the work Cascadia OS builds on — the
+    // inspirations + fonts + art researched while building the site. Opened
+    // from the right-click context menu (context-menu.js) via the exposed
+    // window.CascadiaStartMenu.openCredits.
+    function openCredits() {
+      var modal = document.createElement("div");
+      modal.className = "os-modal";
+      modal.innerHTML =
+        '<div class="os-dialog" role="dialog" aria-modal="true" aria-labelledby="credits-title">' +
+          '<header class="os-dialog__bar">' +
+            '<span class="os-dialog__title" id="credits-title">Credits</span>' +
+            '<button class="os-dialog__close" type="button" aria-label="Close">×</button>' +
+          '</header>' +
+          '<div class="os-dialog__body">' +
+            '<div class="os-dialog__row">' +
+              '<span class="os-dialog__icon" data-icon="info" aria-hidden="true"></span>' +
+              '<div class="os-dialog__message">' +
+                '<p><strong>Cascadia&nbsp;OS</strong><br>The work it builds on, with thanks.</p>' +
+              '</div>' +
+            '</div>' +
+            '<dl class="credits">' +
+              '<div><dt>Inspiration</dt><dd><a href="https://www.nicchan.me/" target="_blank" rel="noopener">Nic Chan · nicchan.me</a>. The desktop-OS portfolio concept, the two-column window layout and the view-transition page motion were the foundations for me to branch off from.</dd></div>' +
+              '<div><dt>Type</dt><dd>Sysfont, Alina Sava’s revival of Susan Kare’s Chicago. W95FA, a Windows 95 system-font revival. <a href="https://departuremono.com/" target="_blank" rel="noopener">Departure Mono</a> by Helena Zhang.</dd></div>' +
+              '<div><dt>Art</dt><dd>Pacific Northwest day and night wallpapers, hand-tuned pixel scenes.</dd></div>' +
+            '</dl>' +
+            '<div class="os-dialog__actions">' +
+              '<button class="btn btn--primary" type="button" data-credits-ok>OK</button>' +
+            '</div>' +
+          '</div>' +
+        '</div>';
+      document.body.appendChild(modal);
+      setShellInert(true);                                       // trap focus in the dialog
+      if (window.CascadiaIcons) window.CascadiaIcons.mountAll(); // render the info icon
+
+      function close() {
+        document.removeEventListener("keydown", onEsc, true);
+        setShellInert(false);                                    // clear BEFORE refocusing
+        modal.remove();
+        btn.focus();
+      }
+      function onEsc(e) { if (e.key === "Escape") { e.preventDefault(); close(); } }
+
+      modal.addEventListener("click", function (e) {
+        if (e.target === modal) return close();             // backdrop
+        if (e.target.closest(".os-dialog__close")) return close();
+        if (e.target.closest("[data-credits-ok]")) return close();
+      });
+      document.addEventListener("keydown", onEsc, true);
+      var ok = modal.querySelector("[data-credits-ok]");
+      if (ok) ok.focus();
+    }
+
+    // Expose openAbout + openCredits so the right-click context menu's
+    // Properties / Credits items can open the SAME dialogs without duplicating
+    // their markup. Defined here inside init() so they keep their closures over
+    // `btn` (focus return) and `setShellInert` (focus trap). Mirrors the
+    // existing window.CascadiaWindows / CascadiaIcons / CascadiaTweaks convention.
     window.CascadiaStartMenu = window.CascadiaStartMenu || {};
     window.CascadiaStartMenu.openAbout = openAbout;
+    window.CascadiaStartMenu.openCredits = openCredits;
 
     /* ----- Shut Down gag -------------------------------------------------- */
     function shutDown() {

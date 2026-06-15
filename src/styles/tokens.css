@@ -38,6 +38,7 @@
   --color-text:           #11202A;
   --color-text-muted:     #5A6878;
   --color-text-inverse:   #F9F7F3;
+  --color-on-accent:      #F9F7F3;   /* readable ink ON an accent background (light = porcelain) */
 
   /* Title bar — deeper Pacific → Pacific Blue. AA-safe for white text. */
   --color-titlebar-a:     #0A6D7A;
@@ -93,7 +94,6 @@
      BEVELS
      ============================================================ */
   --bevel-light:          #FAFCFC;
-  --bevel-face:           #D8E2E2;
   --bevel-dark:           #7A8A92;
   --bevel-darker:         #0D1820;
 
@@ -117,11 +117,14 @@
 
   --text-xs:   0.875rem;    /* 14px (↑ from 13) — smallest labels            */
   --text-sm:   1rem;        /* 16px (↑ from 15) — window titles, item titles */
-  --text-base: 1.1875rem;   /* 19px (↑ from 18) — paragraph body. Sized so the
+  --text-base: 1.25rem;     /* 20px (↑ from 19) — paragraph body. Sized so the
                                W95FA PIXEL font (default mode, font-smoothing:
                                none) reads comfortably AT A GLANCE without
                                needing the anti-aliased toggle (the a11y
-                               option, not a readability crutch).            */
+                               option, not a readability crutch). The window
+                               body pairs this with a touch of letter-spacing
+                               and a capped measure (window.css) so the bitmap
+                               breathes and lines stop at a readable length.  */
   --text-lg:   1.5rem;      /* 24px (↑ from 22) — h3                        */
   --text-xl:   1.75rem;     /* 28px (↑ from 26) — h2                        */
   --text-2xl:  2.125rem;    /* 34px (↑ from 32)                             */
@@ -151,7 +154,6 @@
   --sidebar-width:    104px;
   --window-border:    3px;           /* thicker chrome, more "real"         */
   --icon-size:        48px;
-  --icon-pixel-size:  32px;
 
   /* ============================================================
      MOTION
@@ -217,6 +219,7 @@
   --dark-color-text:           #EDE0C8;   /* sand-warm */
   --dark-color-text-muted:     #8AA0A8;
   --dark-color-text-inverse:   #EDE0C8;
+  --dark-color-on-accent:      #050D18;   /* dark accent is bright coral -> dark ink (9:1, AA) */
 
   --dark-color-titlebar-a:     #0A6D7A;
   --dark-color-titlebar-b:     #0FA3B1;
@@ -251,7 +254,6 @@
   --dark-wp-snow:              #5A7484;
 
   --dark-bevel-light:          #3A5560;
-  --dark-bevel-face:           #15252E;
   --dark-bevel-dark:           #050D15;
   --dark-bevel-darker:         #000000;
 
@@ -270,6 +272,7 @@
   --color-text:           var(--dark-color-text);
   --color-text-muted:     var(--dark-color-text-muted);
   --color-text-inverse:   var(--dark-color-text-inverse);
+  --color-on-accent:      var(--dark-color-on-accent);
   --color-titlebar-a:     var(--dark-color-titlebar-a);
   --color-titlebar-b:     var(--dark-color-titlebar-b);
   --color-titlebar-text:  var(--dark-color-titlebar-text);
@@ -299,7 +302,6 @@
   --wp-lighthouse-red:    var(--dark-wp-lighthouse-red);
   --wp-snow:              var(--dark-wp-snow);
   --bevel-light:          var(--dark-bevel-light);
-  --bevel-face:           var(--dark-bevel-face);
   --bevel-dark:           var(--dark-bevel-dark);
   --bevel-darker:         var(--dark-bevel-darker);
   --shadow-hard:          var(--dark-shadow-hard);
@@ -318,6 +320,7 @@
     --color-text:           var(--dark-color-text);
     --color-text-muted:     var(--dark-color-text-muted);
     --color-text-inverse:   var(--dark-color-text-inverse);
+    --color-on-accent:      var(--dark-color-on-accent);
     --color-titlebar-a:     var(--dark-color-titlebar-a);
     --color-titlebar-b:     var(--dark-color-titlebar-b);
     --color-titlebar-text:  var(--dark-color-titlebar-text);
@@ -347,7 +350,6 @@
     --wp-lighthouse-red:    var(--dark-wp-lighthouse-red);
     --wp-snow:              var(--dark-wp-snow);
     --bevel-light:          var(--dark-bevel-light);
-    --bevel-face:           var(--dark-bevel-face);
     --bevel-dark:           var(--dark-bevel-dark);
     --bevel-darker:         var(--dark-bevel-darker);
     --shadow-hard:          var(--dark-shadow-hard);

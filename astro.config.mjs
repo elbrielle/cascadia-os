@@ -1,5 +1,6 @@
 // @ts-check
 import { defineConfig } from 'astro/config';
+import sitemap from '@astrojs/sitemap';
 
 // ============================================================================
 //  astro.config.mjs  —  PROJECT-WIDE ASTRO SETTINGS
@@ -19,4 +20,14 @@ export default defineConfig({
   // Astro defaults to "directory" routing, so a page at src/pages/about.astro
   // is served at /about/ (with a trailing slash). The nav links use that form.
   trailingSlash: 'always',
+
+  // Generates sitemap-index.xml + sitemap-0.xml at build (uses `site` above for
+  // absolute URLs). robots.txt (public/robots.txt) points crawlers at it.
+  integrations: [
+    sitemap({
+      // The /log-admin curation tool is Cloudflare-Access-gated; keep it out of
+      // the public sitemap (robots.txt disallows it too).
+      filter: (page) => !page.includes('/log-admin'),
+    }),
+  ],
 });

@@ -91,6 +91,7 @@ body {
 .desktop-icon:focus-visible .desktop-icon__label,
 .desktop-icon.is-active .desktop-icon__label {
   background: var(--color-accent);
+  color: var(--color-on-accent);
 }
 .desktop-icon.is-active .desktop-icon__img {
   outline: 2px dashed var(--color-accent);
@@ -321,6 +322,16 @@ body {
 }
 
 .taskbar__item:hover { background: var(--color-surface-hover); }
+
+/* Transient press feedback on a click — reuses the .taskbar__start:active
+   pressed-bevel idiom. Scoped to :not(.is-active) so it doesn't fight the
+   persistent pressed look of the active window's button. Hard-cut, no transition. */
+.taskbar__item:active:not(.is-active) {
+  box-shadow:
+    inset -1px -1px 0 var(--bevel-light),
+    inset  1px  1px 0 var(--bevel-dark);
+  background: var(--color-surface-sunken);
+}
 
 .taskbar__item.is-active {
   box-shadow:

@@ -10,7 +10,8 @@
 // ============================================================================
 import Layout from "../../../layouts/Layout.astro";
 import Window from "../../../components/Window.astro";
-import { getPosts, getTags, formatDate, makeTagSizer, SUBSTACK_FEED_URL } from "../../../lib/substack.js";
+import TagsWindow from "../../../components/TagsWindow.astro";
+import { getPosts, getTags, formatDate, SUBSTACK_FEED_URL } from "../../../lib/substack.js";
 
 export async function getStaticPaths() {
   const [posts, tags] = await Promise.all([getPosts(), getTags()]);
@@ -24,8 +25,6 @@ const { tag, posts, tags } = Astro.props;
 const filtered = posts.filter((p) =>
   Array.isArray(p.tags) && p.tags.some((t) => t.slug === tag.slug)
 );
-
-const tagSize = makeTagSizer(tags); // shared tag-cloud sizing (see substack.js)
 ---
 
 <Layout title={`Elisha Lucero — Blog — ${tag.name}`} pageTitle="Blog" current="blog">
@@ -63,17 +62,7 @@ const tagSize = makeTagSizer(tags); // shared tag-cloud sizing (see substack.js)
   </div>
 
   <div class="layout__cell blog__tags">
-  <Window id="tags" title="Tags" width={360}>
-    <div class="tag-cloud">
-      {tags.map((t) => (
-        <a
-          class:list={["tag", t.slug === tag.slug && "is-active"]}
-          href={`/blog/tagged/${t.slug}/`}
-          style={`font-size: ${tagSize(t.count ?? 1)}px;`}
-        >{t.name}</a>
-      ))}
-    </div>
-  </Window>
+  <TagsWindow tags={tags} activeSlug={tag.slug} />
   </div>
 
 </Layout>

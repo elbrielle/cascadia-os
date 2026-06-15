@@ -34,8 +34,12 @@
     }
 
     // Let the just-opened folder lay out before scrolling to the item.
+    // Honor prefers-reduced-motion: a programmatic smooth scroll isn't covered
+    // by the CSS animation/transition squash, so gate it like windows.js /
+    // startmenu.js already do for their JS motion.
     requestAnimationFrame(function () {
-      target.scrollIntoView({ block: "center", behavior: "smooth" });
+      var smooth = !window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+      target.scrollIntoView({ block: "center", behavior: smooth ? "smooth" : "auto" });
     });
 
     // Brief highlight so the clicked project is obvious on arrival.

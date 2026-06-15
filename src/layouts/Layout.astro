@@ -6,6 +6,9 @@
 //    title     — browser tab text
 //    pageTitle — the giant on-screen heading (the "Home"/"About" word)
 //    current   — which nav id is active (home/about/work/blog/contact)
+//    noindex   — when true, emit robots noindex,nofollow and DROP the canonical
+//                + og:url (for non-indexable pages like 404 — a soft-404 served
+//                at HTTP 200 shouldn't advertise a self-referential canonical)
 //  Real Astro routes + <ClientRouter /> view transitions handle navigation;
 //  the inline scripts at the end of <body> self-register an `astro:page-load`
 //  listener so they run on the initial load AND after every view-transition
@@ -35,6 +38,7 @@ const {
   pageTitle = "",
   current = "",
   description = "Elisha Lucero is a tech educator, curriculum designer, and technical builder creating classroom tools, curriculum, and opinion essays.",
+  noindex = false,
 } = Astro.props;
 
 // Absolute URLs for social cards (og:/twitter:) — Astro.site is the configured
@@ -76,7 +80,9 @@ const nav = [
     <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32.png" />
     <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16.png" />
     <link rel="apple-touch-icon" href="/images/apple-touch-icon.png" />
-    <link rel="canonical" href={canonical} />
+    {noindex
+      ? <meta name="robots" content="noindex, nofollow" />
+      : <link rel="canonical" href={canonical} />}
     <!-- Feed-reader auto-discovery for the Substack blog feed (the visible RSS
          icon on /blog/ is the human path; this is the machine path). -->
     <link rel="alternate" type="application/rss+xml" title="Elisha Lucero — Blog" href={SUBSTACK_FEED_URL} />
@@ -88,7 +94,7 @@ const nav = [
     <meta property="og:site_name" content="Elisha Lucero" />
     <meta property="og:title" content={title} />
     <meta property="og:description" content={description} />
-    <meta property="og:url" content={canonical} />
+    {!noindex && <meta property="og:url" content={canonical} />}
     <meta property="og:image" content={ogImage} />
     <meta property="og:image:width" content="1200" />
     <meta property="og:image:height" content="630" />
@@ -229,18 +235,18 @@ const nav = [
             </button>
             <div class="start-menu__submenu" id="settings-submenu" role="group" aria-label="Settings" hidden>
               <div class="tweaks-group">
-                <h3>Theme</h3>
-                <div class="tweaks-radio" data-tweak-group="theme">
-                  <button type="button" data-tweak-value="system">System</button>
-                  <button type="button" data-tweak-value="light">Light</button>
-                  <button type="button" data-tweak-value="dark">Dark</button>
+                <h3 id="tweaks-theme-label">Theme</h3>
+                <div class="tweaks-radio" data-tweak-group="theme" role="group" aria-labelledby="tweaks-theme-label">
+                  <button type="button" data-tweak-value="system" aria-pressed="true">System</button>
+                  <button type="button" data-tweak-value="light" aria-pressed="false">Light</button>
+                  <button type="button" data-tweak-value="dark" aria-pressed="false">Dark</button>
                 </div>
               </div>
               <div class="tweaks-group">
-                <h3>Font rendering</h3>
-                <div class="tweaks-radio" data-tweak-group="smoothing">
-                  <button type="button" data-tweak-value="pixel">Pixel</button>
-                  <button type="button" data-tweak-value="smooth">Anti-aliased</button>
+                <h3 id="tweaks-smoothing-label">Font rendering</h3>
+                <div class="tweaks-radio" data-tweak-group="smoothing" role="group" aria-labelledby="tweaks-smoothing-label">
+                  <button type="button" data-tweak-value="pixel" aria-pressed="true">Pixel</button>
+                  <button type="button" data-tweak-value="smooth" aria-pressed="false">Anti-aliased</button>
                 </div>
               </div>
             </div>
@@ -364,6 +370,7 @@ const nav = [
     <script is:inline src="/scripts/explorer.js"></script>
     <script is:inline src="/scripts/favorites-explorer.js"></script>
     <script is:inline src="/scripts/attention-grid.js"></script>
+    <script is:inline src="/scripts/scrollbar.js"></script>
 
     <!-- Sidebar nav active-state sync. Since .desktop-icons is persisted,
          its `is-active` class doesn't change naturally on nav — this updates

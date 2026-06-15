@@ -255,6 +255,10 @@
   box-shadow:
     inset -1px -1px 0 var(--bevel-light),
     inset  1px  1px 0 var(--bevel-dark);
+  /* Sink the glyph 1px down-right with the bevel, like a real Win95 button.
+     The ::before hit-area is a child, so it travels along and still covers.
+     Hard-cut — the button transitions background/filter, not transform. */
+  transform: translate(1px, 1px);
 }
 
 /* --- Body: the "paper" content area -------------------------------------- */
@@ -269,6 +273,10 @@
   font-family: var(--font-body);
   font-size: var(--text-base);
   line-height: var(--leading-body);
+  /* W95FA is a tight bitmap; a hair of tracking opens the prose without
+     fuzzing the pixel edges. Chrome labels that set their own letter-spacing
+     (titlebar, .kind chips, post titles, resume roles) override this.       */
+  letter-spacing: 0.02em;
   /* Sunken inner bevel so paper looks recessed.                            */
   box-shadow:
     inset  1px  1px 0 var(--bevel-dark),
@@ -285,6 +293,16 @@
 }
 
 .window__body > * + * { margin-top: var(--space-3); }
+
+/* Cap the reading measure on flowing prose so long lines stop at a comfortable
+   length — the window chrome keeps its designed width; only the running text
+   ends a little short of the edge. Scoped to top-level paragraphs and plain
+   list rows (and the README's .readme__body, when present) so grid/flex
+   content — Favorites covers, the attention grid, resume columns, the contact
+   form — is never constrained. */
+.window__body > p,
+.window__body > ul.cli > li,
+.window__body .readme__body > p { max-width: 64ch; }
 
 /* Retro scrollbar — only shows when a window's body actually overflows, so a
    clipped list (e.g. Build Log's recent posts) reads as "scroll for more,"
@@ -311,6 +329,115 @@
     inset -1px -1px 0 var(--bevel-dark);
 }
 .window__body::-webkit-scrollbar-thumb:hover { background: var(--color-surface-hover); }
+
+/* --- Custom Win95 scrollbar (scrollbar.js) -------------------------------
+   On desktop (pointer:fine) scrollbar.js hides the native bar and overlays a
+   real-DOM bar so the arrow BUTTONS + thumb GRIP actually render on macOS/
+   Safari (the native pseudo-elements above can't draw them there). Touch / no-JS
+   fall back to the native styled bar above. Vertical only. */
+/* Unscoped from .window__body: the custom bar can now also take over the
+   favorites cover grid (.fav__grids), so hide the native bar on ANY .has-cscroll. */
+.has-cscroll { scrollbar-width: none; }
+.has-cscroll::-webkit-scrollbar { width: 0; height: 0; display: none; }
+
+.cscroll {
+  position: absolute;
+  width: 16px;
+  z-index: 20;                 /* above body content, within the .window context */
+  display: flex;
+  flex-direction: column;
+  background: var(--color-surface-sunken);
+  user-select: none;
+}
+/* Arrow buttons: raised beveled squares with a CSS-triangle glyph inked in
+   --color-text so it reads on both theme faces. */
+.cscroll__btn {
+  flex: 0 0 16px;
+  position: relative;
+  padding: 0;
+  background: var(--color-surface);
+  border: 2px solid var(--bevel-darker);
+  box-shadow:
+    inset  1px  1px 0 var(--bevel-light),
+    inset -1px -1px 0 var(--bevel-dark);
+  cursor: pointer;
+}
+.cscroll__btn:hover { background: var(--color-surface-hover); }
+.cscroll__btn:active {
+  box-shadow:
+    inset -1px -1px 0 var(--bevel-light),
+    inset  1px  1px 0 var(--bevel-dark);
+}
+.cscroll__btn::before {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 0;
+  height: 0;
+  transform: translate(-50%, -50%);
+}
+.cscroll__btn--up::before {
+  border-left: 4px solid transparent;
+  border-right: 4px solid transparent;
+  border-bottom: 5px solid var(--color-text);
+}
+.cscroll__btn--down::before {
+  border-left: 4px solid transparent;
+  border-right: 4px solid transparent;
+  border-top: 5px solid var(--color-text);
+}
+/* Glyph rides down-right 1px with the bevel on press. */
+.cscroll__btn:active::before { transform: translate(calc(-50% + 1px), calc(-50% + 1px)); }
+
+/* Sunken track between the buttons. */
+.cscroll__track {
+  flex: 1 1 auto;
+  position: relative;
+  box-shadow:
+    inset  1px  1px 0 var(--bevel-dark),
+    inset -1px -1px 0 var(--bevel-light);
+}
+/* Raised thumb (top/height set by scrollbar.js). */
+.cscroll__thumb {
+  position: absolute;
+  left: 0;
+  right: 0;
+  min-height: 24px;
+  background: var(--color-surface);
+  border: 2px solid var(--bevel-darker);
+  box-shadow:
+    inset  1px  1px 0 var(--bevel-light),
+    inset -1px -1px 0 var(--bevel-dark);
+  cursor: grab;
+}
+.cscroll__thumb:active {
+  cursor: grabbing;
+  box-shadow:
+    inset -1px -1px 0 var(--bevel-light),
+    inset  1px  1px 0 var(--bevel-dark);
+}
+/* Engraved 3-ridge grip — alternating dark/light lines centered on the thumb.
+   A real element, so background-image paints here (unlike the native thumb). */
+.cscroll__thumb::before {
+  content: "";
+  position: absolute;
+  left: 2px;
+  right: 2px;
+  top: 50%;
+  height: 8px;
+  transform: translateY(-50%);
+  background-image:
+    linear-gradient(var(--bevel-dark)  0 0),
+    linear-gradient(var(--bevel-light) 0 0),
+    linear-gradient(var(--bevel-dark)  0 0),
+    linear-gradient(var(--bevel-light) 0 0),
+    linear-gradient(var(--bevel-dark)  0 0),
+    linear-gradient(var(--bevel-light) 0 0);
+  background-repeat: no-repeat;
+  background-size: 100% 1px;
+  background-position: 0 0, 0 1px, 0 3px, 0 4px, 0 6px, 0 7px;
+}
 
 /* --- States --------------------------------------------------------------- */
 /* Plain `is-minimized` (no animation in progress) — hide instantly.

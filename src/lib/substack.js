@@ -182,6 +182,9 @@ export function makeTagSizer(tags) {
 }
 
 export function formatDate(date) {
-  if (!date) return "";
+  // `date` is a Date or null (see post mapping above). Guard the INVALID-Date
+  // case too: `new Date("garbage")` is truthy, so without isNaN it would render
+  // the literal text "Invalid Date" into the post date span.
+  if (!date || isNaN(date.getTime())) return "";
   return date.toLocaleDateString("en-US", { year: "numeric", month: "short", day: "2-digit" });
 }
