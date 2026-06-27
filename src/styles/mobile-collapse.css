@@ -1,0 +1,51 @@
+/* ============================================================================
+   mobile-collapse.css  —  "a scannable index that expands on demand" (mobile)
+   ----------------------------------------------------------------------------
+   A reusable native-<details> disclosure for tall windows on phones. Each
+   collapsible block is authored OPEN in markup, so DESKTOP (and the 721-991px
+   band) are correct at first paint with zero CSS and zero JS. On mobile,
+   public/scripts/mobile-collapse.js strips [open] at <=720px (a media query
+   CANNOT toggle the open attribute) and re-syncs on breakpoint change; a block
+   marked [data-m-keep-open] always stays open. Keyboard + screen-reader support
+   come free from the native <details>/<summary>. Keep a REAL heading inside the
+   <summary> so the document outline survives when collapsed.
+   ========================================================================== */
+
+.m-collapse > summary {
+  display: block;
+  list-style: none;
+  cursor: default;
+  pointer-events: none; /* desktop: a plain heading row, not a toggle */
+}
+.m-collapse > summary::-webkit-details-marker { display: none; }
+
+@media (max-width: 720px) {
+  /* Mobile: the summary IS the tap target — a real disclosure with the Win95
+     [+]/[-] idiom, a >=44px hit area, and the accent focus ring. */
+  .m-collapse > summary {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    min-height: 44px;
+    cursor: pointer;
+    pointer-events: auto;
+  }
+  .m-collapse > summary > * { margin: 0; } /* heading sits inline in the row */
+  .m-collapse > summary::after {
+    content: "[+]";
+    margin-left: auto;
+    font-family: var(--font-mono);
+    font-size: var(--text-sm);
+    color: var(--color-text-muted);
+  }
+  .m-collapse[open] > summary::after { content: "[\2212]"; } /* [-] when open */
+  .m-collapse > summary:focus-visible {
+    outline: 2px solid var(--color-accent);
+    outline-offset: -2px;
+  }
+  .m-collapse > summary:hover { color: var(--color-accent); }
+
+  /* The File Explorer folders are now a primary mobile interaction (data-m-mobile),
+     so ensure their toggle row meets the 44px touch target. */
+  .folder__head { min-height: 44px; }
+}

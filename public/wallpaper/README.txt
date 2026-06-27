@@ -8,4 +8,4 @@ These are TRUE pixel art (1920x1080, ~40-52 KB): a Firewatch-style scene
 rendered through the pixel pipeline — downscale to 640px art-res, quantize to
 a ~36-colour Cascadia-token-snapped palette, Bayer ordered-dither, then
 nearest-neighbour upscale x3. To regenerate or retune (chunkiness / palette /
-dither strength), see scripts/pixelate-wallpaper.py (the KNOBS block).
+dither strength), see docs/PROJECT-STATUS.md ("Wallpaper — pixel-art pipeline").

@@ -17,6 +17,23 @@ import sitemap from '@astrojs/sitemap';
 export default defineConfig({
   site: 'https://elishalucero.com',
 
+  // Route-split browser scripts are pulled into pages via `?url` imports (see
+  // any page's `import x from "../scripts/x.js?url"`). Vite's default
+  // assetsInlineLimit (4 KB) would inline a SMALL such script as a `data:` URI
+  // in the <script src> — which our CSP (`script-src 'self'`, no `data:`)
+  // BLOCKS at runtime, silently breaking that script in prod while still
+  // passing `npm run build` + the inline-hash gate. Force every .js asset to
+  // emit as a real fingerprinted file under /_astro (cacheable, CSP-clean);
+  // leave images/fonts on Vite's default inlining.
+  vite: {
+    build: {
+      assetsInlineLimit(filePath) {
+        if (filePath.endsWith('.js')) return false;
+        return undefined; // others → Vite default (4096 bytes)
+      },
+    },
+  },
+
   // Astro defaults to "directory" routing, so a page at src/pages/about.astro
   // is served at /about/ (with a trailing slash). The nav links use that form.
   trailingSlash: 'always',

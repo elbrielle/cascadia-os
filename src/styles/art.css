@@ -1,0 +1,653 @@
+/* ============================================================================
+   art.css  —  the Art page's four medium windows
+   ----------------------------------------------------------------------------
+   The Art page is a Win95 desktop of four DISTINCT windows (art.astro), each its
+   own physical idiom: a cork board (Photography), a record crate (Music), a
+   Notepad/Explorer file-list (Poetry), and a light table (Visual). Real Win95
+   chrome comes from the shared <Window> component + our bevel tokens; these rules
+   build the tailored interiors. Each window sizes to its content (the page grid
+   top-aligns them — layout.css). All colors via tokens so both themes work; the
+   physical surfaces (cork, lightbox) carry a small dark-theme override.
+   ========================================================================== */
+
+/* ---- shared sunken status bar (the bottom strip of every window) --------- */
+.art-status {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--space-2);
+  margin-top: var(--space-3);
+  padding: 3px 8px;
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  color: var(--color-text-muted);
+  background: var(--color-surface);
+  border: 1px solid var(--bevel-dark);
+  box-shadow: var(--bevel-in);
+}
+.art-status b { color: var(--color-text); font-weight: 400; }
+
+/* ============================ PHOTOGRAPHY → CORK BOARD ===================== */
+/* Panes layout (Window `panes`): tabs + status pinned, only the cork surface
+   ([data-scroll-pane]) scrolls. The body padding is 0 under panes, so each
+   chrome row owns its own margin. */
+.board { display: flex; flex-direction: column; min-height: 0; height: 100%; }
+.board__tabs { display: flex; align-items: flex-end; gap: 4px; flex-shrink: 0; margin: var(--space-3) var(--space-3) -1px; }
+.board__tab {
+  font-family: var(--font-display);
+  font-size: var(--text-xs);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  padding: 5px 12px;
+  cursor: pointer;
+  color: var(--color-text);
+  background: var(--color-surface);
+  border: 2px solid var(--bevel-dark);
+  border-bottom: none;
+}
+.board__tab.is-active { background: var(--color-surface-2); position: relative; z-index: 2; }
+.board__view {
+  margin-left: auto;
+  align-self: center;
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  color: var(--color-text-muted);
+}
+.board__surface {
+  --art-cork: #c2ab7e;
+  /* The scrolling pane (overflow comes from the @62em [data-scroll-pane] rule
+     in window.css). flex:1 1 auto + min-height:0 lets it absorb the window's
+     bounded height; the tabs + status above/below it stay pinned. */
+  flex: 1 1 auto;
+  min-height: 0;
+  margin: 0 var(--space-3);
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-4) var(--space-3);
+  /* Center the pin columns so the board reads balanced — left-packing left a
+     dead gutter on the right at the cork board's column width. */
+  justify-content: center;
+  align-content: flex-start;
+  padding: var(--space-4) var(--space-3) var(--space-5);
+  background-color: var(--art-cork);
+  background-image: radial-gradient(rgba(60, 40, 20, 0.22) 1px, transparent 1.5px);
+  background-size: 7px 7px;
+  border: 2px solid var(--bevel-darker);
+  box-shadow: inset 2px 2px 0 rgba(0, 0, 0, 0.22), inset -2px -2px 0 rgba(255, 255, 255, 0.12);
+}
+[data-theme="dark"] .board__surface { --art-cork: #5c4f38; }
+/* Pinned status strip — overrides the shared .art-status margin-top so it sits
+   flush in the panes column. */
+.board .art-status { flex-shrink: 0; margin: var(--space-3); }
+
+.pin {
+  position: relative;
+  flex: 0 0 auto;
+  width: 124px;
+  margin-top: 9px;
+  padding: 8px 8px 22px;
+  cursor: pointer;
+  background: #f5f1e6;
+  border: 1px solid #d9d2c2;
+  box-shadow: 3px 4px 0 rgba(0, 0, 0, 0.32);
+  color: #2b2a26;
+  text-align: center;
+  transition: transform var(--speed-fast) var(--ease-soft), box-shadow var(--speed-fast) var(--ease-soft);
+}
+.pin:nth-child(4n + 1) { transform: rotate(-2.6deg); }
+.pin:nth-child(4n + 2) { transform: rotate(1.8deg); }
+.pin:nth-child(4n + 3) { transform: rotate(-0.6deg); }
+.pin:nth-child(4n + 4) { transform: rotate(2.4deg); }
+.pin:hover, .pin:focus-visible {
+  transform: rotate(0deg) translateY(-3px);
+  box-shadow: 4px 7px 0 rgba(0, 0, 0, 0.38);
+  z-index: 4;
+  outline: none;
+}
+.pin:focus-visible { box-shadow: 4px 7px 0 rgba(0, 0, 0, 0.38), 0 0 0 2px var(--color-accent); }
+.pin__photo { position: relative; display: block; aspect-ratio: 1 / 1; overflow: hidden; background: #888; }
+.pin__photo img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+.pin__cap {
+  display: block; margin-top: 7px;
+  font-family: var(--font-display); font-size: var(--text-xs); line-height: 1.1;
+  text-transform: uppercase; letter-spacing: 0.3px; color: #3a382f;
+}
+.pin__pushpin {
+  position: absolute; top: -9px; left: 50%; margin-left: -7px;
+  width: 14px; height: 14px; border-radius: 50%;
+  background: radial-gradient(circle at 35% 30%, #ffb59a 0%, #e7613a 45%, #b23a17 100%);
+  box-shadow: 0 2px 2px rgba(0, 0, 0, 0.45); z-index: 5;
+}
+.pin:nth-child(3n + 2) .pin__pushpin { background: radial-gradient(circle at 35% 30%, #bfe3ee 0%, #4fa6c0 45%, #2b6f82 100%); }
+.pin:nth-child(3n + 3) .pin__pushpin { background: radial-gradient(circle at 35% 30%, #f6e3a8 0%, #d8b24a 45%, #9c7d2a 100%); }
+.pin--stack::before {
+  content: ""; position: absolute; inset: 5px -6px -6px 5px; z-index: -1;
+  background: #ece6d6; border: 1px solid #d9d2c2; box-shadow: 3px 4px 0 rgba(0, 0, 0, 0.24);
+  transform: rotate(2.5deg);
+}
+.pin__count {
+  position: absolute; top: 1px; right: 1px; z-index: 6;
+  font-family: var(--font-mono); font-size: 10px; line-height: 1; padding: 2px 4px;
+  color: var(--color-text-inverse); background: rgba(5, 13, 24, 0.72); border: 1px solid var(--bevel-darker);
+}
+
+/* ============================ MUSIC → CD PLAYER ===========================
+   An authentic Win95 CD-Player applet: a recessed green-LCD readout, the album
+   art + meta, raised transport buttons, a sunken seek slider, and a sunken
+   tracklist. art-player.js wires it all to one <audio preload="none">. */
+/* Panes layout (Window `panes`): everything is pinned chrome EXCEPT the
+   tracklist ([data-scroll-pane]) — collapsing the old "two master scrolls"
+   (window body + inner tracklist) into the ONE tracklist scroller. Body padding
+   is 0 under panes, so .cdp owns the inset. */
+/* gap + vertical padding kept tight: the CD player carries the most chrome of
+   any Art window, so every saved px above the tracklist becomes a visible row. */
+.cdp { display: flex; flex-direction: column; gap: 6px; min-height: 0; height: 100%; padding: var(--space-2) var(--space-3); }
+.cdp__albums, .cdp__lcd, .cdp__head, .cdp__note, .cdp__transport, .cdp__seek { flex-shrink: 0; }
+.cdp .art-status { flex-shrink: 0; margin: 0; }
+/* THE single scroll region (play mode). overflow comes from the @62em
+   [data-scroll-pane] rule; flex bounds its height inside the window. */
+.cdp__tracks { flex: 1 1 auto; min-height: 0; }
+
+.cdp__lcd {
+  display: flex; align-items: center; gap: var(--space-2);
+  padding: 6px 10px;
+  background: #08130d;
+  border: 2px solid var(--bevel-darker);
+  box-shadow: inset 1px 1px 0 #000, inset -1px -1px 0 #1d3527;
+  font-family: var(--font-mono); color: #57e08a;
+  text-shadow: 0 0 4px rgba(87, 224, 138, 0.45);
+}
+.cdp__lcd-no { font-size: var(--text-lg); }
+.cdp__lcd-title { flex: 1; min-width: 0; font-size: var(--text-sm); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.cdp__lcd-time { font-size: var(--text-lg); letter-spacing: 1px; }
+
+.cdp__head { display: flex; gap: var(--space-3); align-items: flex-start; }
+.cdp__cover { flex: 0 0 auto; }
+.cdp__cover img { width: 60px; height: 60px; object-fit: cover; display: block; border: 2px solid var(--bevel-darker); box-shadow: var(--shadow-hard); }
+.cdp__meta { min-width: 0; display: flex; flex-direction: column; gap: 3px; }
+.cdp__album { font-family: var(--font-display); font-size: var(--text-base); color: var(--color-text); }
+.cdp__sub { font-family: var(--font-mono); font-size: var(--text-xs); color: var(--color-text-muted); }
+.cdp__links { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 4px; }
+.cdp__links:empty { display: none; }
+.cdp__link { font-family: var(--font-mono); font-size: var(--text-xs); }
+
+.cdp__transport { display: flex; gap: 4px; }
+.cdp__btn {
+  flex: 1; min-height: 30px;
+  display: inline-flex; align-items: center; justify-content: center;
+  cursor: pointer; font-family: var(--font-mono); font-size: var(--text-sm); color: var(--color-text);
+  background: var(--color-surface);
+  border: 2px solid var(--bevel-darker);
+  box-shadow: var(--bevel-out);
+}
+.cdp__btn:active { box-shadow: inset -1px -1px 0 var(--bevel-light), inset 1px 1px 0 var(--bevel-dark); }
+.cdp__btn:focus-visible { outline: 2px solid var(--color-accent); outline-offset: -3px; }
+.cdp__btn--play { flex: 1.4; color: var(--color-accent); }
+/* Vector transport icons exist in the markup for the Aero skin only; retro uses
+   the text glyphs (the <span>s). Hidden by default so retro is unchanged. */
+.cdp__ico { display: none; }
+
+.cdp__seek { -webkit-appearance: none; appearance: none; width: 100%; height: 16px; background: transparent; cursor: pointer; }
+.cdp__seek::-webkit-slider-runnable-track { height: 6px; background: var(--color-surface-sunken); border: 1px solid var(--bevel-dark); box-shadow: inset 1px 1px 0 var(--bevel-dark); }
+.cdp__seek::-moz-range-track { height: 6px; background: var(--color-surface-sunken); border: 1px solid var(--bevel-dark); }
+.cdp__seek::-webkit-slider-thumb { -webkit-appearance: none; width: 12px; height: 16px; margin-top: -6px; background: var(--color-surface); border: 2px solid var(--bevel-darker); box-shadow: var(--bevel-out); }
+.cdp__seek::-moz-range-thumb { width: 10px; height: 16px; border-radius: 0; background: var(--color-surface); border: 2px solid var(--bevel-darker); }
+.cdp__seek:focus-visible { outline: 2px solid var(--color-accent); outline-offset: 2px; }
+
+.cdp__tracks {
+  list-style: none; margin: 0; padding: 2px;
+  /* height/overflow now driven by the panes flex + the @62em [data-scroll-pane]
+     rule (see the .cdp block above) — no fixed max-height cap. */
+  background: var(--color-surface-2);
+  border: 1px solid var(--bevel-dark);
+  box-shadow: var(--bevel-in);
+}
+.cdp__track { display: flex; align-items: center; gap: 8px; width: 100%; padding: 3px 6px; cursor: pointer; text-align: left; background: none; border: 0; font-family: var(--font-mono); font-size: var(--text-xs); color: var(--color-text); }
+.cdp__track-n { width: 20px; color: var(--color-text-muted); }
+.cdp__track-title { flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.cdp__track-dur { color: var(--color-text-muted); }
+.cdp__track.is-playing { background: var(--color-accent); color: var(--color-text-inverse); }
+.cdp__track.is-playing .cdp__track-n, .cdp__track.is-playing .cdp__track-dur { color: var(--color-text-inverse); }
+.cdp__track:hover:not(.is-playing) { background: var(--color-surface-hover); }
+.cdp__track:focus-visible { outline: 2px solid var(--color-accent); outline-offset: -2px; }
+
+/* Album tabs — cover + title; active reads pressed (accent). Replaces the old
+   far-edge skip buttons (which read as track-skip, not album-switch). */
+.cdp__albums { display: flex; gap: 4px; }
+.cdp__albumtab {
+  display: flex; align-items: center; gap: 6px; flex: 1; min-width: 0;
+  padding: 4px 6px; cursor: pointer; text-align: left;
+  font-family: var(--font-display); font-size: var(--text-xs); text-transform: uppercase; letter-spacing: 0.4px;
+  color: var(--color-text); background: var(--color-surface);
+  border: 2px solid var(--bevel-darker);
+  box-shadow: var(--bevel-out);
+}
+.cdp__albumtab img { width: 24px; height: 24px; flex: none; object-fit: cover; border: 1px solid var(--bevel-darker); }
+.cdp__albumtab-t { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+/* "sample" tag is an Aero-only affordance (primary record vs sample teaser); the
+   retro CD player never shows it, so the markup stays shared but it's hidden here. */
+.cdp__albumtab-tag { display: none; }
+.cdp__albumtab.is-active { background: var(--color-accent); color: var(--color-text-inverse); box-shadow: inset -1px -1px 0 var(--bevel-light), inset 1px 1px 0 var(--bevel-dark); }
+.cdp__albumtab:focus-visible { outline: 2px solid var(--color-accent); outline-offset: -3px; }
+
+/* Liner-Notes caption (Fragments): description + years-later recollection, with
+   room to read (it flows with the window). */
+.cdp__note { margin: 0; }
+.cdp__note:empty { display: none; }
+.cdp__note-p { margin: 0 0 var(--space-2); font-size: var(--text-sm); line-height: 1.55; color: var(--color-text); }
+.cdp__note-p--recollection { color: var(--color-text-muted); font-style: italic; }
+
+/* Read-only listing rows (streamed-elsewhere tracks) + the one playable sample. */
+.cdp__track--listing { cursor: default; opacity: 0.72; }
+.cdp__track--listing:hover { background: none; }
+.cdp__track--sample { cursor: pointer; }
+.cdp__track--sample .cdp__track-dur { color: var(--color-accent); text-transform: uppercase; letter-spacing: 0.3px; }
+
+/* Liner-Notes mode: a sample isn't a playthrough, so hide the skip/stop/seek
+   transport (Play remains) and let the read-only listing flow (no inner scroll). */
+.cdp[data-mode="liner"] .cdp__btn--prev,
+.cdp[data-mode="liner"] .cdp__btn--stop,
+.cdp[data-mode="liner"] .cdp__btn--next,
+.cdp[data-mode="liner"] .cdp__seek { display: none; }
+/* Liner mode: the read-only listing + note are prose chrome (a sample isn't a
+   playthrough), so the tracklist does NOT inner-scroll — it flows as fixed-size
+   content. But the long liner note + listing can exceed the bounded music cell,
+   and the panes body is overflow:hidden (adversarialNotes #4 — confirmed in
+   preview: Fragments' note+listing overflowed the cell and clipped). So in liner
+   mode ONLY, hand the scroll back to the window body: it becomes the single
+   block scroller again (there's no "two scrolls" risk here since the tracklist
+   doesn't inner-scroll), and scrollbar.js themes the body's bar exactly as it
+   does on the non-panes windows. Play mode is unchanged (tracklist is the pane).
+   @62em-gated so mobile (where everything flows) is untouched. */
+.cdp[data-mode="liner"] .cdp__tracks { flex: 0 0 auto; overflow: visible; }
+@media (min-width: 62em) {
+  .window--panes .window__body:has(.cdp[data-mode="liner"]) {
+    overflow-y: auto;
+    overflow-x: hidden;
+    overscroll-behavior: contain;
+  }
+}
+
+/* ============================ POETRY → FILE-LIST ========================== */
+/* Panes layout (Window `panes`): menu bar + column header + status pinned, only
+   the rows ([data-scroll-pane]) scroll — like Win95 Explorer Details. */
+.filelist { display: flex; flex-direction: column; min-height: 0; height: 100%; }
+/* The menu bar sits flush under the titlebar — under panes the body padding is
+   0, so it meets the titlebar natively (no negative-margin bleed needed). */
+.filelist__menu {
+  display: flex; gap: 2px; flex-shrink: 0;
+  margin: 0;
+  padding: 2px 6px;
+  background: var(--color-surface);
+  border-bottom: 1px solid var(--bevel-dark);
+}
+.filelist__menu-item {
+  padding: 1px 9px; cursor: default;
+  font-family: var(--font-display); font-size: var(--text-sm); color: var(--color-text);
+}
+.filelist__menu-item:hover { background: var(--color-accent); color: var(--color-text-inverse); }
+.filelist__head {
+  display: flex; align-items: center; flex-shrink: 0; padding: 4px 8px;
+  margin: 0 var(--space-3);
+  font-family: var(--font-mono); font-size: var(--text-xs); color: var(--color-text);
+  background: var(--color-surface);
+  border: 1px solid var(--bevel-dark);
+  box-shadow: var(--bevel-out);
+}
+.filelist__col--name { flex: 1; }
+.filelist__col--kind { width: 130px; padding-right: 10px; }
+.filelist__col--date { width: 44px; text-align: right; }
+.filelist__rows {
+  /* THE scroll region (overflow from the @62em [data-scroll-pane] rule). */
+  flex: 1 1 auto; min-height: 0;
+  list-style: none; margin: 0 var(--space-3); padding: 2px;
+  background: var(--color-surface-2);
+  border: 1px solid var(--bevel-dark);
+  border-top: none;
+  box-shadow: var(--bevel-in);
+}
+.filelist__row {
+  display: flex; align-items: center; width: 100%; padding: 4px 6px;
+  cursor: pointer; text-align: left; background: none; border: 0;
+  font-family: var(--font-mono); font-size: var(--text-sm); color: var(--color-text);
+}
+.filelist__row.is-sel { background: var(--color-accent); color: var(--color-text-inverse); }
+.filelist__icon { width: 15px; height: 15px; flex: none; margin-right: 7px; }
+/* The visual poem keeps its painted cover (RW) as a thumbnail in the row, so the
+   nice album art isn't lost — it leads the slide viewer too. */
+.filelist__icon--art { width: 18px; height: 18px; overflow: hidden; border: 1px solid var(--bevel-darker); }
+.filelist__icon--art img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.filelist__name { flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.filelist__kind { width: 130px; padding-right: 10px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: var(--color-text-muted); }
+.filelist__date { width: 44px; text-align: right; color: var(--color-text-muted); }
+.filelist__row.is-sel .filelist__kind, .filelist__row.is-sel .filelist__date { color: var(--color-text-inverse); }
+.filelist__row:hover:not(.is-sel) { background: var(--color-surface-hover); }
+.filelist__row:focus-visible { outline: 2px solid var(--color-accent); outline-offset: -2px; }
+/* Pinned status strip — overrides the shared .art-status margin-top. */
+/* Slim footer (Elisha): tight vertical margin + padding so the icon grid gets
+   the room on shorter viewports; keeps the "N documents" chrome, just leaner. */
+.filelist .art-status { flex-shrink: 0; margin: 4px var(--space-3) 8px; padding: 2px 8px; }
+
+/* ====================== POETRY MENU BAR (dropdowns) =======================
+   A real Win95 dropdown menu bar (filelist-menu.js wires it). Authentic 98.css
+   bevel — a raised surface with a sunken-into-the-frame pop; no AI-cliche
+   one-sided "spine" border, no gratuitous accent scrollbar. The open top item
+   reads pressed (accent), matching the album/track selected states. */
+.fl-menu { position: relative; }
+.filelist__menu-item[aria-expanded="true"] { background: var(--color-accent); color: var(--color-text-inverse); }
+.fl-menu__pop[hidden] { display: none; }
+.fl-menu__pop {
+  position: absolute; top: 100%; left: 0; z-index: 30;   /* z:30 beats the .cscroll bar (z:20) */
+  min-width: 140px; margin: 0; padding: 2px; list-style: none;
+  background: var(--color-surface);
+  border: 2px solid var(--bevel-darker);
+  box-shadow: var(--bevel-out), var(--shadow-hard);
+}
+.fl-menu__pop button {
+  display: block; width: 100%; text-align: left; padding: 3px 18px 3px 22px;
+  background: none; border: 0; cursor: default;
+  font-family: var(--font-display); font-size: var(--text-sm); color: var(--color-text);
+}
+.fl-menu__pop button:hover:not([disabled]), .fl-menu__pop button:focus-visible {
+  background: var(--color-accent); color: var(--color-text-inverse); outline: none;
+}
+.fl-menu__pop button[aria-disabled="true"] { color: var(--color-text-muted); cursor: default; }
+.fl-menu__pop [aria-pressed="true"]::before { content: "\2022 "; }   /* current-view glyph in the left gutter */
+
+/* ============================ DESKTOP SCALING =============================
+   The desktop doesn't page-scroll (body overflow is hidden), so the three art
+   windows must fit one screen — layout.css bounds the page-art grid to the
+   viewport and each window's body is a panes flex column whose [data-scroll-pane]
+   scrolls internally (window.css). On mobile the windows stack and flow freely
+   (the panes mode is reset below 62em — see mobile.css). */
+@media (min-width: 62em) {
+  /* --- Poetry "Large Icons" view (View ▸ Large Icons) -------------------
+     A real Explorer large-icon grid: 32px file icons, a 48px painted cover for
+     the visual poem, centered wrapping filenames, no column header. Toggled by
+     the data-view attr (filelist-menu.js). The kind/date cells stay in the DOM
+     (display:none) so notepad.js initSort still reads their data-* values. */
+  .filelist[data-view="icons"] .filelist__head { display: none; }
+  .filelist[data-view="icons"] .filelist__rows {
+    display: flex; flex-wrap: wrap; align-content: flex-start;
+    gap: 6px; padding: 8px var(--space-3);
+  }
+  .filelist[data-view="icons"] .filelist__rows > li { display: block; }
+  .filelist[data-view="icons"] .filelist__row {
+    flex-direction: column; align-items: center; justify-content: flex-start;
+    gap: 4px; width: 88px; padding: 4px 4px 6px; text-align: center; white-space: normal;
+  }
+  .filelist[data-view="icons"] .filelist__icon { width: 30px; height: 30px; margin: 0; }
+  .filelist[data-view="icons"] .filelist__icon--art { width: 30px; height: 30px; }
+  .filelist[data-view="icons"] .filelist__name {
+    flex: none; white-space: normal; word-break: break-word;
+    line-height: 1.15; max-width: 88px;
+    /* clamp to two lines + ellipsis so a long filename keeps tiles compact
+       (authentic Explorer: names wrap then ellipsize). */
+    display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+  }
+  .filelist[data-view="icons"] .filelist__kind,
+  .filelist[data-view="icons"] .filelist__date { display: none; }
+  .filelist[data-view="icons"] .filelist__row.is-sel { background: var(--color-accent); color: var(--color-text-inverse); }
+}
+
+/* Below desktop the [data-view="icons"] grid above doesn't apply (it lives in
+   @min-width:62em), so the list layout wins automatically. This belt-and-
+   suspenders block re-asserts the row layout across the whole sub-desktop band
+   (incl. the 720-992 tablet range) even when data-view="icons" is set. */
+@media (max-width: 61.99em) {
+  .filelist .filelist__rows { display: block; }
+  .filelist .filelist__row { flex-direction: row; width: 100%; text-align: left; }
+  .filelist .filelist__date, .filelist .filelist__head { display: revert; }
+  /* The Type column ("Text Document" / "Visual Poem") is ~130px wide — on a
+     phone-width Poetry window it starves the filename (flex:1) to 0px, so the
+     poem NAMES disappear entirely. Drop the Type cell (rows + header) on the
+     sub-desktop band; Name + Year carry the row, which is what matters on a
+     phone. The kind data stays in the DOM (display:none) so Sort ▸ by Type and
+     the viewer launchers still read it. */
+  .filelist .filelist__kind,
+  .filelist .filelist__col--kind { display: none; }
+  /* Slightly larger touch target + readable icon on phones. */
+  .filelist .filelist__row { padding: 7px 8px; }
+  .filelist .filelist__icon { width: 17px; height: 17px; }
+  .filelist .filelist__icon--art { width: 20px; height: 20px; }
+}
+
+/* ================= MOBILE: medium switcher + one-window-at-a-time =========
+   The V2 "A6" reflow: a phone never stacks all three windows into a ~3,600px
+   scroll. The launcher rail becomes a sticky top row of chips, ONE medium shows
+   full-width at a time, and each window caps its own growth (corkboard → compact
+   pinned grid, crate flips albums, Notepad list scrolls). art-mobile.js wires the
+   chips to the same .is-active window state the taskbar uses. Desktop is wholly
+   unaffected — the chip rail is display:none and the grid shows all three. */
+.art-switch { display: none; }   /* desktop: the page-art grid shows all windows */
+
+@media (max-width: 61.99em) {
+  /* The launcher rail → a sticky toolbar of chips, always reachable while the
+     active window scrolls beneath it. */
+  .art-switch {
+    display: flex;
+    gap: 6px;
+    position: sticky;
+    top: 0;
+    z-index: 8;
+    margin: 0 0 var(--space-3);
+    padding: var(--space-2) var(--space-3);
+    background: var(--color-desktop);
+  }
+  .art-switch__chip {
+    flex: 1 1 0;
+    min-height: 40px;
+    padding: 6px 8px;
+    font-family: var(--font-display);
+    font-size: var(--text-sm);
+    color: var(--color-text);
+    background: var(--color-surface);
+    border: 2px solid var(--bevel-darker);
+    box-shadow: var(--bevel-out);
+    cursor: pointer;
+  }
+  .art-switch__chip.is-active {
+    color: var(--color-text-inverse);
+    background: var(--color-accent);
+    box-shadow: inset -1px -1px 0 var(--bevel-light), inset 1px 1px 0 var(--bevel-dark);
+  }
+  .art-switch__chip:focus-visible { outline: 2px solid var(--color-accent); outline-offset: 2px; }
+
+  .layout__grid.page-art { display: block; }
+
+  /* One medium full-screen at a time: hide every cell, reveal the one whose
+     window is .is-active (chips + taskbar both drive that state). GUARDED by
+     @supports so engines WITHOUT :has() (older Safari/Firefox/Chrome) skip the
+     whole block and safely fall back to the stacked layout instead of a blank
+     page. #art-photo also ships statically .is-active (Window `active` prop), so
+     the first medium shows pre-JS and even if windows.js never runs — no blank
+     flash, no hard dependence on JS for content to appear. */
+  @supports selector(:has(*)) {
+    .layout__grid.page-art > .art-cell { display: none; }
+    .layout__grid.page-art > .art-cell:has(.window.is-active) { display: block; }
+  }
+
+  /* Minimize is meaningless in single-pane mode (the other cells are
+     display:none): minimizing would blank the pane and silently promote a
+     different medium. Hide the button; windows.js also no-ops minimize() for Art
+     on mobile so the taskbar path can't trigger it either. Switch via the chips. */
+  .page-art .window__btn[data-action="minimize"] { display: none; }
+
+  /* Trim the stacked mobile horizontal padding (window body + board margin +
+     board padding ate ~112px, collapsing the board to one column) so the cork
+     board gets real width back. */
+  .page-art .window--panes .window__body { padding: 10px; }
+
+  /* Corkboard absorbs growth as a compact pinned GRID (V2 "corkboard
+     paginates") instead of a single column of full-bleed polaroids — caps the
+     runaway height; the few pins read as a board, not an endless feed. */
+  .page-art .board__surface {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(88px, 1fr));
+    gap: var(--space-3) var(--space-2);
+    margin: 0 4px;
+    padding: 12px 8px;
+  }
+  .page-art .pin { width: auto; margin-top: 12px; padding: 6px 6px 16px; }
+  .page-art .pin__cap { font-size: 10px; }
+}
+
+/* ============================ NOTEPAD VIEWER ==============================
+   A Win95 Notepad window for the written poems — .os-modal supplies the fixed
+   dim backdrop; the title bar matches the OS chrome; the poem renders verbatim
+   in a <pre> (white-space:pre). Only the paper scrolls; the title bar, menu, and
+   status bar stay pinned. Opened by notepad.js off the [data-np] file-list rows. */
+.np[hidden] { display: none; }
+.np__win {
+  display: flex; flex-direction: column;
+  width: min(560px, 94vw); max-height: min(82vh, 680px);
+  background: var(--color-surface);
+  border: var(--window-border) solid var(--bevel-darker);
+  box-shadow: inset 2px 2px 0 var(--bevel-light), inset -2px -2px 0 var(--bevel-dark), var(--shadow-hard-lg);
+}
+.np.np-anim .np__win { animation: tcg-pop var(--speed) var(--ease-soft); }
+.np__bar {
+  flex-shrink: 0;
+  display: flex; align-items: center; gap: var(--space-2);
+  height: var(--titlebar-height); padding: 0 var(--space-2) 0 var(--space-3);
+  background: linear-gradient(90deg, var(--color-titlebar-a), var(--color-titlebar-b));
+  color: var(--color-titlebar-text);
+  border-bottom: 2px solid var(--bevel-darker);
+  box-shadow: inset 0 1px 0 var(--bevel-light);
+}
+.np__ic { width: 16px; height: 16px; flex: none; }
+.np__title { flex: 1; min-width: 0; font-family: var(--font-display); font-size: var(--text-sm); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.np__x {
+  flex: none; width: 26px; height: 22px; display: grid; place-items: center; cursor: pointer;
+  font-family: var(--font-display); font-size: 15px; line-height: 1; color: var(--color-text);
+  background: var(--color-surface); border: 2px solid var(--bevel-darker);
+  box-shadow: var(--bevel-out);
+}
+.np__x:active { box-shadow: inset -1px -1px 0 var(--bevel-light), inset 1px 1px 0 var(--bevel-dark); }
+.np__menubar { flex-shrink: 0; display: flex; gap: 2px; padding: 3px 6px; background: var(--color-surface); border-bottom: 1px solid var(--bevel-dark); }
+.np__menu { padding: 2px 9px; font-family: var(--font-display); font-size: var(--text-sm); color: var(--color-text); }
+.np__paper {
+  flex: 1 1 auto; min-height: 0; overflow-y: auto;
+  margin: var(--window-border); padding: var(--space-4);
+  background: var(--color-surface-2);
+  box-shadow: var(--bevel-in);
+}
+.np__attr { margin: 0 0 var(--space-3); font-family: var(--font-mono); font-size: var(--text-xs); color: var(--color-text-muted); }
+.np__attr[hidden] { display: none; }
+.np__text { margin: 0; white-space: pre; overflow-x: auto; font-family: var(--font-mono); font-size: var(--text-base); line-height: var(--leading-body); color: var(--color-text); tab-size: 4; }
+.np__status { flex-shrink: 0; display: flex; justify-content: space-between; gap: var(--space-2); padding: 3px 8px; font-family: var(--font-mono); font-size: var(--text-xs); color: var(--color-text-muted); background: var(--color-surface); border-top: 1px solid var(--bevel-dark); box-shadow: inset 0 1px 0 var(--bevel-light); }
+@media (max-width: 720px) {
+  .np__text { white-space: pre-wrap; overflow-wrap: anywhere; }
+  .np__win { width: 100%; max-height: 88vh; }
+}
+
+/* ============================ VISUAL-POEM VIEWER =========================
+   A green-on-black BBS/teletype terminal for the visual poem "what i chose".
+   .os-modal supplies the fixed dim backdrop; the window chrome matches the OS;
+   the stanza teletypes char-by-char inside an LCD screen echoing .cdp__lcd. The
+   title painting shows framed on frame 0 only and is lazy-loaded on open.
+   Opened by visual-poem.js off the [data-vpv] file-list row. */
+.vpv[hidden] { display: none; }
+:root.vpv-open { overflow: hidden; }
+
+.vpv__win {
+  display: flex; flex-direction: column;
+  width: min(620px, 94vw); max-height: min(86vh, 720px);
+  background: var(--color-surface);
+  border: var(--window-border) solid var(--bevel-darker);
+  box-shadow: inset 2px 2px 0 var(--bevel-light), inset -2px -2px 0 var(--bevel-dark), var(--shadow-hard-lg);
+}
+.vpv.vpv-anim .vpv__win { animation: tcg-pop var(--speed) var(--ease-soft); }   /* reuse existing keyframe */
+
+.vpv__bar {
+  flex: none; display: flex; align-items: center; gap: var(--space-2);
+  height: var(--titlebar-height); padding: 0 var(--space-2) 0 var(--space-3);
+  background: linear-gradient(90deg, var(--color-titlebar-a), var(--color-titlebar-b));
+  color: var(--color-titlebar-text);
+  border-bottom: 2px solid var(--bevel-darker);
+  box-shadow: inset 0 1px 0 var(--bevel-light);
+}
+.vpv__ic { width: 16px; height: 16px; flex: none; }
+.vpv__title { flex: 1; min-width: 0; font-family: var(--font-display); font-size: var(--text-sm); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.vpv__meta { flex: none; font-family: var(--font-mono); font-size: var(--text-xs); opacity: 0.9; }
+.vpv__x {
+  flex: none; width: 26px; height: 22px; display: grid; place-items: center; cursor: pointer;
+  font-family: var(--font-display); font-size: 15px; line-height: 1; color: var(--color-text);
+  background: var(--color-surface); border: 2px solid var(--bevel-darker);
+  box-shadow: var(--bevel-out);
+}
+.vpv__x:active { box-shadow: inset -1px -1px 0 var(--bevel-light), inset 1px 1px 0 var(--bevel-dark); }
+.vpv__x:focus-visible { outline: 2px solid var(--color-accent); outline-offset: -3px; }
+
+/* Stage = bevels + nav chevrons flanking the terminal screen */
+.vpv__stage {
+  flex: 1 1 auto; min-height: 0; position: relative;
+  display: flex; align-items: stretch; gap: var(--space-2);
+  margin: var(--window-border); padding: var(--space-2);
+  background: var(--color-surface-2);
+  box-shadow: var(--bevel-in);
+}
+
+/* The LCD terminal screen — the in-house green-on-black palette (echoes .cdp__lcd) */
+.vpv__screen {
+  flex: 1 1 auto; min-width: 0; overflow-y: auto;   /* sized to fit; scrolls only if a stanza is tall on a short viewport */
+  padding: var(--space-3);
+  background: #08130d;
+  border: 2px solid var(--bevel-darker);
+  box-shadow: inset 1px 1px 0 #000, inset -1px -1px 0 #1d3527;
+  color: #57e08a;
+  font-family: var(--font-mono);
+  text-shadow: 0 0 4px rgba(87, 224, 138, 0.45);
+}
+
+/* Title painting frame — frame 0 only, lazy <img> injected by JS */
+.vpv__art { margin: 0 0 var(--space-3); }
+.vpv__art[hidden] { display: none; }
+.vpv__art-img { display: block; width: 100%; max-height: 220px; object-fit: contain; border: 2px solid #1d3527; background: #050d08; }
+.vpv__art-cap { margin: 6px 0 0; font-size: var(--text-xs); line-height: 1.4; color: #3f9e6a; }   /* dimmer green credit */
+
+/* BBS section header rule:  ── I. ── */
+.vpv__rule { margin: 0 0 var(--space-2); font-size: var(--text-sm); letter-spacing: 1px; color: #3f9e6a; }
+.vpv__rule:empty { display: none; }
+
+/* The stanza — verbatim, white-space:pre. Line breaks/indentation preserved exactly. */
+.vpv__text {
+  margin: 0; white-space: pre; overflow-x: auto;
+  font-family: var(--font-mono); font-size: var(--text-base); line-height: var(--leading-body);
+  color: #57e08a; tab-size: 4;
+}
+.vpv__text:focus-visible { outline: 2px solid var(--color-accent); outline-offset: 2px; }
+
+/* Blinking block cursor — hard on/off, steps(1) (authentic console cursor, no fade) */
+.vpv__cur { display: inline-block; }
+@keyframes vpv-blink { 0%, 49% { opacity: 1; } 50%, 100% { opacity: 0; } }
+.vpv__cur { animation: vpv-blink 1s steps(1, end) infinite; }
+
+/* Prev/next chevrons — same bevel idiom as .tcg__nav */
+.vpv__nav {
+  flex: none; align-self: center;
+  width: 34px; height: 48px;
+  display: inline-flex; align-items: center; justify-content: center;
+  font-family: var(--font-display); font-size: 22px; line-height: 1; cursor: pointer;
+  color: var(--color-text); background: var(--color-surface);
+  border: 2px solid var(--bevel-darker);
+  box-shadow: var(--bevel-out);
+}
+.vpv__nav:active { box-shadow: var(--bevel-in); }
+.vpv__nav:disabled { opacity: 0.3; cursor: default; }
+.vpv__nav:focus-visible { outline: 2px solid var(--color-accent); outline-offset: -3px; }
+
+.vpv__hint {
+  flex: none; margin: 0; padding: 4px 8px var(--space-2);
+  font-family: var(--font-mono); font-size: var(--text-xs); color: var(--color-text-muted); text-align: center;
+}
+
+@media (max-width: 720px) {
+  .vpv__text { white-space: pre-wrap; overflow-wrap: anywhere; }   /* mirror .np__text mobile */
+  .vpv__win { width: 100%; max-height: 90vh; }
+  .vpv__art-img { max-height: 160px; }
+  .vpv__nav { width: 30px; font-size: 20px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .vpv.vpv-anim .vpv__win { animation: none; }
+  .vpv__cur { animation: none; opacity: 1; }   /* REQUIRED: tokens.css zeroes duration but sets iteration-count:1, so a steps(1) infinite blink would still flash once then freeze mid-cycle — this pins it fully on */
+}

@@ -24,14 +24,44 @@ import "../styles/window.css";
 import "../styles/layout.css";
 import "../styles/components.css";
 import "../styles/favorites.css";
+import "../styles/trophies.css";
+import "../styles/art.css";
+import "../styles/contact-terminal.css";
+import "../styles/mobile-collapse.css";
 import "../styles/tweaks.css";
 import "../styles/dialog.css";
 import "../styles/startmenu.css";
 import "../styles/boot.css";
 import "../styles/cursor.css";
 import "../styles/mobile.css";
+// "Cascadia Aero" exploration skin is served as a real <link> from public/aero/
+// (NOT a bundled import) so it survives Astro view-transition swaps in dev too —
+// see the <link> in <head>. Every rule is :root[data-skin="aero"], which wins by
+// SPECIFICITY not load order, so a standalone stylesheet is cascade-safe.
 import { BUILD_SHA, BUILD_DATE } from "../lib/build-info.js";
 import { SUBSTACK_FEED_URL } from "../lib/substack.js";
+
+// Global shell scripts. They run on EVERY page, so they stay here — but pulled
+// in as fingerprinted ?url assets (→ /_astro, immutable 1-yr cache) instead of
+// uncached public/scripts/ files. Emission order below is preserved verbatim,
+// which keeps the two load-order contracts intact: startmenu before
+// context-menu (window.CascadiaStartMenu) and player-engine before art-player
+// (window.CascadiaPlayer). assetsInlineLimit (astro.config) forces each to a
+// real file so the small ones never inline as a CSP-blocked data: URI.
+import iconsScript from "../scripts/icons.js?url";
+import tweaksScript from "../scripts/tweaks.js?url";
+import systemScript from "../scripts/system.js?url";
+import windowsScript from "../scripts/windows.js?url";
+import startmenuScript from "../scripts/startmenu.js?url";
+import systrayScript from "../scripts/systray.js?url";
+import mobileCollapseScript from "../scripts/mobile-collapse.js?url";
+import contextMenuScript from "../scripts/context-menu.js?url";
+import bootScript from "../scripts/boot.js?url";
+import playerEngineScript from "../scripts/player-engine.js?url";
+import artPlayerScript from "../scripts/art-player.js?url";
+import taskbarPlayerScript from "../scripts/taskbar-player.js?url";
+import scrollbarScript from "../scripts/scrollbar.js?url";
+import taskbarPinScript from "../scripts/taskbar-pin.js?url";
 
 const {
   title = "Elisha Lucero — Cascadia OS",
@@ -54,11 +84,12 @@ const nav = [
   { id: "work", label: "Work", href: "/work/", icon: "work" },
   { id: "blog", label: "Blog", href: "/blog/", icon: "blog" },
   { id: "contact", label: "Contact", href: "/contact/", icon: "contact" },
+  { id: "art", label: "Art", href: "/art/", icon: "art" },
 ];
 ---
 
 <!doctype html>
-<html lang="en">
+<html lang="en" data-skin="aero">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
@@ -109,6 +140,10 @@ const nav = [
          /blog/ and /blog/tagged/<slug>/ cross-fades instead of hard-reloading.
          Re-runs the inline scripts via the astro:page-load event. -->
     <ClientRouter />
+    <!-- Cascadia Aero skin (exploration) — real <link> (not a bundled import) so it
+         persists across view-transition swaps in dev too; data-skin="aero" on <html>
+         activates it. Wins by specificity, so this position is cascade-safe. -->
+    <link rel="stylesheet" href="/aero/frutiger-aero.css" />
   </head>
   <body data-build={BUILD_SHA} data-build-date={BUILD_DATE}>
     <style is:global>
@@ -133,6 +168,13 @@ const nav = [
         grid-template-columns: 1fr;
       }
     </style>
+
+    {/* (Removed the #aero-spec / #aero-grain SVG filter sprite — it shipped in every
+        page's DOM in both skins but a repo-wide grep showed ZERO `filter:url(#aero-*)`
+        consumers. Aero's convex/glass specular is delivered via the CSS gloss recipe
+        (--aero-teal-gloss / --gel-spec + inset box-shadows), not feSpecularLighting;
+        the feSpec route was a researched option that was never wired and carries a
+        perf cost, so the dead defs were pure weight. Ship-loop audit #4, 2026-06-27.) */}
 
     <!-- BOOT SPLASH — shown once per session, then fades to the desktop.
          Visible by default so the desktop never flashes behind it; a pure-CSS
@@ -235,6 +277,13 @@ const nav = [
             </button>
             <div class="start-menu__submenu" id="settings-submenu" role="group" aria-label="Settings" hidden>
               <div class="tweaks-group">
+                <h3 id="tweaks-skin-label">Interface</h3>
+                <div class="tweaks-radio" data-tweak-group="skin" role="group" aria-labelledby="tweaks-skin-label">
+                  <button type="button" data-tweak-value="aero" aria-pressed="true">Aero</button>
+                  <button type="button" data-tweak-value="95" aria-pressed="false">Cascadia&nbsp;95</button>
+                </div>
+              </div>
+              <div class="tweaks-group">
                 <h3 id="tweaks-theme-label">Theme</h3>
                 <div class="tweaks-radio" data-tweak-group="theme" role="group" aria-labelledby="tweaks-theme-label">
                   <button type="button" data-tweak-value="system" aria-pressed="true">System</button>
@@ -242,7 +291,7 @@ const nav = [
                   <button type="button" data-tweak-value="dark" aria-pressed="false">Dark</button>
                 </div>
               </div>
-              <div class="tweaks-group">
+              <div class="tweaks-group tweaks-group--rendering">
                 <h3 id="tweaks-smoothing-label">Font rendering</h3>
                 <div class="tweaks-radio" data-tweak-group="smoothing" role="group" aria-labelledby="tweaks-smoothing-label">
                   <button type="button" data-tweak-value="pixel" aria-pressed="true">Pixel</button>
@@ -307,6 +356,33 @@ const nav = [
 
       <div class="taskbar__items" data-taskbar-items></div>
 
+      <!-- PERSISTENT MINI-PLAYER + the one shared <audio>. The whole <footer> is
+           transition:persist, so this host (and the live <audio> inside it) is
+           carried as part of that persisted subtree — playback + player state
+           survive view-transition swaps: start a track on /art, navigate away,
+           and the audio keeps playing while this compact player stays docked.
+           Do NOT add transition:persist to the host itself — a SEPARATELY
+           persisted node gets re-inserted relative to its non-persisted siblings
+           ([data-taskbar-items], systray) and can land at the wrong flex slot
+           (x:0) after a swap; letting the footer carry it whole preserves the
+           source-order position between the window strip and the tray cluster.
+           Hidden until a track plays; taskbar-player.js toggles .is-showing /
+           .is-hiding for the ANSI reveal. A SIBLING of [data-taskbar-items]
+           (windows.js does innerHTML="" on that node). The <audio> keeps
+           preload="none" so nothing downloads until the user hits play. -->
+      <div class="taskbar__player-host" data-player-host>
+        <audio data-cdp-audio data-engine-audio preload="none"></audio>
+        <div class="taskbar__player" data-mini-player hidden role="group" aria-label="Now playing">
+          <button class="taskbar__player-btn" type="button" data-mp-act="prev" aria-label="Previous track"><span aria-hidden="true">◄◄</span></button>
+          <button class="taskbar__player-btn taskbar__player-btn--toggle" type="button" data-mp-act="toggle" data-mp-toggle aria-label="Play" aria-pressed="false"><span aria-hidden="true">►</span></button>
+          <button class="taskbar__player-btn" type="button" data-mp-act="next" aria-label="Next track"><span aria-hidden="true">►►</span></button>
+          <a class="taskbar__player-lcd" href="/art/" data-mp-open aria-label="Now playing — open the CD player">
+            <span class="taskbar__player-eq" data-mp-eq aria-hidden="true"></span>
+            <span class="taskbar__player-title" data-mp-title>—</span>
+          </a>
+        </div>
+      </div>
+
       <!-- SVG sprite — the UBC crest defined ONCE here, then referenced via
            <use> by both the taskbar systray and the mobile Start-menu tray, so
            the path data isn't duplicated. It lives in the persisted footer so
@@ -323,26 +399,39 @@ const nav = [
            (they relocate into the Start menu there; see .start-menu__tray). Pride
            = RD pixel-art PNG (pixelated); UBC = the crest <use>d from the sprite
            above, so its navy ink follows the theme via --crest-ink and the gold
-           sun stays constant. Native <title> tooltip on hover. No inline script
-           tags, so the CSP hash list stays at two. -->
-      <div class="systray" aria-label="Badges">
-        <img
-          class="systray__badge systray__badge--pixel"
-          src="/images/badges/pride.png"
-          width="37" height="22"
-          alt="Progress Pride flag" title="Love is Love"
-        />
-        <a
-          class="systray__badge-link"
-          href="https://cogsys.ubc.ca/"
-          target="_blank" rel="noopener"
-          title="UBC · Cognitive Systems"
-          aria-label="UBC Cognitive Systems"
+           sun stays constant. The cluster is a toggle button: hover a badge for a
+           Win95 cream info-tip (CSS), click to open the labels flyout (the same
+           strip the mobile Start menu shows + the UBC link). systray.js wires the
+           open/close; it's external, so the CSP hash list stays at two. -->
+      <div class="systray">
+        <button
+          type="button"
+          class="systray__toggle"
+          aria-label="Badges"
+          aria-haspopup="true"
+          aria-expanded="false"
+          aria-controls="systray-flyout"
+          data-systray-toggle
         >
-          <svg class="systray__badge systray__badge--crest" viewBox="0 0 192.756 192.756" aria-hidden="true" focusable="false">
-            <use href="#ubc-crest" />
-          </svg>
-        </a>
+          <span class="systray__badge-wrap">
+            <img class="systray__badge systray__badge--pixel" src="/images/badges/pride.png" width="37" height="22" alt="" />
+            <span class="systray__tip" role="tooltip">Love is Love</span>
+          </span>
+          <span class="systray__badge-wrap">
+            <svg class="systray__badge systray__badge--crest" viewBox="0 0 192.756 192.756" aria-hidden="true" focusable="false"><use href="#ubc-crest" /></svg>
+            <span class="systray__tip" role="tooltip">UBC · Cognitive Systems</span>
+          </span>
+        </button>
+        <div id="systray-flyout" class="systray__flyout" data-systray-flyout hidden>
+          <span class="systray__flyout-row">
+            <img class="systray__badge systray__badge--pixel" src="/images/badges/pride.png" width="37" height="22" alt="" />
+            <span class="systray__flyout-label">Love is Love</span>
+          </span>
+          <a class="systray__flyout-row systray__flyout-row--link" href="https://cogsys.ubc.ca/" target="_blank" rel="noopener">
+            <svg class="systray__badge systray__badge--crest" viewBox="0 0 192.756 192.756" aria-hidden="true" focusable="false"><use href="#ubc-crest" /></svg>
+            <span class="systray__flyout-label">UBC · Cognitive Systems</span>
+          </a>
+        </div>
       </div>
 
       <div class="hit-counter" aria-label="Visitor counter">
@@ -352,25 +441,39 @@ const nav = [
       <div class="taskbar__clock" data-clock aria-label="Clock">--:--</div>
     </footer>
 
-    <!-- SCRIPTS (served from public/). Each one self-registers an
-         `astro:page-load` listener internally — that event fires both on
-         the initial document load AND after every view-transition swap, so
-         the scripts don't need `data-astro-rerun` (which would stack up
-         duplicate listeners on each re-run). The shell scripts (tweaks,
-         system) bind to persisted elements; the content-area scripts
-         (icons, windows) re-mount on every page-load to attach handlers
-         to the freshly-rendered <main>.                                     -->
-    <script is:inline src="/scripts/icons.js"></script>
-    <script is:inline src="/scripts/tweaks.js"></script>
-    <script is:inline src="/scripts/system.js"></script>
-    <script is:inline src="/scripts/windows.js"></script>
-    <script is:inline src="/scripts/startmenu.js"></script>
-    <script is:inline src="/scripts/context-menu.js"></script>
-    <script is:inline src="/scripts/boot.js"></script>
-    <script is:inline src="/scripts/explorer.js"></script>
-    <script is:inline src="/scripts/favorites-explorer.js"></script>
-    <script is:inline src="/scripts/attention-grid.js"></script>
-    <script is:inline src="/scripts/scrollbar.js"></script>
+    <!-- GLOBAL SHELL SCRIPTS. Each self-registers an `astro:page-load` listener
+         internally — that event fires on the initial document load AND after
+         every view-transition swap, so they don't need `data-astro-rerun`
+         (which would stack duplicate listeners on each re-run). The shell
+         scripts (tweaks, system) bind to persisted elements; the content-area
+         scripts (icons, windows) re-mount on every page-load to attach handlers
+         to the freshly-rendered <main>. Delivered as fingerprinted ?url assets
+         (see the imports above); the tag ORDER here is the load contract. -->
+    <script is:inline src={iconsScript}></script>
+    <script is:inline src={tweaksScript}></script>
+    <script is:inline src={systemScript}></script>
+    <script is:inline src={windowsScript}></script>
+    <script is:inline src={startmenuScript}></script>
+    <script is:inline src={systrayScript}></script>
+    <script is:inline src={mobileCollapseScript}></script>
+    <script is:inline src={contextMenuScript}></script>
+    <script is:inline src={bootScript}></script>
+    <!-- The audio engine + its two views STAY global: the docked taskbar
+         mini-player persists across navigation (cross-page playback), and
+         art-player.js depends on window.CascadiaPlayer (player-engine) existing
+         before its init binds the controller. player-engine MUST load first. -->
+    <script is:inline src={playerEngineScript}></script>
+    <script is:inline src={artPlayerScript}></script>
+    <script is:inline src={taskbarPlayerScript}></script>
+    <script is:inline src={scrollbarScript}></script>
+    <script is:inline src={taskbarPinScript}></script>
+    <!-- Route-split scripts live in src/scripts/ and are pulled into the one
+         page that renders their guard element via a fingerprinted ?url import
+         (→ /_astro, immutable-cached; never loaded off-route):
+         contact-terminal (contact); attention-grid + avatar-dissolve (home);
+         about-reveal + favorites-explorer (about); explorer (work);
+         art-mobile + filelist-menu + notepad + visual-poem (art);
+         trophy-gallery (about + art). -->
 
     <!-- Sidebar nav active-state sync. Since .desktop-icons is persisted,
          its `is-active` class doesn't change naturally on nav — this updates
@@ -388,6 +491,7 @@ const nav = [
           : path.startsWith("/work")            ? "work"
           : path.startsWith("/blog")            ? "blog"
           : path.startsWith("/contact")         ? "contact"
+          : path.startsWith("/art")             ? "art"
           :                                       null;
         nav.querySelectorAll(".desktop-icon").forEach((el) => {
           const isActive = el.dataset.navId === idFromPath;

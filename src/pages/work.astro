@@ -1,6 +1,9 @@
 ---
 import Layout from "../layouts/Layout.astro";
 import Window from "../components/Window.astro";
+// Route-split (fingerprinted ?url → /_astro, immutable-cached). explorer drives
+// the <details.folder> file tree; shared with /about, Vite dedups to one file.
+import explorerScript from "../scripts/explorer.js?url";
 ---
 
 <Layout title="Elisha Lucero — Work" pageTitle="Work" current="work">
@@ -13,7 +16,7 @@ import Window from "../components/Window.astro";
         <span class="explorer__path">C:\Work</span>
       </div>
 
-      <details class="folder" open>
+      <details class="folder" open data-m-mobile="closed">
         <summary class="folder__head">
           <span class="folder__icon" data-icon="folder" aria-hidden="true"></span>
           <span class="folder__name">Apps</span>
@@ -80,7 +83,7 @@ import Window from "../components/Window.astro";
         <summary class="folder__head">
           <span class="folder__icon" data-icon="folder" aria-hidden="true"></span>
           <span class="folder__name">Curriculum</span>
-          <span class="folder__count">1 item</span>
+          <span class="folder__count">2 items</span>
         </summary>
         <ul class="panel-list folder__body">
           <li class="panel work-item" id="work-cce" style="--accent: #1a8c5a;">
@@ -100,10 +103,28 @@ import Window from "../components/Window.astro";
               </a>
             </div>
           </li>
+          <li class="panel work-item" id="work-it" style="--accent: #3949ab;">
+            <div class="work-item__header">
+              <span class="work-item__icon" data-icon="bot" aria-hidden="true"></span>
+              <h3>Innovative Technology Modules</h3>
+            </div>
+            <p>
+              A curated set of CTE Innovative Technology units, animation,
+              graphic design, 3D modeling, AI, AR, and VR, built in Canvas with
+              custom HTML and inline CSS. Each lesson opens as the real module,
+              video and interactive scenes included.
+            </p>
+            <div class="project-links">
+              <a class="pixel-link" href="https://elbrielle.github.io/innovative-technology/" target="_blank" rel="noopener">
+                <span class="pixel-link__icon" data-icon="bot" aria-hidden="true"></span>
+                <span class="pixel-link__label">View modules</span>
+              </a>
+            </div>
+          </li>
         </ul>
       </details>
 
-      <details class="folder">
+      <details class="folder" data-m-mobile="open">
         <summary class="folder__head">
           <span class="folder__icon" data-icon="folder" aria-hidden="true"></span>
           <span class="folder__name">Services</span>
@@ -149,30 +170,25 @@ import Window from "../components/Window.astro";
 
       <section class="resume__section">
         <h3>Summary</h3>
-        <ul class="cli">
-          <li>Integrated foundation in computer science, psychology, and linguistics, grounded in contemporary cognitive neuroscience research.</li>
-          <li>Implementing evidence-based practices that connect learning to self and community.</li>
-          <li>Committed to community building and support through education, project management, and technical problem solving.</li>
-        </ul>
+        <p class="resume__summary">Tech educator, curriculum designer, and technical builder with a foundation in computer and cognitive science (B.A. Cognitive Systems), where I studied how cognition is modeled in machine learning and intelligent systems. I design career-readiness and technology curricula that move students into real project work; I build tools to rectify systems that feel too brittle, slow, or indifferent to how people move through their day.</p>
       </section>
 
       <hr class="resume__rule" />
 
-      <section class="resume__section">
-        <h3>Educational experience</h3>
+      <details class="resume__section m-collapse" open>
+        <summary><h3>Skills</h3></summary>
+        <ul class="cli">
+          <li><strong>Languages &amp; frameworks:</strong> HTML/CSS, JavaScript, Python, SQL, Flutter/Dart, Flask</li>
+          <li><strong>Infrastructure &amp; systems:</strong> Docker, Linux, Google Workspace, web hosting, DNS/domain administration</li>
+          <li><strong>Data &amp; tools:</strong> Power Apps, SharePoint, Power BI, SPSS, Jira, Apps Script automation, local LLM deployment</li>
+          <li><strong>Creative &amp; media:</strong> Adobe Creative Suite, Final Cut Pro, CapCut, Logic Pro, Riverside</li>
+        </ul>
+      </details>
 
-        <div class="resume__job">
-          <div class="resume__job-head">
-            <span class="resume__role">Summer STEM Camp · Facilitator &amp; Acting Administrator</span>
-            <span class="resume__date">Summer 2026</span>
-          </div>
-          <p class="resume__org">Irving ISD · Irving, TX</p>
-          <ul class="cli">
-            <li>Acting administrator for the district STEM Camp summer program: lead and support camp staff.</li>
-            <li>Build spreadsheets to track attendance, manage waitlists, and coordinate supplies, curriculum, and staff placements.</li>
-            <li>Maintain student records and progress, and support teacher training.</li>
-          </ul>
-        </div>
+      <hr class="resume__rule" />
+
+      <details class="resume__section m-collapse" open>
+        <summary><h3>Experience</h3></summary>
 
         <div class="resume__job">
           <div class="resume__job-head">
@@ -181,10 +197,23 @@ import Window from "../components/Window.astro";
           </div>
           <p class="resume__org">Irving ISD · Irving, TX</p>
           <ul class="cli">
-            <li>Teach project-based courses in CAD, Immersive Media, and AI + Robotics, centered on real-world problem-solving and student voice.</li>
-            <li>Lead student media production such as yearbook, journalism, and campus broadcasting.</li>
-            <li>Named 2025–26 Campus Teacher of the Year and District finalist, recognized for equity-focused instruction and student-centered innovation.</li>
-            <li>Advise Student Council and CTSO, fostering leadership, civic engagement, and career-readiness.</li>
+            <li>Design and teach project-based CAD, Immersive Media, and AI/Robotics courses grounded in real-world problem-solving and student voice.</li>
+            <li>Lead student media production across yearbook, journalism, and campus broadcasting.</li>
+            <li>Named 2025–26 Campus Teacher of the Year and District finalist for equity-focused, student-centered instruction.</li>
+            <li>Launched campus Student Council and first CTSO, creating leadership and state/national competition pathways for 100+ students.</li>
+          </ul>
+        </div>
+
+        <div class="resume__job">
+          <div class="resume__job-head">
+            <span class="resume__role">Irving ISD STEM Camp · Administrator &amp; Facilitator</span>
+            <span class="resume__date">Summer 2026</span>
+          </div>
+          <p class="resume__org">Irving ISD · Irving, TX</p>
+          <ul class="cli">
+            <li>Directed staff and curriculum for a 350-camper, four-grade STEM program spanning robotics, digital fabrication, and coding; designed the systems for student placement, staffing, supplies, and scheduling.</li>
+            <li>Built the camp's operational tooling: custom HTML/CSS attendance tracking backed by Google Apps Script, Python scripts that automated badge generation, rosters, and mail-merge for parent communications.</li>
+            <li>Designed a unified SharePoint and Power BI system to serve as a single source of truth for camp administration.</li>
           </ul>
         </div>
 
@@ -195,78 +224,47 @@ import Window from "../components/Window.astro";
           </div>
           <p class="resume__org">Irving ISD · Irving, TX</p>
           <ul class="cli">
-            <li>Instructed six Honors RLA/ESL sections in collaboration with a highly effective PLC team, fostering academic excellence and language proficiency.</li>
+            <li>Taught Honors RLA/ESL in a high-performing PLC, supporting literacy growth and language development.</li>
           </ul>
         </div>
 
-        <div class="resume__job">
-          <div class="resume__job-head">
-            <span class="resume__role">YMCA · Childcare Group Leader</span>
-            <span class="resume__date">Dec 2020 – Jul 2021</span>
-          </div>
-          <p class="resume__org">Irving, TX</p>
-        </div>
-
-        <div class="resume__job">
-          <div class="resume__job-head">
-            <span class="resume__role">Johnson Middle School · Permanent Substitute</span>
-            <span class="resume__date">Aug 2020 – May 2021</span>
-          </div>
-          <p class="resume__org">Irving, TX</p>
-        </div>
-
-        <div class="resume__job">
-          <div class="resume__job-head">
-            <span class="resume__role">University of British Columbia · Teaching Assistant</span>
-            <span class="resume__date">2018 – 2019</span>
-          </div>
-        </div>
-      </section>
-
-      <hr class="resume__rule" />
-
-      <section class="resume__section">
-        <h3>Technical experience</h3>
         <div class="resume__job">
           <div class="resume__job-head">
             <span class="resume__role">The Haven · Systems Administrator</span>
             <span class="resume__date">Jun 2021 – Aug 2022</span>
           </div>
           <ul class="cli">
-            <li>Managed Jira Kanban boards and tickets to keep timelines and deadlines on track for a distributed team.</li>
-            <li>Administered Google Workspace and Jira access control, managed domain administration end-to-end and supported front-end work for digital media spaces.</li>
+            <li>Administered technical infrastructure for a distributed digital arts platform, including Google Workspace shared drives, user access roles, domain registration, DNS routing, and website launch support.</li>
+            <li>Led project coordination through Zoom facilitation, Jira/Atlassian workflow management, ticket tracking, and team training/onboarding.</li>
           </ul>
         </div>
-      </section>
+
+        <div class="resume__job">
+          <p class="resume__org">Earlier: YMCA Childcare Group Leader, Johnson MS Substitute, and UBC Teaching Assistant (2018–2021).</p>
+        </div>
+      </details>
 
       <hr class="resume__rule" />
 
-      <section class="resume__section">
-        <h3>Education</h3>
+      <details class="resume__section m-collapse" open>
+        <summary><h3>Education &amp; certifications</h3></summary>
         <div class="resume__job">
           <div class="resume__job-head">
-            <span class="resume__role">B.A. Cognitive Systems · Brain &amp; Cognition</span>
+            <span class="resume__role">B.A. Cognitive Systems</span>
             <span class="resume__date">UBC</span>
           </div>
           <p class="resume__org">Minor in Creative Writing · University of British Columbia</p>
         </div>
         <ul class="cli">
-          <li>TExES 7–12 ELAR, PPR &amp; ESL — Texas teaching certification (ACT Dallas Alt Cert).</li>
-          <li>Singley Academy — HSDG, Digital Media &amp; Game Design CTE.</li>
+          <li>TExES 7–12 ELAR, PPR &amp; ESL Teaching Certification · ACT Dallas Alternative Certification.</li>
+          <li>Singley Academy · Digital Media &amp; Game Design (CTE).</li>
         </ul>
-      </section>
-
-      <hr class="resume__rule" />
-
-      <section class="resume__section">
-        <h3>Skills</h3>
-        <p class="resume__skills">
-          HTML/CSS · SQL · Java · SPSS data analysis · web hosting &amp; server management ·
-          Kanban workflows · Adobe Photoshop, Lightroom &amp; Premiere · audio recording &amp; engineering · Microsoft Office
-        </p>
-      </section>
+      </details>
     </div>
   </Window>
   </div>
+
+  {/* File-tree expand/collapse + scroll-to-target (external + fingerprinted). */}
+  <script is:inline src={explorerScript}></script>
 
 </Layout>

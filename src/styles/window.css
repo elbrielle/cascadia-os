@@ -111,11 +111,12 @@
    manually-positioned window animates from where it actually sits — not
    from (0,0) — avoiding the "snap-to-default then animate" flash.       */
 .window.is-closing {
-  /* Exit pair (--speed-exit/--ease-exit): shorter than the open/restore
-     enters and accelerating away — symmetric enter/exit is the un-tuned
-     default this deliberately avoids. Restore (.is-opening) stays on the
-     enter pair: it's conceptually an arrival. */
-  animation: window-close var(--speed-exit) var(--ease-exit) forwards;
+  /* Minimize uses the SAME pair as restore (--speed-window/--ease-soft), not the
+     shorter accelerate-away exit pair. Per Elisha: a window leaving for the
+     taskbar should feel like the restore that mirrors it. (The exit pair's
+     accelerate ease makes a leaving window read as faster than its longer-but-
+     decelerating restore — the asymmetry felt off, so we matched them.) */
+  animation: window-close var(--speed-window) var(--ease-soft) forwards;
   pointer-events: none;
 }
 @keyframes window-close {
@@ -123,9 +124,11 @@
   100% { transform: translate(var(--drag-x, 0px), calc(var(--drag-y, 0px) + 60vh))               scale(0.1); opacity: 0; }
 }
 
-/* Restore: pops back FROM the taskbar to the user's dragged position. */
+/* Restore: pops back FROM the taskbar to the user's dragged position.
+   Window-specific --speed-window (slower than the shared --speed) so the
+   arrival glides in rather than snapping. */
 .window.is-opening {
-  animation: window-open var(--speed) var(--ease-soft);
+  animation: window-open var(--speed-window) var(--ease-soft);
 }
 @keyframes window-open {
   0%   { transform: translate(var(--drag-x, 0px), calc(var(--drag-y, 0px) + 60vh))               scale(0.1);  opacity: 0; }
@@ -220,9 +223,7 @@
   background: var(--color-surface);
   color: var(--color-text);
   border: 2px solid var(--bevel-darker);
-  box-shadow:
-    inset  1px  1px 0 var(--bevel-light),
-    inset -1px -1px 0 var(--bevel-dark);
+  box-shadow: var(--bevel-out);
   font-family: var(--font-display);
   font-size: 12px;
   line-height: 1;
@@ -261,6 +262,20 @@
   transform: translate(1px, 1px);
 }
 
+/* Latched "held-in" look while the window is maximized — the maximize control
+   stays visibly depressed so the maximized state reads at a glance, not just
+   from the ▢→❐ glyph + aria-label swap (which windows.js still does for AT).
+   Reuses the exact :active bevel inversion + 1px sink above so it's an
+   authentic Win95 toggled-button idiom, not an invented treatment. The bevel
+   is un-transitioned (a hard-cut sunken state), matching the press above. */
+.window.is-maximized .window__btn[data-action="maximize"] {
+  box-shadow:
+    inset -1px -1px 0 var(--bevel-light),
+    inset  1px  1px 0 var(--bevel-dark);
+  background: var(--color-surface-hover);
+  transform: translate(1px, 1px);
+}
+
 /* --- Body: the "paper" content area -------------------------------------- */
 .window__body {
   /* Fill the window — width comes from the .window flex item's resolved
@@ -278,9 +293,7 @@
      (titlebar, .kind chips, post titles, resume roles) override this.       */
   letter-spacing: 0.02em;
   /* Sunken inner bevel so paper looks recessed.                            */
-  box-shadow:
-    inset  1px  1px 0 var(--bevel-dark),
-    inset -1px -1px 0 var(--bevel-light);
+  box-shadow: var(--bevel-in);
   /* Scroll happens INSIDE the window, not on the page.
      flex:1 + min-height:0 lets the body shrink to fit inside the window's
      bounded max-height; overflow-y:auto adds the scrollbar; overscroll
@@ -290,6 +303,34 @@
   overflow-y: auto;
   overflow-x: hidden;
   overscroll-behavior: contain;
+}
+
+/* --- OPT-IN "panes" body (Window.astro `panes` prop) ---------------------
+   Default behaviour above keeps .window__body the single overflow scroller
+   (6 of 9 windows scroll-as-one-block and must NOT change). A window that
+   passes `panes` instead lays its body out as a flex COLUMN with the box
+   itself clipped (overflow:hidden); only the child marked [data-scroll-pane]
+   scrolls, so menu bars / column headers / transport / status strips stay
+   pinned (authentic Win95 chrome). The pane's overflow is gated to desktop
+   so mobile (where the windows stack + flow with the page) never traps the
+   scroll. Used by the Art page's three windows. */
+.window--panes .window__body {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  padding: 0;
+}
+/* Neutralize the default top-margin rhythm inside a panes body — the panes
+   children own their own spacing (margins set per-window in art.css). */
+.window--panes .window__body > * + * { margin-top: 0; }
+@media (min-width: 62em) {
+  .window--panes [data-scroll-pane] {
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow-y: auto;
+    overflow-x: hidden;
+    overscroll-behavior: contain;
+  }
 }
 
 .window__body > * + * { margin-top: var(--space-3); }
@@ -317,16 +358,12 @@
 .window__body::-webkit-scrollbar { width: 15px; }
 .window__body::-webkit-scrollbar-track {
   background: var(--color-surface-sunken);
-  box-shadow:
-    inset  1px  1px 0 var(--bevel-dark),
-    inset -1px -1px 0 var(--bevel-light);
+  box-shadow: var(--bevel-in);
 }
 .window__body::-webkit-scrollbar-thumb {
   background: var(--color-surface);
   border: 2px solid var(--bevel-darker);
-  box-shadow:
-    inset  1px  1px 0 var(--bevel-light),
-    inset -1px -1px 0 var(--bevel-dark);
+  box-shadow: var(--bevel-out);
 }
 .window__body::-webkit-scrollbar-thumb:hover { background: var(--color-surface-hover); }
 
@@ -357,9 +394,7 @@
   padding: 0;
   background: var(--color-surface);
   border: 2px solid var(--bevel-darker);
-  box-shadow:
-    inset  1px  1px 0 var(--bevel-light),
-    inset -1px -1px 0 var(--bevel-dark);
+  box-shadow: var(--bevel-out);
   cursor: pointer;
 }
 .cscroll__btn:hover { background: var(--color-surface-hover); }
@@ -394,9 +429,7 @@
 .cscroll__track {
   flex: 1 1 auto;
   position: relative;
-  box-shadow:
-    inset  1px  1px 0 var(--bevel-dark),
-    inset -1px -1px 0 var(--bevel-light);
+  box-shadow: var(--bevel-in);
 }
 /* Raised thumb (top/height set by scrollbar.js). */
 .cscroll__thumb {
@@ -406,9 +439,7 @@
   min-height: 24px;
   background: var(--color-surface);
   border: 2px solid var(--bevel-darker);
-  box-shadow:
-    inset  1px  1px 0 var(--bevel-light),
-    inset -1px -1px 0 var(--bevel-dark);
+  box-shadow: var(--bevel-out);
   cursor: grab;
 }
 .cscroll__thumb:active {
@@ -448,12 +479,26 @@
   position: fixed;
   top:  var(--space-2) !important;
   left: calc(var(--sidebar-width) + var(--space-2)) !important;
-  width:  calc(100vw - var(--sidebar-width) - var(--space-4)) !important;
-  height: calc(100vh - var(--taskbar-height) - var(--space-4));
-  max-width: none;
+  /* Fill the desktop WORK AREA — the viewport minus the persistent nav rail
+     (left) and taskbar (bottom), both of which stay fixed and on top so the
+     user can always reach other windows. dvw/dvh (not vw/vh) match the rest of
+     the app (window.css:59, layout.css) so a mobile dynamic toolbar can't push
+     the bottom edge under the taskbar. Symmetric --space-2 inset top + bottom.
+       Every clamp here is !important on purpose: per-page rules in layout.css
+     (e.g. .about__favorites .window {max-width:660px} / .about__left {600px})
+     are MORE specific (0,4,0) than this rule (0,2,0), so without !important
+     they'd survive and clamp the box back to their page width — the box would
+     only "relocate and enlarge slightly, varying by page" instead of filling.
+     min-width:0 likewise kills the base 320px floor on a narrow desktop.      */
+  width:  calc(100dvw - var(--sidebar-width) - var(--space-4)) !important;
+  height: calc(100dvh - var(--taskbar-height) - var(--space-2) - var(--space-2)) !important;
+  min-width: 0 !important;
+  max-width: none !important;
   max-height: none !important;
   /* Clear drag delta while maximized — translate of 0 so the window sits
-     square inside the desktop area.                                         */
+     square inside the desktop area. The FLIP tween (windows.js) animates the
+     INDIVIDUAL translate/scale props, which compose on top of this !important
+     transform — a `transform` keyframe would be swallowed by !important.      */
   transform: translate(0, 0) !important;
 }
 

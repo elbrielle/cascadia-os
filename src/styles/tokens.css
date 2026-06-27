@@ -65,6 +65,11 @@
   --tint-game:  #1A8C5A;   /* fir green                                */
   --tint-album: #D45886;   /* salmonberry pink                         */
   --tint-paper: #5A6878;   /* graphite blue                            */
+  /* Art explorer folder/cover tints — one per medium (art.astro). */
+  --tint-art-photography: #0F6F8F;   /* pacific teal     */
+  --tint-art-music:       #C8451A;   /* deep coral       */
+  --tint-art-poetry:      #5A6878;   /* graphite (docs)  */
+  --tint-art-visual:      #6B4FA0;   /* violet (artwork) */
 
   /* Auxiliary signal colors. */
   --color-warning:        #C97506;
@@ -96,6 +101,15 @@
   --bevel-light:          #FAFCFC;
   --bevel-dark:           #7A8A92;
   --bevel-darker:         #0D1820;
+
+  /* Composite 1px Win95 bevels (built from the light/dark sub-tokens above, so
+     they theme-swap automatically). --bevel-out = raised (light top-left, dark
+     bottom-right); --bevel-in = sunken (the inverse). These are the canonical
+     pair repeated ~50x across the stylesheets; var()-substitution makes each
+     use byte-identical to the literal it replaces. Variants (2px, top-edge-only,
+     reversed-order, hardcoded colors) intentionally stay inline. */
+  --bevel-out:  inset 1px 1px 0 var(--bevel-light), inset -1px -1px 0 var(--bevel-dark);
+  --bevel-in:   inset 1px 1px 0 var(--bevel-dark), inset -1px -1px 0 var(--bevel-light);
 
   /* ============================================================
      TYPOGRAPHY
@@ -148,6 +162,12 @@
      ============================================================ */
   --safe-area-bottom:     env(safe-area-inset-bottom, 0px);
   --safe-area-bottom-max: env(safe-area-max-inset-bottom, var(--safe-area-bottom));
+  /* Live gap between the layout-viewport bottom and the VISIBLE bottom, written
+     by taskbar-pin.js from the VisualViewport API so bottom-anchored chrome stays
+     glued to the visible bottom while iOS's browser toolbar collapses on scroll.
+     0 at rest / on desktop / without VisualViewport — every use is a no-op until
+     the script raises it. */
+  --vv-inset-bottom:      0px;
   --taskbar-core-height:  44px;
   --taskbar-height:       calc(var(--taskbar-core-height) + var(--safe-area-bottom-max));
   --titlebar-height:  34px;          /* taller — easier to grab            */
@@ -168,6 +188,14 @@
   --speed:      180ms;
   --speed-page: 260ms;
   --speed-exit: 140ms;
+  /* ALL window motion — maximize, minimize-to-taskbar, restore-from-taskbar —
+     shares this one duration AND the soft decelerate ease (--ease-soft), a touch
+     slower than the generic --speed so the big geometry changes glide instead of
+     snapping (the generic tokens stay quick for menus, dialogs, chips, etc.).
+     Unified on Elisha's call: every window motion should feel like the restore
+     it mirrors, not whip away on a separate exit easing. windows.js reads
+     --speed-window for the maximize FLIP. */
+  --speed-window: 320ms;
   --ease:       steps(4, end);
   --ease-soft:  cubic-bezier(0.2, 0.8, 0.2, 1);
   --ease-exit:  cubic-bezier(0.2, 0, 1, 0.9);
@@ -396,6 +424,7 @@
     --speed:      0.01ms;
     --speed-page: 0.01ms;
     --speed-exit: 0.01ms;
+    --speed-window:      0.01ms;
   }
   *, *::before, *::after {
     animation-duration: 0.01ms !important;

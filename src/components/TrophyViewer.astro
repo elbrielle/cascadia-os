@@ -1,0 +1,32 @@
+---
+// ============================================================================
+//  TrophyViewer.astro  —  the maximized media gallery overlay (#tcg)
+// ----------------------------------------------------------------------------
+//  A propless, shared fragment used by BOTH /about/ (Trophy Case) and /art/
+//  (photography singles + albums). The markup was byte-identical copy-pasted
+//  in both pages and had to stay in lockstep with trophy-gallery.js's
+//  hard-coded #tcg / [data-tcg] selectors — so it lives here once.
+//
+//  Rendered OUTSIDE any window on purpose: a window carries a drag `transform`,
+//  which would re-anchor a position:fixed descendant to the window instead of
+//  the viewport. trophy-gallery.js (loaded in Layout) finds this by id and
+//  wires it on astro:page-load. No props — drop <TrophyViewer /> once per page.
+// ============================================================================
+---
+<div id="tcg" class="tcg" hidden aria-hidden="true">
+  <div class="tcg__win" role="dialog" aria-modal="true" aria-labelledby="tcg-title">
+    <header class="tcg__bar">
+      <span class="tcg__ic" aria-hidden="true"></span>
+      <span class="tcg__title" id="tcg-title"></span>
+      <span class="tcg__meta" aria-live="polite"></span>
+      <button class="tcg__x" type="button" data-tcg="close" aria-label="Close gallery">×</button>
+    </header>
+    <div class="tcg__stage">
+      <button class="tcg__nav tcg__prev" type="button" data-tcg="prev" aria-label="Previous">‹</button>
+      <div class="tcg__media" id="tcg-media"></div>
+      <button class="tcg__nav tcg__next" type="button" data-tcg="next" aria-label="Next">›</button>
+    </div>
+    <div class="tcg__strip" id="tcg-strip"></div>
+    <p class="tcg__caption" id="tcg-caption"></p>
+  </div>
+</div>

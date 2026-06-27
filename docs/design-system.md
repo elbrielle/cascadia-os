@@ -23,6 +23,14 @@ title bars look pressed, taskbar updates) is what makes it read as "an OS."
 
 ## Brand palette
 
+> **Scope: this is the Cascadia 95 (retro) + base palette.** It lives in
+> `src/styles/tokens.css` and drives the default/retro skin. The **Cascadia Aero**
+> skin (`data-skin="aero"`) has its OWN, different palette since 2026-06-26 — sky-blue
+> chrome + evergreen accent + aqua icons, with **orange fully retired** — defined
+> entirely in `public/aero/frutiger-aero.css` and documented in
+> **`docs/aero-design-system.md` → "## Locked palette"**. The two skins are intentionally
+> separate; editing colors here affects 95, not Aero. Keep both alive.
+
 Five named brand colors. Light "Ocean Breeze" / dark "Midnight Bay" share them
 with inverted roles.
 

@@ -57,6 +57,6 @@ jobs:
         run: node scripts/compute-csp-hashes.cjs --check
 
       # Only fail on high/critical. The Astro <=6.1.9 moderate advisory is
-      # tracked separately.
+      # tracked separately; see docs/PROJECT-STATUS.md "Astro 6 upgrade".
       - name: Audit production deps
         run: npm audit --omit=dev --audit-level=high

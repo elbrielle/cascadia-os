@@ -13,7 +13,7 @@
    de-dupes against a title you already added by hand. This is the same fetch
    logic as src/lib/trakt.js, adapted to the Workers runtime (env vars, not
    process.env). It stays empty until the home-server Plex→Trakt sync feeds
-   Trakt with data — fail-soft to [].
+   Trakt with data (see docs/plextraktsync-agent-spec.md) — fail-soft to [].
    ========================================================================== */
 
 const TRAKT_API = "https://api.trakt.tv";

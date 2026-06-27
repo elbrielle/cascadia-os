@@ -15,16 +15,13 @@
 .start-menu {
   position: fixed;
   left: var(--space-2);
-  bottom: calc(var(--taskbar-height) + 4px);
+  bottom: calc(var(--taskbar-height) + 4px + var(--vv-inset-bottom));
   z-index: var(--z-taskbar);
   width: 250px;
   display: flex;
   background: var(--color-surface);
   border: var(--window-border) solid var(--bevel-darker);
-  box-shadow:
-    inset  1px  1px 0 var(--bevel-light),
-    inset -1px -1px 0 var(--bevel-dark),
-    var(--shadow-hard-lg);
+  box-shadow: var(--bevel-out), var(--shadow-hard-lg);
   animation: start-menu-in var(--speed) var(--ease-soft);
 }
 .start-menu[hidden] { display: none; }
@@ -132,10 +129,7 @@
   gap: var(--space-3);
   background: var(--color-surface);
   border: var(--window-border) solid var(--bevel-darker);
-  box-shadow:
-    inset  1px  1px 0 var(--bevel-light),
-    inset -1px -1px 0 var(--bevel-dark),
-    var(--shadow-hard-lg);
+  box-shadow: var(--bevel-out), var(--shadow-hard-lg);
 }
 .start-menu__submenu[hidden] { display: none; }
 
@@ -269,6 +263,21 @@
   box-shadow:
     inset -1px -1px 0 rgba(255, 255, 255, 0.4),
     inset  1px  1px 0 rgba(0, 0, 0, 0.4);
+}
+
+/* --- Reboot variant (interface skin switch) ----------------------------- */
+/* No manual button: the CRT collapses, "Restarting…" fades up on the black,
+   then tweaks.js's reboot() reloads into the new skin. Reuses .shutdown +
+   .shutdown__crt; only the restart caption is new. */
+.shutdown__restarting[hidden] { display: none; }
+.shutdown__restarting { animation: shutdown-restarting-in 240ms var(--ease-soft) both; }
+@keyframes shutdown-restarting-in {
+  from { opacity: 0; transform: translateY(4px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .shutdown__crt { animation-duration: 1ms; }
+  .shutdown__restarting { animation: none; }
 }
 
 /* --- Mobile system tray (relocated from the taskbar) ---------------------

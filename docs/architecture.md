@@ -31,7 +31,7 @@ public/                  served as-is from the site root
   fonts/                 Sysfont, W95FA, Departure Mono (.woff2 + .woff)
   images/avatar.png      the Introduction-window portrait (64×64-native art, baked 2× → 128×128, PNG-8)
   images/og-image.png    1200×630 Open Graph / Twitter share card (avatar + name
-                         + tagline)
+                         + tagline; source + regen recipe: design-references/og-card.html)
   images/projects/       per-project tile logos
   wallpaper/             wallpaper-day.webp, wallpaper-night.webp
 
@@ -156,9 +156,16 @@ recalculated — the browser's already doing all the responsive work.
 
 ---
 
-## The script layer (`public/scripts/`)
+## The script layer (`src/scripts/`)
 
-Plain JavaScript loaded with `<script src="…">` from `Layout.astro`:
+Plain (non-module) JavaScript, but delivered through the build: each file is
+pulled in with a fingerprinted-URL import — `import x from "../scripts/x.js?url"`
+then `<script is:inline src={x}></script>` — so it ships as a content-hashed,
+immutable-cached `/_astro/*.js` file under `script-src 'self'`. **Shell** scripts
+(every page) are imported in `Layout.astro`; **route-specific** scripts are
+imported only in the page that renders their guard element, so they never load
+off-route. (`public/scripts/` now holds only `log-admin.js`, served as a plain
+`/scripts/` file for the Access-gated admin.) Examples below load from Layout:
 
 - **windows.js** — drag handling, focus, minimize/maximize, taskbar wiring.
   No layout logic.
@@ -226,7 +233,7 @@ purely in CSS — see `src/styles/wallpaper.css`. Full palette tables are in
 | Add a window | Drop a `<Window id="unique" title="…" width={N}>…` in any page |
 | Add a project to Work | Add an `<li class="panel work-item">` in `work.astro` |
 | Change a color | `src/styles/tokens.css` |
-| Add a pixel icon | New SVG in `public/scripts/icons.js`; reference with `<span data-icon="key">` |
+| Add a pixel icon | New SVG in `src/scripts/icons.js`; reference with `<span data-icon="key">` |
 
 ---
 

@@ -38,29 +38,29 @@
   line-height: 1.3;
 }
 
-/* Minimize HOLDS the slot on Home (OS-true windows), at every width where a
-   window can be dragged. Home is the only page that stacks two windows in one
-   cell (Introduction over Build Log inside home__left, a flex column), so the
-   global `display: none` minimize rule (window.css) pulls the minimized window's
-   box out of flow — Build Log reflows UP into Introduction's space, and because
-   drag is a transform offset ON TOP of the flow position, a dragged window then
-   leaps by that gap. Keep the box instead: `visibility: hidden` reserves the
+/* Minimize HOLDS the slot (OS-true windows), at every width where a window can
+   be dragged. Every page now lays its windows out in width-sized grid columns
+   (wallpaper gutters float the block right of the icon rail), so the global
+   `display: none` minimize rule (window.css) would collapse a minimized
+   window's column to 0 and shove its neighbours sideways. Keep the box instead:
+   `visibility: hidden` reserves the
    window's NATURAL slot (no hardcoded height) while still removing it from the
    a11y tree, tab order, and hit-testing exactly like display:none — so a
    minimized window leaves empty wallpaper where it was and its neighbor never
    moves. Restores the per-window-slot contract this file and windows.js share.
 
-   Gated at 721px to MIRROR the drag-enable threshold, NOT the grid breakpoint:
-   windows.js disables drag at `(max-width: 720px), (pointer: coarse)`, so ≥721px
-   is exactly the range a mouse can drag — and thus the range where a reflow
-   would be felt as a leap. This deliberately spans BOTH the ≥62em per-page grid
-   AND the 721–991px band where that grid hasn't engaged yet but mouse-drag is
-   still live (e.g. a half-screen window on a wide monitor). Below 721px drag is
-   off and the single-column stack SHOULD reclaim the space, so the global
-   display:none stands there. (Specificity 0,5,0 > the global 0,3,0; display:flex
-   matches the .window base so the reserved box keeps its titlebar+body layout.) */
-@media (min-width: 721px) {
-  .layout__grid.page-home .window.is-minimized:not(.is-closing) {
+   Gated at the GRID breakpoint (≥62em), where the width-sized columns actually
+   exist — that's the only place a collapsed track shoves neighbours sideways.
+   Below 62em (including the 721–991px band) the grid is the single-column
+   default, so there's no sized column to collapse: the global display:none stands
+   and the stack reclaims the space. (Holding the slot there would instead reserve
+   a near-viewport-tall invisible box and push siblings off the overflow-clipped
+   page; the minor drag-leap display:none can cause in that stacked band is
+   acceptable — windows there are full-bleed, not floating in sized columns.)
+   (Specificity 0,4,0 > the global 0,3,0; display:flex matches the .window base so
+   the reserved box keeps its titlebar+body layout.) */
+@media (min-width: 62em) {
+  .layout__grid .window.is-minimized:not(.is-closing) {
     display: flex;
     visibility: hidden;
   }
@@ -71,46 +71,37 @@
    `grid-template-columns: 1fr` default → cells stack vertically.          */
 @media (min-width: 62em) {
 
-  /* HOME — the left column STACKS Introduction
-     over Build Log; attention.log sits alone on the right at its NATURAL height
-     (top-aligned), so wallpaper breathes below it instead of the window being
-     stretched floor-to-ceiling (the old "cramped" look).
+  /* HOME — three windows across (intentional scatter, not a flush grid):
 
-         ┌──────────────┬──────────────┐
-         │ Introduction │ attention.log│
-         ├──────────────┤  (natural    │
-         │  Build Log   │   height)    │
-         └──────────────┟··············┤
-                        ┊  wallpaper   ┊  ← breathing room
-                        └ · · · · · · ·┘
+         ┌ · · · ┬───────────┬──────────────┬───────────────┬ · · · ┐
+         ┊ gutter│ Build Log │ Introduction │ attention.log │ gutter┊
+         └ · · · ┴───────────┴──────────────┴───────────────┴ · · · ┘
 
-     Why Introduction + Build Log are NESTED in one cell (home__left): a single
-     CSS-grid row is shared across BOTH columns, so a tall right-hand window
-     inflates the row tracks the left column depends on — which shoved Build Log
-     off the bottom and hid its posts. Giving the left pair their own cell =
-     their own formatting context: attention.log can be any height without
-     pushing them around.
-
-     The grid is ONE row at the full (viewport-locked) main height, and the left
-     cell is bounded to it. Introduction takes its natural size; Build Log fills
-     the remainder and scrolls its OWN body only if the viewport is too short to
-     show every post — on a normal laptop everything fits with room to spare.
-     DOM order intro → build-log → attention, so the mobile single-column stack
-     reads greeting → posts → what I'm into.                                     */
+     Each window now lives in its OWN .layout__cell (home__buildlog / home__intro
+     / home__attention in index.astro) — un-nested from the old single cell so
+     Build Log gets a full-height column and shows every post, and a tall
+     attention.log can't push the others around (separate cells = separate
+     formatting contexts). One row at the locked main height; each window keeps
+     its natural height at the top of its cell, wallpaper breathing below. DOM
+     order intro → build-log → attention so the mobile single-column stack reads
+     greeting → posts → what I'm into.                                           */
   .layout__grid.page-home {
-    /* Three tracks: left stack (Intro + Build Log) | attention.log | a flexible
-       wallpaper gutter. The content columns are CAPPED at the windows' designed
-       widths (not greedy fr), so on a big desktop they stop stretching into ugly
-       internal whitespace — the extra space becomes wallpaper, which also makes the
-       windows read as distinct, draggable objects. The caps shrink on narrower
-       desktops (minmax floor 0), so the tighter look there is preserved. */
-    grid-template-columns: minmax(0, 540px) minmax(0, 470px) minmax(0, 1fr);
+    /* Gutters (cols 1 & 5) float the trio right-of-centre. Home's 0.7fr:0.5fr
+       lean (~1.4:1) is intentionally gentler than the 1fr:0.55fr (~1.82:1) the
+       two-window pages share: three fixed windows leave less free width, and a
+       flatter bias keeps attention.log off the viewport edge. The gutters only
+       open up on a wide desktop (≥~1630px here); below that the windows just
+       fill the width (minmax floor 0) — no left-cluster either way. Rows locked
+       to the main height (stretch) so each window keeps its natural height at the
+       top of its cell, wallpaper below. */
+    grid-template-columns: minmax(0, 0.7fr) minmax(0, 420px) minmax(0, 520px) minmax(0, 460px) minmax(0, 0.5fr);
     grid-template-rows: minmax(0, 1fr);
     column-gap: var(--space-4);
     align-items: stretch;
   }
-  .layout__grid.page-home > .home__left      { grid-column: 1; grid-row: 1; min-height: 0; }
-  .layout__grid.page-home > .home__attention { grid-column: 2; grid-row: 1; min-height: 0; }
+  .layout__grid.page-home > .home__buildlog  { grid-column: 2; grid-row: 1; min-height: 0; }
+  .layout__grid.page-home > .home__intro     { grid-column: 3; grid-row: 1; min-height: 0; }
+  .layout__grid.page-home > .home__attention { grid-column: 4; grid-row: 1; min-height: 0; }
   /* Home windows fill their column width (drop the per-window 480px cap). */
   .layout__grid.page-home .window { min-width: 0; max-width: none; }
   /* Introduction keeps its natural height and never collapses to its titlebar. */
@@ -159,44 +150,151 @@
   .layout__grid.page-home [data-window="intro"] .window__body > * + * { margin-top: var(--space-2); }
   .layout__grid.page-home .project-tiles { margin-bottom: var(--space-2); }
 
-  /* ABOUT — README (left) + Favorites explorer (right, wider so the folder
-     sidebar + cover grid + detail pane have room). attention.log is Home-only
-     now (Phase C); About leads with the README and the Favorites explorer.     */
+  /* ABOUT — README + Trophy Case stacked in the left column (Option B); the
+     Favorites explorer on the right. This is the DEFAULT (≥62em) layout: a
+     proportional 1fr:1.5fr split, no right-shift gutters. About keeps this on the
+     laptop band (~992–1376px) because the two windows don't both fit at full size
+     there, and the proportional split lets Favorites keep enough width for its
+     2-column 3-pane (fixed gutter tracks here would starve it to one cramped
+     column). The right-shift gutters take over only at ≥86em (override at the end
+     of the file), where the viewport IS wide enough to hold both windows at full
+     size AND a gutter — so on a full desktop About leans right like every other
+     page, with nothing shrinking to make room. The left cell is a .layout__cell
+     flex column, so README + Trophy Case stack with the standard gap (this
+     single-cell-stacks-two-windows pattern lives only here, not on Home).
+     attention.log is Home-only (Phase C).                                       */
   .layout__grid.page-about {
     grid-template-columns: minmax(0, 1fr) minmax(0, 1.5fr);
     align-items: start;
   }
-  .layout__grid.page-about > .about__readme    { grid-column: 1; grid-row: 1; }
+  .layout__grid.page-about > .about__left {
+    grid-column: 1; grid-row: 1;
+    /* A DEFINITE height (the same envelope a single window uses) so the two
+       stacked windows can split it with flex-basis:0 — a basis-0 grow needs a
+       resolved container height to divide, which max-height alone doesn't give.
+       Keeps the README from growing full-height and shoving the Trophy Case off
+       the overflow-clipped desktop. */
+    height: calc(100dvh - var(--taskbar-height) - 9rem);
+    min-height: 0;
+  }
   .layout__grid.page-about > .about__favorites { grid-column: 2; grid-row: 1; }
+  /* Inside the left column the README and the Trophy Case split the bounded
+     height evenly; each scrolls its OWN body (retro scrollbar) rather than one
+     starving the other. On a tall desktop both fill out comfortably; on a short
+     one they stay balanced and equally reachable.                              */
+  .layout__grid.page-about #bio,
+  .layout__grid.page-about #trophies { flex: 1 1 0; min-height: 0; }
   /* Let the explorer exceed the default per-window cap, but bound it: a tight
      2-column cover grid (covers stay big, no stretched gap before the detail
      pane), with wallpaper breathing to the right on wide screens.             */
   .layout__grid.page-about .about__favorites .window { max-width: 660px; }
-  /* Cap the README too, so prose stays readable and both windows leave
-     wallpaper breathing room on very wide screens.                            */
-  .layout__grid.page-about .about__readme .window { max-width: 600px; }
+  /* Cap the left-column windows (README + Trophy Case) so prose stays readable
+     and they leave wallpaper breathing room on very wide screens.             */
+  .layout__grid.page-about .about__left .window { max-width: 600px; }
 
   /* WORK — Selected Work (left, wider) + résumé.doc (right). */
   .layout__grid.page-work {
-    grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr);
+    grid-template-columns: minmax(0, 1fr) minmax(0, 680px) minmax(0, 460px) minmax(0, 0.55fr);
     align-items: start;
   }
-  .layout__grid.page-work > .work__selected { grid-column: 1; grid-row: 1; }
-  .layout__grid.page-work > .work__resume   { grid-column: 2; grid-row: 1; }
+  .layout__grid.page-work > .work__selected { grid-column: 2; grid-row: 1; }
+  .layout__grid.page-work > .work__resume   { grid-column: 3; grid-row: 1; }
 
   /* BLOG and BLOG/TAGGED — Posts (left, wider) + Tags (right). */
   .layout__grid.page-blog {
-    grid-template-columns: minmax(0, 1.6fr) minmax(0, 1fr);
+    /* col3 track matches the Tags window's own width (360, TagsWindow.astro) so
+       it fills its track — no dead wallpaper between Tags and the right gutter. */
+    grid-template-columns: minmax(0, 1fr) minmax(0, 560px) minmax(0, 360px) minmax(0, 0.55fr);
     align-items: start;
   }
-  .layout__grid.page-blog > .blog__posts { grid-column: 1; grid-row: 1; }
-  .layout__grid.page-blog > .blog__tags  { grid-column: 2; grid-row: 1; }
+  .layout__grid.page-blog > .blog__posts { grid-column: 2; grid-row: 1; }
+  .layout__grid.page-blog > .blog__tags  { grid-column: 3; grid-row: 1; }
 
-  /* CONTACT — Form (left) + Elsewhere socials (right). */
+  /* CONTACT — a wide LANDSCAPE terminal (it deliberately breaks the site's
+     column of portrait windows). This is the LAPTOP-band layout (62em–86em):
+     the terminal fills the wide track and Elsewhere socials stack BELOW it,
+     left-aligned, because both windows can't sit side-by-side at full size at
+     these widths. At ≥86em the viewport is wide enough to park Elsewhere to the
+     RIGHT of the terminal instead (override at the end of the file) — the same
+     two-tier pattern About uses. */
   .layout__grid.page-contact {
-    grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr);
+    grid-template-columns: minmax(0, 1fr) minmax(0, 780px) minmax(0, 0.5fr);
     align-items: start;
   }
-  .layout__grid.page-contact > .contact__form      { grid-column: 1; grid-row: 1; }
-  .layout__grid.page-contact > .contact__elsewhere { grid-column: 2; grid-row: 1; }
+  .layout__grid.page-contact > .contact__form      { grid-column: 2; grid-row: 1; }
+  .layout__grid.page-contact > .contact__elsewhere { grid-column: 2; grid-row: 2; justify-self: start; }
+
+  /* ART — a Win95 desktop of three medium windows (cork board / crate / poetry
+     file-list, with the visual poem living inside the file-list). The tall cork
+     board sits on the left across both rows; the crate + file-list stack on the
+     right. Top-aligned, natural heights; they stack to one column on mobile. */
+  .layout__grid.page-art {
+    /* Right column (CD player + Poetry stacked) WIDER so Poetry gains
+       horizontal room for the Large-Icons grid; the cork board narrows to ~44%
+       but stays full-height (grid-row 1/3) — "tall on the left." */
+    grid-template-columns: minmax(0, 0.92fr) minmax(0, 1.15fr);
+    /* CD player (row 1) leads on height — it carries a lot of chrome (album tabs
+       + LCD + cover/meta + transport + seek + status) above its tracklist, which
+       needs the room. Poetry's Large-Icons grid fits all 5 tiles in ONE row, so
+       row 2 only needs enough for that single row + its status, so the CD player
+       gets the lion's share (1.8fr) — its tracklist was being squeezed to ~1 row
+       before; this + the lift + the chrome trim (art.css) give it ~3-4 rows. */
+    grid-template-rows: minmax(0, 1.8fr) minmax(0, 1fr);
+    /* THE LIFT — the "Art" page-title is short and lives top-LEFT, leaving the
+       right column's top band as empty wallpaper. Pull the whole grid UP under
+       the title by --art-lift, then add that same amount back to the height so
+       the grid bottom still meets the taskbar. The right column (CD + Poetry)
+       now starts level with the title; the cork board is held back below it via
+       padding-top on its cell (below). This is the deliberate asymmetric
+       stagger — windows tuck under the title rather than aligning in a tidy row
+       — and it's what finally gives the CD tracklist + Poetry their height. */
+    --art-lift: 7rem;
+    margin-top: calc(-1 * var(--art-lift));
+    height: calc(100dvh - var(--taskbar-height) - 6rem + var(--art-lift));
+    align-items: stretch;
+    column-gap: var(--space-4);
+    row-gap: var(--space-4);
+  }
+  /* Cork board clears the title: pad its cell down by the lift so the board
+     window starts beneath "Art" (its height nets back to the pre-lift value). */
+  .layout__grid.page-art > .art-cell--photo  { grid-column: 1; grid-row: 1 / 3; min-height: 0; padding-top: var(--art-lift); }
+  .layout__grid.page-art > .art-cell--music  { grid-column: 2; grid-row: 1; min-height: 0; }
+  .layout__grid.page-art > .art-cell--poetry { grid-column: 2; grid-row: 2; min-height: 0; }
+  /* Let each window shrink to its (bounded) cell so its body scrolls internally
+     instead of overflowing past the taskbar. */
+  .layout__grid.page-art .window { min-height: 0; }
 }
+
+/* ABOUT, full desktop only — once the viewport is wide enough to hold both
+   windows at FULL size plus a gutter (≥86em ≈ 1376px), About switches from its
+   proportional default (above) to the same right-shift gutter grid the other
+   pages use. The gutters take only the EXTRA space beyond the full-size windows,
+   so nothing shrinks to make room for the lean. Below 86em the proportional
+   layout owns the laptop band so the Favorites 3-pane keeps its width (its 2nd
+   cover column). Tracks match the actual window widths: README/Trophy 520
+   (about.astro), Favorites 660. */
+@media (min-width: 86em) {
+  .layout__grid.page-about {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 520px) minmax(0, 660px) minmax(0, 0.55fr);
+  }
+  .layout__grid.page-about > .about__left      { grid-column: 2; grid-row: 1; }
+  .layout__grid.page-about > .about__favorites { grid-column: 3; grid-row: 1; }
+
+  /* CONTACT, full desktop only — at ≥86em the landscape terminal + Elsewhere
+     finally fit side-by-side, so Elsewhere lifts OUT from under the terminal
+     into its own right column: no window pushed below the fold, and the wide
+     wallpaper gutter that used to sit empty beside the terminal is now filled.
+     The terminal keeps its full 780 landscape track; Elsewhere takes a 440
+     track for its 420-wide window. 780+440 = 1220 fits from 86em up (grid width
+     = viewport − 104 sidebar − 32 main padding ≈ 1240px at 86em); the 1fr/0.55fr
+     gutters take only the extra beyond that, so nothing shrinks to make room.
+     The form cell (col 2 / row 1) is inherited from the laptop-band rule. */
+  .layout__grid.page-contact {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 780px) minmax(0, 440px) minmax(0, 0.55fr);
+  }
+  /* Let the cell fill its 440 track (overriding the laptop rule's shrink-to-fit
+     `justify-self: start`) so the window grows to its full 420 max-width beside
+     the terminal, rather than collapsing to the link list's ~370 intrinsic width. */
+  .layout__grid.page-contact > .contact__elsewhere { grid-column: 3; grid-row: 1; justify-self: stretch; }
+}
+

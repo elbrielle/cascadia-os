@@ -2,7 +2,8 @@
    favorites.css  —  the About page "Favorites" explorer (Phase C)
    ----------------------------------------------------------------------------
    A Windows/Finder-style explorer: a folder sidebar (one per category) → a grid
-   of cover "icons" → a detail pane with Elisha's review. Supports real cover
+   of cover "icons" → a detail pane with Elisha's review. Ported from
+   design-references/favorites-mockup.html (Approach 1), adapted for real cover
    art and a mobile drill-in (folder row → grid → full-width detail w/ back).
 
    Markup (built at build time in about.astro, hydrated by
@@ -27,6 +28,10 @@
 }
 
 /* ---- sidebar (folders) -------------------------------------------------- */
+/* Aqua "source list" section header — shown only under the Aero skin (see
+   frutiger-aero.css §37); hidden in the base/retro look so the Win95 sidebar
+   is unchanged. */
+.fav__side-head { display: none; }
 .fav__side {
   flex: 0 0 140px;
   display: flex;
@@ -35,7 +40,7 @@
   padding: var(--space-2);
   background: var(--color-surface);
   border: 2px solid var(--bevel-dark);
-  box-shadow: inset 1px 1px 0 var(--bevel-dark), inset -1px -1px 0 var(--bevel-light);
+  box-shadow: var(--bevel-in);
 }
 /* Mobile category picker — a retro combo box that replaces the folder sidebar
    on narrow screens, so categories never require a horizontal scroll. Hidden on
@@ -109,8 +114,16 @@
   color: var(--color-text-muted);
   background: var(--color-surface);
   border: 1px solid var(--bevel-dark);
-  box-shadow: inset 1px 1px 0 var(--bevel-dark), inset -1px -1px 0 var(--bevel-light);
+  box-shadow: var(--bevel-in);
 }
+/* Path crumbs. Markup is segments (root "Favorites" + the leaf category); the
+   retro look reconstructs the classic DOS path here (C:\Favorites\<cat>), while
+   the Aero skin re-presents the SAME spans as a Vista breadcrumb (Favorites ›
+   <cat>). inline-flex drops the inter-span whitespace so separators sit tight. */
+.fav__path { display: inline-flex; align-items: baseline; min-width: 0; }
+.fav__crumb--root::before { content: "C:\\"; }
+.fav__crumb + .fav__crumb::before { content: "\\"; }
+
 .fav__content {
   flex: 1;
   display: flex;
@@ -252,7 +265,7 @@
   padding: var(--space-3);
   background: var(--color-surface-sunken);
   border: 1px solid var(--bevel-dark);
-  box-shadow: inset 1px 1px 0 var(--bevel-dark), inset -1px -1px 0 var(--bevel-light);
+  box-shadow: var(--bevel-in);
 }
 .fav__detail[hidden] { display: none; }
 .fav__detail-cover {
@@ -299,7 +312,7 @@
   color: var(--color-text);
   background: var(--color-surface);
   border: 2px solid var(--bevel-darker);
-  box-shadow: inset 1px 1px 0 var(--bevel-light), inset -1px -1px 0 var(--bevel-dark);
+  box-shadow: var(--bevel-out);
 }
 
 .fav__empty { color: var(--color-text-muted); font-size: var(--text-sm); }

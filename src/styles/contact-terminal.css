@@ -1,0 +1,286 @@
+/* ============================================================================
+   contact-terminal.css  —  the Contact "Terminal — contact" console
+   ----------------------------------------------------------------------------
+   A terminal/console SKIN over the real Web3Forms form, NOT a literal command
+   line. The Contact window interior (.term) is a fixed-dark console: an ASCII
+   CONTACT logo, a typed boot, then the form rendered as console prompts you type
+   into — borderless inputs that blend into the screen (NO filled/white boxes),
+   a recessed-dark message buffer, and a cascadia:~$ send row. Every input stays a
+   true <label>-wraps-input with its [name], required, focus ring, tab order, and
+   the aria-live status — so it is as usable as a plain form.
+
+   COLOR: tangerine + cream on black (the brand, which reads as a warm amber CRT).
+   No green. Every --term-* is a FIXED literal scoped on .term, so the console
+   stays dark in BOTH themes (a terminal is dark by nature); in light theme it is
+   a dark terminal app on a light desktop. The surrounding Window chrome still
+   follows the theme tokens.
+
+   Contrast on --term-bg #0a0e14:  cream #F2EFE6 ~17:1 · tangerine #F7A072 ~9:1 ·
+   dim #8A99A3 ~6:1 · amber error #FBBF24 ~10:1 — all AA.
+
+   Markup: src/pages/contact.astro. Boot type-on + transmit bar: the EXTERNAL
+   public/scripts/contact-terminal.js — submit-free, so the inline form handler's
+   bytes (and the 2-hash CSP) stay untouched.
+   ========================================================================== */
+
+.term {
+  /* Fixed terminal palette — tangerine + cream on black, never theme vars. */
+  --term-bg:      #0a0e14;  /* console (near-black, faint navy)                */
+  --term-bg-2:    #05080d;  /* recessed message buffer (darker than bg)        */
+  --term-ink:     #F2EFE6;  /* typed text / body (cream)                       */
+  --term-accent:  #F7A072;  /* prompts, cursor, logo, headings, transmit       */
+  --term-dim:     #8A99A3;  /* placeholders, secondary lines, fill underlines  */
+  --term-amber:   #FBBF24;  /* error status (warm, distinct from the accent)   */
+
+  position: relative;
+  background: var(--term-bg);
+  color: var(--term-ink);
+  padding: var(--space-3);
+  border: 0;
+  box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.5);
+  overflow: hidden;
+  font-family: var(--font-mono);
+  font-size: var(--text-sm);
+  line-height: 1.55;
+}
+
+/* Bleed the black terminal to the window's inner edge — a proper terminal screen
+   fills the monitor. Zero the body padding + paint it black so no gray chrome
+   shows around the console; .term keeps its own internal padding. Scoped to the
+   form window so the Elsewhere window keeps its normal surface. */
+[data-window="form"] .window__body { padding: 0; background: #0a0e14; }
+
+/* STATIC CRT scanline overlay (no animation; reduced-motion has nothing to do). */
+.term::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  background: repeating-linear-gradient(
+    0deg, rgba(0, 0, 0, 0.22) 0 1px, transparent 1px 3px);
+  mix-blend-mode: multiply;
+}
+.term > * { position: relative; z-index: 2; }
+
+/* ---- head row: ASCII CONTACT logo (left) + typed boot (right) = landscape - */
+.term__head {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-4);
+  flex-wrap: wrap;
+  margin-bottom: var(--space-3);
+}
+.term__logo {
+  flex: 0 0 auto;
+  margin: 0;
+  color: var(--term-accent);
+  font-family: var(--font-mono);
+  font-size: clamp(6px, 1.7vw, 14px);
+  line-height: 1.05;
+  white-space: pre;
+  overflow: hidden;
+  text-shadow: 0 0 8px rgba(247, 160, 114, 0.3);
+}
+
+/* ---- typed boot lines (decorative) -------------------------------------- */
+.term__boot { flex: 1 1 220px; min-width: 0; align-self: center; margin: 0; color: var(--term-dim); }
+.term__line { display: block; white-space: pre-wrap; }
+.term__line b { color: var(--term-accent); font-weight: 400; }
+
+/* Boot reveal: contact-terminal.js adds .term--connecting on the first visit
+   this session (motion allowed); each line clips on in sequence. Default (JS off
+   / reduced motion / revisit) shows them fully. The last line carries
+   [data-term-last] so the script settles to the steady cursor on its end. */
+.term--connecting .term__line {
+  animation: term-line-in var(--speed) steps(8, end) both;
+}
+.term--connecting .term__line:nth-child(1) { animation-delay: 0ms; }
+.term--connecting .term__line:nth-child(2) { animation-delay: 200ms; }
+.term--connecting .term__line:nth-child(3) { animation-delay: 400ms; }
+@keyframes term-line-in {
+  from { clip-path: inset(0 100% 0 0); opacity: 0.4; }
+  to   { clip-path: inset(0 0 0 0);    opacity: 1; }
+}
+/* Blinking block cursor after "ready." once booted (frozen under reduce). */
+.term--connected .term__line[data-term-last]::after {
+  content: "\2588";
+  margin-left: 3px;
+  color: var(--term-accent);
+  animation: blink 1s steps(2, end) infinite;
+  text-shadow: 0 0 6px rgba(247, 160, 114, 0.4);
+}
+
+/* ---- heading (real, kept for outline) + instruction, as console lines --- */
+.term .term__h2 {
+  margin: 0 0 var(--space-1);
+  font-family: var(--font-mono);
+  font-size: var(--text-base);
+  font-weight: 400;
+  letter-spacing: 0.5px;
+  color: var(--term-ink);
+}
+.term__h2::before { content: "# "; color: var(--term-accent); }
+.term__intro {
+  margin: 0 0 var(--space-3);
+  font-family: var(--font-mono);
+  font-size: var(--text-sm);
+  line-height: var(--leading-body);
+  color: var(--term-dim);
+}
+
+/* ============================================================================
+   The form — a console session. Inputs blend into the screen: borderless, no
+   fill (NO white boxes), just a faint dotted underline + a tangerine caret. The
+   message is a recessed DARK buffer (the opposite of a white box).
+   ========================================================================== */
+.term__session {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  column-gap: var(--space-4);
+  row-gap: var(--space-2);
+  align-items: baseline;
+}
+.term__session .field--to      { grid-column: 1; }
+.term__session .field--subject { grid-column: 2; }
+.term__session .field--msg,
+.term__session .term__send,
+.term__session .form-status,
+.term__session .term__xmit { grid-column: 1 / -1; }
+
+/* inline rows: prompt word + input on one console line (to, subject) */
+.term .field {
+  display: grid;
+  grid-template-columns: 6rem 1fr;
+  align-items: baseline;
+  gap: 8px;
+}
+.term .field--msg { grid-template-columns: 1fr; gap: 4px; } /* message stacks */
+
+.term__key {
+  font-family: var(--font-mono);
+  font-size: var(--text-sm);
+  color: var(--term-accent);
+  white-space: nowrap;
+}
+.term__key::before { content: "\00BB "; } /* » prompt marker */
+
+/* short inputs — transparent, dotted underline, cream text, tangerine caret */
+.term .field input {
+  background: transparent;
+  border: 0;
+  border-bottom: 1px dotted rgba(242, 239, 230, 0.3);
+  border-radius: 0;
+  box-shadow: none;
+  padding: 1px 1px 3px;
+  color: var(--term-ink);
+  caret-color: var(--term-accent);
+  font-family: var(--font-mono);
+  font-size: var(--text-sm);
+}
+.term .field input:focus,
+.term .field input:focus-visible {
+  border-bottom: 1px solid var(--term-accent);
+  outline: 2px solid var(--color-accent-bright);
+  outline-offset: 3px;
+}
+
+/* message buffer — recessed dark well with a subtle uniform border; never a white box */
+.term .field--msg textarea {
+  background: var(--term-bg-2);
+  border: 1px solid rgba(242, 239, 230, 0.12);
+  border-radius: 0;
+  box-shadow: none;
+  padding: 8px 10px;
+  color: var(--term-ink);
+  caret-color: var(--term-accent);
+  font-family: var(--font-mono);
+  font-size: var(--text-sm);
+  line-height: 1.5;
+  resize: vertical;
+}
+.term .field--msg textarea:focus,
+.term .field--msg textarea:focus-visible {
+  border-color: var(--term-accent);
+  outline: 2px solid var(--color-accent-bright);
+  outline-offset: 2px;
+}
+
+.term .field input::placeholder,
+.term .field textarea::placeholder { color: var(--term-dim); opacity: 1; }
+
+/* ---- cascadia:~$ send row ----------------------------------------------- */
+.term__send {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  margin-top: var(--space-2);
+  flex-wrap: wrap;
+}
+.term__prompt {
+  font-family: var(--font-mono);
+  font-size: var(--text-sm);
+  color: var(--term-accent);
+  text-shadow: 0 0 5px rgba(247, 160, 114, 0.25);
+}
+.term__go {
+  background: transparent;
+  color: var(--term-accent);
+  border: 1px solid var(--term-accent);
+  border-radius: 0;
+  font-family: var(--font-mono);
+  font-size: var(--text-sm);
+  letter-spacing: 1px;
+  padding: 3px 16px;
+  cursor: pointer;
+}
+.term__go:hover { background: var(--term-accent); color: var(--term-bg); }
+.term__go:active { transform: translate(1px, 1px); }
+.term__go:focus-visible { outline: 2px solid var(--color-accent-bright); outline-offset: 2px; }
+
+/* ---- status line — console output; re-point the handler's inline var()s ---- */
+/* The inline handler sets color: var(--color-text-muted|--color-warning) inline,
+   which beats a plain CSS color; redirect THESE locals so it resolves to console-
+   safe values (mirrors the existing components.css .form-status trick) — zero
+   script edit, so the CSP stays at 2 hashes. */
+.term .form-status {
+  --color-warning: var(--term-amber);
+  --color-text-muted: var(--term-dim);
+  margin: var(--space-1) 0 0;
+  font-family: var(--font-mono);
+  font-size: var(--text-sm);
+}
+.term .form-status:not(:empty)::before { content: "> "; color: var(--term-accent); }
+
+/* ---- transmit bar (decorative, contact-terminal.js fills it on submit) --- */
+.term__xmit {
+  margin-top: var(--space-1);
+  min-height: 1.3em;
+  font-family: var(--font-mono);
+  font-size: var(--text-sm);
+  letter-spacing: 1px;
+  color: var(--term-dim);
+  white-space: nowrap;
+  overflow: hidden;
+}
+.term__xmit b { color: var(--term-accent); font-weight: 400; }
+
+/* ============================================================================
+   Mobile — inputs stack under their prompt; no fixed-width labels to overflow.
+   ========================================================================== */
+@media (max-width: 600px) {
+  .term { padding: var(--space-2); }
+  /* Condense the decorative preamble so the form is reachable without a long
+     scroll: small logo, just the "ready." boot line (drop the dial-in lines),
+     tighter heading/intro. The full motion still plays on desktop. */
+  .term__head { gap: var(--space-1); margin-bottom: var(--space-2); align-items: center; }
+  .term__logo { font-size: clamp(6px, 1.9vw, 9px); }
+  .term__boot { font-size: var(--text-xs); }
+  .term__boot .term__line:not([data-term-last]) { display: none; }
+  .term .term__h2 { font-size: var(--text-sm); margin-bottom: 2px; }
+  .term__intro { font-size: var(--text-xs); margin-bottom: var(--space-2); }
+  .term__session { grid-template-columns: 1fr; }
+  .term__session .field--to,
+  .term__session .field--subject { grid-column: auto; } /* stack; don't make an implicit col 2 */
+  .term .field { grid-template-columns: 1fr; gap: 2px; }
+}

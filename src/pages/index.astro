@@ -3,19 +3,27 @@ import Layout from "../layouts/Layout.astro";
 import Window from "../components/Window.astro";
 import AttentionLog from "../components/AttentionLog.astro";
 import { getPosts, formatDate, SUBSTACK_FEED_URL } from "../lib/substack.js";
+// Route-split (fingerprinted ?url → /_astro, immutable-cached, home-only):
+import attentionScript from "../scripts/attention-grid.js?url";
+import avatarScript from "../scripts/avatar-dissolve.js?url";
 
 const posts = (await getPosts()).slice(0, 4);
 ---
 
 <Layout title="Elisha Lucero" pageTitle="Home" current="home">
 
-  <div class="layout__cell home__left">
+  <div class="layout__cell home__intro">
   <Window id="intro" title="Introduction" width={520}>
     <div class="intro-grid">
-      <div class="avatar avatar--photo">
-        {/* ?v=N is a cache-buster — bump it whenever the avatar art changes so a
-            previously-cached /images/avatar.png doesn't linger (KV/CDN cache is 4h). */}
-        <img src="/images/avatar.png?v=2" alt="Elisha Lucero portrait" width="128" height="128" />
+      {/* The pixel-art portrait "dissolves" into a real photo on hover (tap on
+          touch) — a Win95 block dissolve painted by avatar-dissolve.js onto the
+          <canvas> over the pixel-art <img>. The <img> is the no-JS / pre-load
+          fallback and carries the alt text; the canvas (256² backing for crisp 2×)
+          loads the real photo itself. ?v=N is a cache-buster — bump when an avatar
+          asset changes (KV/CDN 4h cache). */}
+      <div class="avatar avatar--photo" data-avatar-reveal>
+        <img class="avatar__pixel" src="/images/avatar.png?v=2" alt="Elisha Lucero portrait" width="128" height="128" />
+        <canvas class="avatar__canvas" width="256" height="256" aria-hidden="true"></canvas>
       </div>
       <div>
         <h2>Hi, I'm Elisha.</h2>
@@ -63,7 +71,9 @@ const posts = (await getPosts()).slice(0, 4);
       <a class="btn" href="/about/">About me</a>
     </div>
   </Window>
+  </div>
 
+  <div class="layout__cell home__buildlog">
   <Window id="buildlog" title="Build Log" width={420}>
     <a class="rss-corner" data-icon="rss" href={SUBSTACK_FEED_URL} target="_blank" rel="noopener" aria-label="Subscribe via RSS"></a>
     <ul class="panel-list" aria-label="Recent posts">
@@ -81,5 +91,9 @@ const posts = (await getPosts()).slice(0, 4);
   <div class="layout__cell home__attention">
   <AttentionLog width={460} />
   </div>
+
+  {/* Home-only route-split scripts (external + fingerprinted via ?url). */}
+  <script is:inline src={attentionScript}></script>
+  <script is:inline src={avatarScript}></script>
 
 </Layout>

@@ -80,9 +80,17 @@ const sections = [
     <p class="attn__empty">— log empty —</p>
   ) : (
   <div class="attn" data-attn>
-    {sections.map((section) => (
-      <Fragment>
-        <h2>{section.heading}</h2>
+    {/* Each section is a native <details> so a phone gets a scannable index that
+        expands on tap (the .attn panel is a ~2,000px wall of cover grids on
+        mobile). mobile-collapse.js authors the DESKTOP truth — all open — and
+        only diverges at <=720px: every section collapses EXCEPT the first, which
+        carries data-m-mobile="open" so the log still opens with something to read.
+        The .attn__detail sticky bar + backdrop stay OUTSIDE every <details> (as
+        direct children of .attn) so the mobile bottom sheet still pins to the
+        viewport even when a section is collapsed. */}
+    {sections.map((section, i) => (
+      <details class="attn__section m-collapse" open data-m-mobile={i === 0 ? "open" : undefined}>
+        <summary><h2>{section.heading}</h2></summary>
         <ul class="attn__grid">
           {section.items.map((it) => (
             <li>
@@ -117,7 +125,7 @@ const sections = [
             <a href={section.footer.href} target="_blank" rel="noopener">{section.footer.text}</a>
           </p>
         )}
-      </Fragment>
+      </details>
     ))}
 
     <div class="attn__detail" data-attn-detail aria-live="polite">

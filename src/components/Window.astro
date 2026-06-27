@@ -12,13 +12,28 @@
 //            is narrower — text reflows naturally. min-width in window.css
 //            keeps it from getting silly-narrow. Omit to use the global
 //            default (480px). On mobile, mobile.css forces full-width.
+//    panes : optional OPT-IN flag (boolean). When true, adds the
+//            `window--panes` modifier so the body becomes a flex column with
+//            overflow:hidden and ONLY a child marked [data-scroll-pane] scrolls
+//            (the rest of the content — menu bars / column headers / transport /
+//            status strips — stays pinned). Default false keeps the body as the
+//            single overflow scroller every other window relies on. See
+//            window.css ".window--panes" + art.astro for the Art-page panes.
+//    active: optional OPT-IN flag (boolean). Ships the window with `is-active`
+//            in the static HTML. windows.js re-derives is-active at runtime
+//            (focusWindow strips + re-adds it), so this is purely a pre-JS /
+//            no-JS anchor — it matters on the Art page's mobile single-pane mode,
+//            where a CSS rule (art.css) gates each cell's visibility on a window
+//            being .is-active; the statically-active first window means content
+//            shows before windows.js runs (no blank flash) and even if it never
+//            does. Default false.
 //  Layout note: <main> in Layout.astro is a CSS Grid with per-page named
 //  cells; each <Window /> is placed inside a .layout__cell wrapper that
 //  occupies a fixed grid slot. Drag is applied as a CSS transform via
 //  --drag-x / --drag-y custom props that windows.js updates — never via
 //  top/left, so resize never breaks the flow.
 // ============================================================================
-const { id, title = "Window", width } = Astro.props;
+const { id, title = "Window", width, panes = false, active = false } = Astro.props;
 const styleVar = width ? `--preferred-width: ${width}px` : undefined;
 ---
 
@@ -29,7 +44,7 @@ const styleVar = width ? `--preferred-width: ${width}px` : undefined;
     joins the Tab order): windows.js focuses it after a restore so a keyboard
     user lands back on the window they brought back. title= on the name span
     is the native full-text tooltip for when the CSS ellipsis truncates. */}
-<section class="window" id={id} data-window={id} style={styleVar} aria-labelledby={`${id}-window-title`}>
+<section class:list={["window", { "window--panes": panes, "is-active": active }]} id={id} data-window={id} style={styleVar} aria-labelledby={`${id}-window-title`}>
   <header class="window__titlebar" tabindex="-1">
     <span class="window__title" id={`${id}-window-title`} title={title}>{title}</span>
     <div class="window__controls">

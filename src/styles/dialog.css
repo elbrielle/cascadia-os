@@ -79,9 +79,7 @@
   background: var(--color-surface);
   color: var(--color-text);
   border: 2px solid var(--bevel-darker);
-  box-shadow:
-    inset  1px  1px 0 var(--bevel-light),
-    inset -1px -1px 0 var(--bevel-dark);
+  box-shadow: var(--bevel-out);
   font-family: var(--font-display);
   font-size: 12px;
   line-height: 1;
@@ -101,9 +99,7 @@
   color: var(--color-text);
   margin: var(--window-border);
   padding: var(--space-4);
-  box-shadow:
-    inset  1px  1px 0 var(--bevel-dark),
-    inset -1px -1px 0 var(--bevel-light);
+  box-shadow: var(--bevel-in);
   font-family: var(--font-body);
   font-size: var(--text-base);
   line-height: var(--leading-body);

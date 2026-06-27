@@ -66,9 +66,7 @@
   background: var(--color-surface);
   color: var(--color-text);
   border: var(--window-border) solid var(--bevel-darker);
-  box-shadow:
-    inset  1px  1px 0 var(--bevel-light),
-    inset -1px -1px 0 var(--bevel-dark);
+  box-shadow: var(--bevel-out);
   font-family: var(--font-display);
   font-size: 11px;
   letter-spacing: 1px;
@@ -100,9 +98,7 @@
   color: var(--color-text);
   padding: var(--space-2) var(--space-3);
   border: 1px solid var(--bevel-dark);
-  box-shadow:
-    inset  1px  1px 0 var(--bevel-dark),
-    inset -1px -1px 0 var(--bevel-light);
+  box-shadow: var(--bevel-in);
 }
 
 .panel-list {
@@ -142,9 +138,7 @@
   height: 96px;
   background: var(--color-surface-sunken);
   border: 2px solid var(--bevel-darker);
-  box-shadow:
-    inset  1px  1px 0 var(--bevel-dark),
-    inset -1px -1px 0 var(--bevel-light);
+  box-shadow: var(--bevel-in);
   padding: 4px;
   flex-shrink: 0;
 }
@@ -167,6 +161,32 @@
   object-fit: cover;
   display: block;
   image-rendering: pixelated;
+}
+/* Win95 block-dissolve reveal: a <canvas> sits OVER the pixel-art <img> and
+   repaints the portrait block-by-block — pixel-art → real photo on hover (tap on
+   touch via avatar-dissolve.js), and back on un-hover. The <img> stays underneath
+   as the no-JS / pre-load fallback. Under reduced motion the script swaps
+   instantly (the dissolve is rAF-driven JS, not a CSS transition). */
+.avatar--photo { position: relative; }
+.avatar--photo .avatar__pixel,
+.avatar--photo .avatar__canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+.avatar--photo .avatar__canvas { z-index: 1; display: block; }
+/* The Introduction window shrinks on the Home 3-across grid well before the
+   mobile breakpoint, and a narrow window crushed the `auto 1fr` text column into
+   one-word-per-line wrapping. Make the window body a size container and stack the
+   hero (avatar over full-width text) whenever the window ITSELF is narrow —
+   independent of viewport, so it reacts to the actual window width. Mirrors the
+   mobile.css stack; mobile still works via its own rule. */
+[data-window="intro"] .window__body { container-type: inline-size; }
+@container (max-width: 28rem) {
+  .intro-grid { grid-template-columns: 1fr; text-align: center; }
+  .intro-grid > div { text-align: left; }
+  .intro-grid .avatar { margin: 0 auto; }
 }
 
 
@@ -289,10 +309,14 @@
   --t-game: var(--tint-game);  --t-album: var(--tint-album); --t-paper: var(--tint-paper);
 }
 .attn > * + * { margin-top: var(--space-3); }
-/* The section headers (<h2>) are large (text-xl); give the cover grid extra air
-   below its header so the title doesn't crowd the covers — the uniform * + * gap
-   reads tight under the big uppercase heading. */
-.attn h2 + .attn__grid { margin-top: var(--space-4); }
+/* Each section is a <details class="attn__section m-collapse"> (collapsible on
+   mobile — see AttentionLog.astro + mobile-collapse.css), so the heading lives in
+   its <summary> and the grid/footer are nested inside the <details>, no longer
+   direct children of .attn. Re-scope the two intra-section gaps the cascade used
+   to give: extra air below the big text-xl header so the title doesn't crowd the
+   covers, and the standard gap before the "full shelf" footer line. */
+.attn__section > .attn__grid { margin-top: var(--space-4); }
+.attn__section > .attn__more { margin-top: var(--space-3); }
 /* Intro is a single punchy line; scale it up with the window but keep it on
    ONE line down to the narrowest phones (min term ≈ current size, vw term sized
    so "what's got my attention" never wraps in the narrow mobile column). */
@@ -426,9 +450,7 @@
   padding: 4px 8px 4px 10px;
   background: var(--color-surface);
   border: var(--window-border) solid var(--bevel-darker);
-  box-shadow:
-    inset  1px  1px 0 var(--bevel-light),
-    inset -1px -1px 0 var(--bevel-dark);
+  box-shadow: var(--bevel-out);
   font-family: var(--font-display);
   font-size: 11px;
   letter-spacing: 0.5px;
@@ -512,9 +534,7 @@
   padding: 4px 8px;
   background: var(--color-surface);
   border: 1px solid var(--bevel-darker);
-  box-shadow:
-    inset  1px  1px 0 var(--bevel-light),
-    inset -1px -1px 0 var(--bevel-dark);
+  box-shadow: var(--bevel-out);
 }
 .project-links .pixel-link__icon {
   width: 16px;
@@ -546,9 +566,7 @@
   padding: 4px;
   background: var(--color-surface);
   border: var(--window-border) solid var(--bevel-darker);
-  box-shadow:
-    inset  1px  1px 0 var(--bevel-light),
-    inset -1px -1px 0 var(--bevel-dark);
+  box-shadow: var(--bevel-out);
   color: var(--color-text);
   text-decoration: none;
   cursor: pointer;
@@ -674,9 +692,7 @@
   padding: 4px var(--space-2);
   background: var(--color-surface-2);
   border: 1px solid var(--bevel-dark);
-  box-shadow:
-    inset  1px  1px 0 var(--bevel-dark),
-    inset -1px -1px 0 var(--bevel-light);
+  box-shadow: var(--bevel-in);
   font-family: var(--font-mono);
   font-size: var(--text-sm);
   letter-spacing: 1px;
@@ -746,46 +762,6 @@
 /* Folder contents — indented under the header, Explorer-style. */
 .folder__body {
   padding: var(--space-2) var(--space-2) var(--space-3) var(--space-3);
-}
-
-/* --- Contact form ----------------------------------------------------- */
-.form-grid {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-3);
-}
-.form-grid .field {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
-.form-grid .field > span {
-  font-family: var(--font-display);
-  font-size: 10px;
-  letter-spacing: 1px;
-  text-transform: uppercase;
-  color: var(--color-text-muted);
-}
-.form-grid input,
-.form-grid textarea {
-  padding: var(--space-2);
-  background: var(--color-surface-2);
-  color: var(--color-text);
-  border: var(--window-border) solid var(--bevel-darker);
-  box-shadow:
-    inset  1px  1px 0 var(--bevel-dark),
-    inset -1px -1px 0 var(--bevel-light);
-  font-family: var(--font-body);
-  font-size: var(--text-base);
-  resize: vertical;
-}
-.form-grid input:focus,
-.form-grid textarea:focus {
-  outline: 2px solid var(--color-accent);
-  outline-offset: -2px;
-}
-.form-grid .btn {
-  align-self: flex-start;
 }
 
 /* --- Stylized résumé (Work → resume.doc) ------------------------------ */
@@ -877,11 +853,24 @@
   color: var(--color-text-muted);
 }
 .resume__job .cli { margin-top: 4px; }
-.resume__skills {
+.resume__summary {
   font-family: var(--font-mono);
   font-size: 14px;
   line-height: 1.7;
   color: var(--color-text);
+}
+
+/* Maximized: resume.doc is a Word-style DOCUMENT, so the authentic move when it
+   fills the desktop is a centered page with margins — like maximizing a doc in a
+   word processor. Without this the monospace summary runs full-bleed (~1380px
+   lines) and each job's right-aligned date flies to the far edge, disconnected
+   from its role. Capping the document at a letter-page measure and centering it
+   keeps lines readable and pulls the dates back beside their roles. ~816px is a
+   US-letter page at 96dpi. Columns (like the plain-text README) would fight the
+   role/date job-heads, so a centered page is the right idiom for a .doc. */
+.window.is-maximized .resume {
+  max-width: min(100%, 51rem);
+  margin-inline: auto;
 }
 
 /* --- README (About → #bio) -------------------------------------------------
@@ -928,6 +917,235 @@
   left: 4px;
   color: var(--color-accent);
   font-weight: 700;
+}
+
+/* Maximized: a single 64ch prose column would strand the bio on the left with
+   dead space to the right (window.css caps .readme__body > p at 64ch for a
+   comfortable measure). Flow it into NEWSPAPER COLUMNS instead — the wide space
+   gets used, but each column keeps a readable width, so we don't trade dead air
+   for unreadably-long lines. column-width is a MINIMUM: ~2 columns on a normal
+   maximized desktop, 3 on an ultrawide, 1 if the work area is narrow. Only
+   applies while maximized; the normal/narrow window stays a single column. */
+.window.is-maximized .readme__body {
+  column-width: 26rem;
+  column-gap: var(--space-5);
+}
+/* Keep each paragraph whole (no mid-paragraph column break) and let it fill its
+   column box — the 64ch cap is unnecessary once the column itself is the measure. */
+.window.is-maximized .readme__body > p {
+  max-width: none;
+  break-inside: avoid;
+}
+
+/* --- README reveal highlight ("A Means to an End" launcher) -----------------
+   The bio's closing sentence IS the launcher: an inline <button> styled as a
+   highlight — a tinted wash behind accent ink, no underline — so it reads like a
+   marked phrase you can click. box-decoration-break keeps the wash continuous as
+   the sentence wraps. Opens the #mte reader; about-reveal.js binds [data-mte]. */
+.readme__reveal {
+  display: inline; margin: 0; border: 0; cursor: pointer;
+  font: inherit; line-height: inherit; text-align: left; text-decoration: none;
+  color: var(--color-accent);
+  background: var(--color-accent-soft);
+  padding: 0 0.18em;
+  box-decoration-break: clone;
+  -webkit-box-decoration-break: clone;
+  transition: background var(--speed-fast) var(--ease-soft), color var(--speed-fast) var(--ease-soft);
+}
+.readme__reveal:hover { background: var(--color-accent); color: var(--color-on-accent); }
+.readme__reveal:focus-visible { outline: 2px solid var(--color-accent); outline-offset: 2px; }
+
+/* --- "A Means to an End" reader (#mte) --------------------------------------
+   A paged green BBS/LCD terminal opened from the README reveal line. Faithful
+   sibling of the Art page's visual-poem viewer (#vpv, src/styles/art.css): same
+   screen palette, bevels and chevrons — but the body is long prose (normal wrap,
+   readable measure) with NO teletype; the blinking cursor is the only motion.
+   .os-modal (dialog.css) supplies the fixed dim backdrop + centering; tcg-pop
+   (trophies.css) the open pop. Both are imported globally in Layout.astro.
+   Markup: src/pages/about.astro (#mte). Data: src/lib/about.js. JS: about-reveal.js. */
+.mte[hidden] { display: none; }
+:root.mte-open { overflow: hidden; }
+
+.mte__win {
+  display: flex; flex-direction: column;
+  width: min(640px, 94vw); max-height: min(86vh, 760px);
+  background: var(--color-surface);
+  border: var(--window-border) solid var(--bevel-darker);
+  box-shadow: inset 2px 2px 0 var(--bevel-light), inset -2px -2px 0 var(--bevel-dark), var(--shadow-hard-lg);
+}
+.mte.mte-anim .mte__win { animation: tcg-pop var(--speed) var(--ease-soft); }
+
+.mte__bar {
+  flex: none; display: flex; align-items: center; gap: var(--space-2);
+  height: var(--titlebar-height); padding: 0 var(--space-2) 0 var(--space-3);
+  background: linear-gradient(90deg, var(--color-titlebar-a), var(--color-titlebar-b));
+  color: var(--color-titlebar-text);
+  border-bottom: 2px solid var(--bevel-darker);
+  box-shadow: inset 0 1px 0 var(--bevel-light);
+}
+.mte__ic { flex: none; font-family: var(--font-mono); font-size: 14px; line-height: 1; }
+.mte__title { flex: 1; min-width: 0; font-family: var(--font-display); font-size: var(--text-sm); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.mte__meta { flex: none; font-family: var(--font-mono); font-size: var(--text-xs); opacity: 0.9; }
+.mte__x {
+  flex: none; width: 26px; height: 22px; display: grid; place-items: center; cursor: pointer;
+  font-family: var(--font-display); font-size: 15px; line-height: 1; color: var(--color-text);
+  background: var(--color-surface); border: 2px solid var(--bevel-darker);
+  box-shadow: var(--bevel-out);
+}
+.mte__x:active { box-shadow: inset -1px -1px 0 var(--bevel-light), inset 1px 1px 0 var(--bevel-dark); }
+.mte__x:focus-visible { outline: 2px solid var(--color-accent); outline-offset: -3px; }
+
+.mte__stage {
+  flex: 1 1 auto; min-height: 0; position: relative;
+  display: flex; align-items: stretch; gap: var(--space-2);
+  margin: var(--window-border); padding: var(--space-2);
+  background: var(--color-surface-2);
+  box-shadow: var(--bevel-in);
+}
+
+/* The LCD terminal screen — green-on-black, echoes .cdp__lcd / .vpv__screen */
+.mte__screen {
+  flex: 1 1 auto; min-width: 0; overflow-y: auto;
+  padding: var(--space-3);
+  background: #08130d;
+  border: 2px solid var(--bevel-darker);
+  box-shadow: inset 1px 1px 0 #000, inset -1px -1px 0 #1d3527;
+  color: #57e08a;
+  font-family: var(--font-mono);
+  text-shadow: 0 0 4px rgba(87, 224, 138, 0.45);
+}
+
+.mte__page { margin: 0; }
+.mte__page[hidden] { display: none !important; }     /* beat the cover's flex display when paged out */
+
+/* Cover — frontispiece: vertically-centered title + epigraph */
+.mte__page--cover {
+  display: flex; flex-direction: column; justify-content: center;
+  min-height: 100%; gap: var(--space-3); text-align: center;
+}
+.mte__cover-title { margin: 0; font-family: var(--font-mono); font-size: var(--text-xl); letter-spacing: 1px; color: #57e08a; }
+.mte__cover-epi { margin: 0; font-size: var(--text-base); line-height: var(--leading-body); color: #3f9e6a; }
+
+/* Section header rule:  ── I ── */
+.mte__rule { margin: 0 0 var(--space-3); font-size: var(--text-sm); letter-spacing: 1px; color: #3f9e6a; }
+
+/* Body prose — normal wrap on a readable measure (NOT pre; this is paragraphs) */
+.mte__text { margin: 0; max-width: 60ch; font-size: var(--text-base); line-height: var(--leading-body); color: #57e08a; }
+
+/* Inline highlight inside the terminal prose ([bracketed] runs from about.js) */
+.mte-mark { background: rgba(87, 224, 138, 0.18); color: #aef5c8; padding: 0 2px; box-decoration-break: clone; -webkit-box-decoration-break: clone; }
+
+/* Gallery-frame lead line (e.g. the "II · themes" frame) */
+.mte__lead { margin: 0 0 var(--space-3); font-size: var(--text-base); line-height: var(--leading-body); color: #57e08a; }
+
+/* Italic PS / aside line (Elisha's /slashed/ notes) */
+.mte__aside { margin: var(--space-3) 0 0; font-style: italic; font-size: var(--text-sm); line-height: var(--leading-body); color: #3f9e6a; }
+
+/* A photo gallery within a frame: a contact sheet + an optional shared caption */
+.mte__gallery { margin: var(--space-3) 0 0; }
+
+/* Contact sheet — square thumbnails; the full photo loads only on enlarge.
+   Thumbs cap at 120px so a single-photo frame doesn't blow one up full-width. */
+.mte__sheet {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(88px, 120px));
+  gap: var(--space-2);
+  margin: 0;
+}
+.mte__sheet-cap { margin: var(--space-2) 0 0; font-size: var(--text-sm); line-height: var(--leading-body); color: #57e08a; }
+.mte__cap-link { color: #8af0b0; text-decoration: underline; text-underline-offset: 2px; }
+.mte__cap-link:hover { color: #aef5c8; }
+.mte__cap-link:focus-visible { outline: 2px solid var(--color-accent); outline-offset: 2px; }
+
+/* Inline photo — a single image placed mid-prose to break a paragraph. A short
+   label sits on a translucent bar over the bottom of the photo; the full caption
+   shows on enlarge (tap). Sized to sit IN the column, not full-bleed. */
+.mte__inline { margin: var(--space-3) 0; text-align: center; }
+.mte__inline-frame {
+  position: relative; display: inline-block; max-width: 100%;
+  margin: 0; padding: 0; line-height: 0; cursor: pointer;
+  background: #050d08; border: 2px solid #1d3527;
+}
+.mte__inline-frame img { display: block; width: auto; height: auto; max-width: 100%; max-height: 320px; }
+.mte__inline-frame:hover { border-color: #57e08a; }
+.mte__inline-frame:focus-visible { outline: none; border-color: #57e08a; box-shadow: 0 0 0 2px #57e08a; }
+.mte__inline-cap {
+  position: absolute; left: 0; right: 0; bottom: 0;
+  padding: 12px 8px 6px;
+  /* Reach near-opaque BEFORE the glyph band so the label clears AA even over a
+     light photo (e.g. the white XDA forum shot); the text-shadow is a backing-
+     independent readability floor. */
+  background: linear-gradient(rgba(8, 19, 13, 0) 0%, rgba(8, 19, 13, 0.92) 25%, rgba(8, 19, 13, 0.96) 100%);
+  color: #d4fbe2; text-shadow: 0 1px 2px rgba(0, 0, 0, 0.9);
+  font-family: var(--font-mono); font-size: var(--text-xs); line-height: 1.25;
+  text-align: left; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+/* Forced-colors / Windows High Contrast drops box-shadow + author border, so give
+   the keyboard focus ring a real outline there (covers the pre-existing thumb too). */
+@media (forced-colors: active) {
+  .mte__inline-frame:focus-visible,
+  .mte__thumb:focus-visible { outline: 2px solid Highlight; outline-offset: 2px; }
+}
+.mte__thumb {
+  display: block; margin: 0; padding: 0; cursor: pointer;
+  aspect-ratio: 1 / 1; overflow: hidden;
+  background: #050d08; border: 2px solid #1d3527;
+}
+.mte__thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.mte__thumb:hover { border-color: #57e08a; }
+.mte__thumb:focus-visible { outline: none; border-color: #57e08a; box-shadow: 0 0 0 2px #57e08a; }
+
+/* Image mode — a tapped thumbnail, enlarged inside the green screen. Toggled
+   via the [hidden] attr by about-reveal.js; flex column = back / photo / caption. */
+.mte__imgview:not([hidden]) { display: flex; flex-direction: column; gap: var(--space-2); min-height: 100%; }
+.mte__imgview-back {
+  align-self: flex-start; cursor: pointer;
+  font-family: var(--font-mono); font-size: var(--text-xs); color: #57e08a;
+  background: transparent; border: 0; padding: 2px 0;
+  text-decoration: underline; text-underline-offset: 2px;
+}
+.mte__imgview-back:hover { color: #8af0b0; }
+.mte__imgview-back:focus-visible { outline: 2px solid var(--color-accent); outline-offset: 2px; }
+.mte__imgview-stage { flex: 1 1 auto; min-height: 0; display: flex; align-items: center; justify-content: center; }
+.mte__imgview-img {
+  max-width: 100%; max-height: 100%; object-fit: contain; display: block;
+  border: 2px solid #1d3527; background: #050d08;
+}
+.mte__imgview-cap { margin: 0; font-size: var(--text-sm); line-height: var(--leading-body); color: #57e08a; text-align: center; }
+
+/* Blinking block cursor — hard on/off (authentic console), parked at end of text */
+.mte__cur { display: inline-block; margin-left: 2px; animation: mte-blink 1s steps(1, end) infinite; }
+@keyframes mte-blink { 0%, 49% { opacity: 1; } 50%, 100% { opacity: 0; } }
+
+/* Prev/next chevrons — same bevel idiom as .vpv__nav / .tcg__nav */
+.mte__nav {
+  flex: none; align-self: center;
+  width: 34px; height: 48px;
+  display: inline-flex; align-items: center; justify-content: center;
+  font-family: var(--font-display); font-size: 22px; line-height: 1; cursor: pointer;
+  color: var(--color-text); background: var(--color-surface);
+  border: 2px solid var(--bevel-darker);
+  box-shadow: var(--bevel-out);
+}
+.mte__nav:active { box-shadow: var(--bevel-in); }
+.mte__nav:disabled { opacity: 0.3; cursor: default; }
+.mte__nav:focus-visible { outline: 2px solid var(--color-accent); outline-offset: -3px; }
+
+.mte__hint {
+  flex: none; margin: 0; padding: 4px 8px var(--space-2);
+  font-family: var(--font-mono); font-size: var(--text-xs); color: var(--color-text-muted); text-align: center;
+}
+
+@media (max-width: 720px) {
+  .mte__win { width: 100%; max-height: 90vh; }
+  .mte__text { max-width: none; }
+  .mte__sheet { grid-template-columns: repeat(auto-fill, minmax(72px, 1fr)); }
+  .mte__nav { width: 30px; font-size: 20px; }
+  .mte__cover-title { font-size: var(--text-lg); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .mte.mte-anim .mte__win { animation: none; }
+  .mte__cur { animation: none; opacity: 1; }   /* tokens.css zeroes duration but keeps iteration-count:1; pin it fully on */
 }
 
 /* --- Contact form status line -------------------------------------------

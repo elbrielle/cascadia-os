@@ -1,7 +1,16 @@
 ---
 import Layout from "../layouts/Layout.astro";
 import Window from "../components/Window.astro";
+import TrophyViewer from "../components/TrophyViewer.astro";
+import Img from "../components/Img.astro";
 import { getFavorites, groupByCategory } from "../lib/favorites.js";
+import { TROPHIES, ICONS, MEDIA_BASE, mediaLabel } from "../lib/trophies.js";
+import { MEANS_TO_AN_END, MTE_MEDIA_BASE } from "../lib/about.js";
+// Route-split (fingerprinted ?url → /_astro, immutable-cached, About-only;
+// trophy-gallery drives the #tcg award viewer, shared with /art → one file):
+import revealScript from "../scripts/about-reveal.js?url";
+import favoritesScript from "../scripts/favorites-explorer.js?url";
+import trophyScript from "../scripts/trophy-gallery.js?url";
 
 // Phase C: the About page leads with the README and presents the all-time
 // Favorites as a Windows/Finder-style explorer (folders → cover grid → detail).
@@ -17,11 +26,51 @@ const groups = groupByCategory(favorites);
 // --tint-* tokens in src/styles/tokens.css; this just emits a var() reference
 // per kind (with a neutral fallback for any kind the palette doesn't know).
 const tintVar = (kind) => `--tint: var(--tint-${kind}, #888)`;
+
+// Resolve each honor's media to absolute paths once, so the row can carry them
+// as a data-attribute (no inline JSON <script> — that would trip the CSP
+// inline-script gate). trophy-gallery.js reads these straight off the row.
+const withMedia = (m) =>
+  JSON.stringify(
+    m.map((x) => ({
+      type: x.type,
+      src: MEDIA_BASE + x.src,
+      ...(x.poster ? { poster: MEDIA_BASE + x.poster } : {}),
+    }))
+  );
+
+// Means-to-an-End reader (#mte): the deck = a cover frame (rendered below) + these
+// content frames. Each frame's meter label is its roman ("II", "II · themes", …).
+// Thumbs come from /thumbs/<name>; the full file loads on enlarge.
+const mteFrames = MEANS_TO_AN_END.frames;
+const mteThumb = (name) => MTE_MEDIA_BASE + "thumbs/" + name;
+const mteFull = (name) => MTE_MEDIA_BASE + name;
+// Inline highlights: prose marks emphasis with [bracketed text] (see about.js).
+// Split a body into plain runs + {mark} runs so about.astro can wrap marks in
+// <mark>. Nothing else in the prose uses square brackets.
+const mteBodyRuns = (str) => {
+  const runs = [];
+  const re = /\[([^\]]+)\]/g;
+  let last = 0, m;
+  while ((m = re.exec(str)) !== null) {
+    if (m.index > last) runs.push({ text: str.slice(last, m.index) });
+    runs.push({ mark: m[1] });
+    last = m.index + m[0].length;
+  }
+  if (last < str.length) runs.push({ text: str.slice(last) });
+  return runs;
+};
+// The blinking terminal cursor only reads right when a frame ENDS in text — after
+// a photo grid it would float oddly below the sheet.
+const mteEndsInText = (f) => {
+  const b = f.blocks[f.blocks.length - 1];
+  return !!(b && (b.p || b.lead || b.aside));
+};
 ---
 
 <Layout title="Elisha Lucero — About" pageTitle="About" current="about">
 
-  <div class="layout__cell about__readme">
+  <div class="layout__cell about__left">
   <Window id="bio" title="README — Elisha Lucero" width={520}>
     <div class="readme">
       <header class="readme__head">
@@ -30,27 +79,66 @@ const tintVar = (kind) => `--tint: var(--tint-${kind}, #888)`;
       <hr class="readme__rule" aria-hidden="true" />
       <div class="readme__body">
         <p>
-          I am an educator, learning content designer, and technical builder with a
-          B.A. in Cognitive Systems; my academic background at the University of
-          British Columbia bridged computer science and cognitive science to study
-          how cognition can be modeled in machine learning and intelligent systems.
+          I am an educator, curriculum designer, and technical builder with a
+          B.A. in Cognitive Systems from the University of British Columbia, where
+          my education bridged computer science and cognitive science to study how
+          cognition can be modeled in machine learning and intelligent systems.
         </p>
         <p>
-          Across these roles, I keep coming back to the same design problem: the
+          I design career readiness and technology curriculum across robotics,
+          digital fabrication, immersive media, and applied computing, moving students
+          from guided exploration into real project work. I also build tools to
+          rectify systems that feel too brittle or indifferent to how people move
+          throughout their day.
+        </p>
+        {/* P3 closes with the launcher for the "A Means to an End" reader (#mte).
+            Only the closing KEY PHRASE is the highlighted <button> (the rest is
+            plain prose), so it reads as a highlighted word-run inside the
+            paragraph, not a boxy block. about-reveal.js binds [data-mte]. */}
+        <p>
+          Across this work, I keep coming back to the same design problem: the
           systems we're entrenched in shape the models we build to navigate the
-          world, constraining the choices we notice and thus the actions we take.
-          I seek to build curricula and tools that make such constraints visible
-          enough for people to see where a system ends and their agency begins.
-        </p>
-        <p>
-          I design career readiness and technology curriculum that moves students
-          from guided exploration into real project work across robotics, electronics,
-          digital fabrication, immersive media, and applied computing. I also build
-          tools to rectify systems that feel too brittle, slow, or indifferent to
-          how people move throughout their day.
+          world, constraining the choices we notice and thus the actions we take. I
+          work to make those constraints visible enough for people to see{" "}
+          <span
+            class="readme__reveal"
+            role="button"
+            tabindex="0"
+            data-mte
+            aria-haspopup="dialog"
+          >where a system ends and their agency begins</span>.
         </p>
       </div>
     </div>
+  </Window>
+
+  <Window id="trophies" title="Trophy Case" width={520}>
+    <p class="tc-addr">C:\Recognition\ · open an award for photos &amp; video</p>
+    <ul class="tc-list">
+      {TROPHIES.map((a) => (
+        <li>
+          <button
+            class:list={["tc-row", { "tc-row--featured": a.featured }]}
+            type="button"
+            data-award={a.id}
+            data-title={a.title}
+            data-year={a.year}
+            data-sub={a.sub}
+            data-tier-label={a.tierLabel}
+            data-blurb={a.blurb}
+            data-media={withMedia(a.media)}
+          >
+            <span class="tc-ic" data-ic={a.icon} set:html={ICONS[a.icon]} />
+            <span class="tc-info">
+              <span class="tc-title">{a.title}</span>
+              <span class="tc-sub">{a.year} · {a.sub}</span>
+            </span>
+            <span class="tc-count">{mediaLabel(a.media)}</span>
+            <span class={`tc-chip tc-chip--${a.tierClass}`}>{a.tier}</span>
+          </button>
+        </li>
+      ))}
+    </ul>
   </Window>
   </div>
 
@@ -64,6 +152,8 @@ const tintVar = (kind) => `--tint: var(--tint-${kind}, #888)`;
             roving tabindex + arrow keys + tabpanel wiring (audit #8). Each
             button keeps its static name; only aria-pressed flips. */}
         <div class="fav__side" role="group" aria-label="Favorite categories">
+          {/* Aqua Finder source-list section header (Aero-only; base hides it). */}
+          <p class="fav__side-head" aria-hidden="true">Favorites</p>
           {groups.map((g, i) => (
             <button
               class:list={["fav__folder", { "is-active": i === 0 }]}
@@ -86,8 +176,15 @@ const tintVar = (kind) => `--tint: var(--tint-${kind}, #888)`;
               <option value={g.key} selected={i === 0}>{g.label}</option>
             ))}
           </select>
+          {/* Path as ordered SEGMENTS, not one string, so each skin presents it
+              in its own metaphor: the base/retro look reconstructs the DOS path
+              (C:\Favorites\<cat>) via ::before separators, while the Aero skin
+              re-renders the same spans as a Vista breadcrumb (Favorites › <cat>).
+              JS updates only the leaf crumb on category switch. */}
           <div class="fav__bar">
-            <span class="fav__path" data-fav-path>{`C:\\Favorites\\${groups[0].label}`}</span>
+            <span class="fav__path" data-fav-path>
+              <span class="fav__crumb fav__crumb--root">Favorites</span><span class="fav__crumb" data-fav-leaf>{groups[0].label}</span>
+            </span>
           </div>
           <div class="fav__content">
             <div class="fav__grids">
@@ -147,5 +244,119 @@ const tintVar = (kind) => `--tint: var(--tint-${kind}, #888)`;
     )}
   </Window>
   </div>
+
+  {/* Maximized media gallery — shared TrophyViewer (#tcg). Rendered OUTSIDE any
+      window on purpose: a window carries a drag `transform`, which would make a
+      position:fixed descendant anchor to the window instead of the viewport.
+      trophy-gallery.js (loaded in Layout) wires it on astro:page-load. */}
+  <TrophyViewer />
+
+  {/* "A Means to an End" reader — the README's closing line ([data-mte]) opens
+      this. Rendered OUTSIDE any window (same reason as #tcg above: a dragged
+      window's transform would re-anchor a position:fixed child). The pages are
+      STATIC DOM built from src/lib/about.js; about-reveal.js (loaded in Layout)
+      flips which one is visible and updates the [ N of N ] meter on
+      astro:page-load. A green BBS/LCD terminal echoing the Art page's #vpv. */}
+  <div id="mte" class="mte os-modal" hidden aria-hidden="true">
+    <div class="mte__win" role="dialog" aria-modal="true" aria-labelledby="mte-title">
+      <header class="mte__bar">
+        <span class="mte__ic" aria-hidden="true">▤</span>
+        <span class="mte__title" id="mte-title">{MEANS_TO_AN_END.title}</span>
+        <span class="mte__meta" id="mte-meta" aria-live="polite">[ cover ]</span>
+        <button class="mte__x" type="button" data-mte-close aria-label="Close">×</button>
+      </header>
+      <div class="mte__stage">
+        <button class="mte__nav mte__prev" type="button" data-mte-prev aria-label="Previous" disabled>‹</button>
+        <div class="mte__screen" id="mte-screen" tabindex="0">
+          <div class="mte__deck" id="mte-deck">
+            {/* Frame 0 — title card + epigraph */}
+            <article class="mte__page mte__page--cover" data-mte-page="0" data-meta="cover" aria-hidden="false">
+              <h3 class="mte__cover-title">{MEANS_TO_AN_END.title}</h3>
+              <p class="mte__cover-epi">{MEANS_TO_AN_END.epigraph}<span class="mte__cur" aria-hidden="true">▌</span></p>
+            </article>
+            {mteFrames.map((f, i) => (
+              <article class="mte__page" data-mte-page={i + 1} data-meta={f.roman} aria-hidden="true" hidden>
+                <p class="mte__rule" aria-hidden="true">── {f.roman} ──</p>
+                {f.blocks.map((b) =>
+                  b.p ? (
+                    <p class="mte__text">
+                      {mteBodyRuns(b.p).map((r) => (r.mark ? <mark class="mte-mark">{r.mark}</mark> : r.text))}
+                    </p>
+                  ) : b.lead ? (
+                    <p class="mte__lead">{b.lead}</p>
+                  ) : b.aside ? (
+                    <p class="mte__aside">{b.aside}</p>
+                  ) : b.img ? (
+                    /* A single photo placed inline to break the prose: a translucent
+                       label bar over the image, full caption on enlarge. It's a
+                       one-image [data-mte-gallery] so about-reveal.js enlarges it. */
+                    <div class="mte__inline" data-mte-gallery>
+                      <button
+                        class="mte__inline-frame"
+                        type="button"
+                        data-mte-thumb
+                        data-full={mteFull(b.img)}
+                        data-caption={b.caption}
+                        data-alt={b.alt}
+                        data-link={b.link || ""}
+                        aria-label={`Enlarge photo: ${b.label || b.alt}`}
+                      >
+                        <Img src={mteThumb(b.img)} alt={b.alt} loading="lazy" decoding="async" />
+                        {b.label && <span class="mte__inline-cap" aria-hidden="true">{b.label}</span>}
+                      </button>
+                    </div>
+                  ) : b.grid ? (
+                    <figure class="mte__gallery">
+                      <div class="mte__sheet" data-mte-gallery>
+                        {b.grid.images.map((im) => (
+                          <button
+                            class="mte__thumb"
+                            type="button"
+                            data-mte-thumb
+                            data-full={mteFull(im.name)}
+                            data-caption={im.caption || b.grid.caption || ""}
+                            data-alt={im.alt}
+                            data-link={im.link || b.grid.link || ""}
+                            aria-label={`Enlarge: ${im.alt}`}
+                          >
+                            <Img src={mteThumb(im.name)} alt={im.alt} loading="lazy" decoding="async" />
+                          </button>
+                        ))}
+                      </div>
+                      {b.grid.caption && (
+                        <figcaption class="mte__sheet-cap">
+                          {b.grid.caption}
+                          {b.grid.link && (<>{" "}<a class="mte__cap-link" href={b.grid.link} target="_blank" rel="noopener noreferrer">(review)</a></>)}
+                        </figcaption>
+                      )}
+                    </figure>
+                  ) : null
+                )}
+                {mteEndsInText(f) && <span class="mte__cur" aria-hidden="true">▌</span>}
+              </article>
+            ))}
+          </div>
+          {/* Image mode — a tapped thumbnail enlarges here, inside the terminal.
+              about-reveal.js shows this over the deck and points the nav at the
+              frame's photos; Esc / the back control returns to the page. */}
+          <figure class="mte__imgview" id="mte-imgview" hidden aria-hidden="true">
+            <button class="mte__imgview-back" type="button" data-mte-back>‹ back to the story</button>
+            <div class="mte__imgview-stage">
+              <img class="mte__imgview-img" id="mte-imgview-img" alt="" />
+            </div>
+            <figcaption class="mte__imgview-cap" id="mte-imgview-cap"></figcaption>
+          </figure>
+        </div>
+        <button class="mte__nav mte__next" type="button" data-mte-next aria-label="Next">›</button>
+      </div>
+      <p class="mte__hint" id="mte-hint" aria-hidden="true">← → to turn the page · Esc to close</p>
+    </div>
+  </div>
+
+  {/* About-only route-split scripts (external + fingerprinted via ?url).
+      trophy-gallery (#tcg award viewer) is shared with /art — Vite dedups it. */}
+  <script is:inline src={revealScript}></script>
+  <script is:inline src={favoritesScript}></script>
+  <script is:inline src={trophyScript}></script>
 
 </Layout>

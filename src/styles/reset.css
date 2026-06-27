@@ -19,6 +19,10 @@ body {
 }
 
 img, svg, video { display: block; max-width: 100%; }
+/* <picture> is only a format-picker wrapper around its <img> (see Img.astro +
+   the webp swaps in the gallery scripts) — make it layout-transparent so the
+   inner <img> sizes exactly as a bare <img> would inside flex/grid parents. */
+picture { display: contents; }
 
 button {
   font: inherit;

@@ -57,11 +57,27 @@
   .hit-counter,
   .systray { display: none; }
 
-  /* --- Page title scales --- */
+  /* --- Page title shrinks to a compact page-label ---
+     On desktop the title is a hero (--text-huge). On a phone that hero ate the
+     top of every page before any content, so drop it to a compact label scale
+     here — still a real <h1> in the pixel font, still rotated, still the
+     view-transition morph target (transition:name). The 3px/6px desktop outline
+     is proportionally heavy at this size, so scale the 8-way pixel stroke to 2px
+     and the drop to 4px to keep the outline reading as crisp pixel art. */
   .page-title {
     margin: var(--space-2) 0 var(--space-2) var(--space-3);
-    font-size: clamp(2.5rem, 14vw, 4.5rem);
+    font-size: clamp(1.6rem, 9vw, 2.5rem);
     letter-spacing: -1px;
+    text-shadow:
+      -2px -2px 0 var(--color-text-inverse),
+       0   -2px 0 var(--color-text-inverse),
+       2px -2px 0 var(--color-text-inverse),
+      -2px  0   0 var(--color-text-inverse),
+       2px  0   0 var(--color-text-inverse),
+      -2px  2px 0 var(--color-text-inverse),
+       0    2px 0 var(--color-text-inverse),
+       2px  2px 0 var(--color-text-inverse),
+       4px  4px 0 var(--bevel-darker);
   }
 
   /* --- Hide desktop-only chrome --- */
@@ -167,7 +183,7 @@
     position: fixed;
     left: 0;
     right: 0;
-    bottom: calc(var(--taskbar-core-height) + var(--safe-area-bottom));
+    bottom: calc(var(--taskbar-core-height) + var(--safe-area-bottom) + var(--vv-inset-bottom));
     margin: 0;
     z-index: var(--z-tweaks);
     transform: translateY(calc(100% + var(--taskbar-core-height) + var(--safe-area-bottom-max)));
@@ -203,9 +219,7 @@
     background: var(--color-surface);
     color: var(--color-text);
     border: 2px solid var(--bevel-darker);
-    box-shadow:
-      inset  1px  1px 0 var(--bevel-light),
-      inset -1px -1px 0 var(--bevel-dark);
+    box-shadow: var(--bevel-out);
     font-family: var(--font-display);
     font-size: 15px;
     line-height: 1;
@@ -218,7 +232,7 @@
   .attn__backdrop {
     display: block;
     position: fixed;
-    inset: 0 0 calc(var(--taskbar-core-height) + var(--safe-area-bottom)) 0;
+    inset: 0 0 calc(var(--taskbar-core-height) + var(--safe-area-bottom) + var(--vv-inset-bottom)) 0;
     z-index: calc(var(--z-tweaks) - 1);
     background: rgba(5, 13, 24, 0.5);
   }
@@ -246,8 +260,33 @@
   .taskbar__start { height: 36px; }
   .start-menu__item { min-height: 44px; }
 
-  /* --- Form fields wider for touch --- */
-  .form-grid input, .form-grid textarea { font-size: 16px; /* prevents iOS zoom */ }
+  /* --- Mini-player on mobile ---
+     The right-side tray (systray, hit-counter, clock, Start label) is hidden at
+     this width, freeing space. Keep [data-taskbar-items] flex:1 (still the window
+     switcher); give the player a hard max-width + ellipsis title and grow the
+     buttons toward the 36px touch target. */
+  .taskbar__player { height: 36px; max-width: 40vw; }
+  .taskbar__player-btn { height: 28px; min-width: 32px; font-size: 12px; }
+  .taskbar__player-lcd { height: 28px; max-width: 10ch; font-size: 11px; }
+}
+
+/* --- Sub-desktop reset for the opt-in `panes` windows (Art page) ----------
+   The panes overflow/height is gated @min-width:62em (992px). Below that there
+   is no grid bounding the window height, so leaving the body as a flex column
+   with overflow:hidden would trap/clip the scroll across the 720-992 tablet
+   band. Gating this RESET at 61.99em (NOT 720px) re-relaxes panes mode to
+   natural document flow across the WHOLE sub-desktop range — closing that dead
+   band cleanly. Padding is restored on the body (panes set it to 0 for the
+   flush chrome). scrollbar.js is off on coarse pointers, so the rows flow with
+   the page on touch. */
+@media (max-width: 61.99em) {
+  .window--panes .window__body {
+    display: block;
+    overflow: visible;
+    padding: var(--space-4) var(--space-4) var(--space-3);
+  }
+  .board, .cdp, .filelist { display: block; height: auto; padding: 0; }
+  .window--panes [data-scroll-pane] { overflow: visible; max-height: none; flex: 0 0 auto; }
 }
 
 /* --- Very small (phone portrait) --- */
@@ -256,5 +295,12 @@
   .desktop-icon { width: 60px; }
   .desktop-icon__img { width: 32px; height: 32px; }
   .desktop-icon__label { font-size: 8px; letter-spacing: 0.5px; }
-  .page-title { font-size: clamp(2rem, 16vw, 3.5rem); }
+  .page-title { font-size: clamp(1.4rem, 8.5vw, 2.1rem); }
+
+  /* On the narrowest band keep only play/pause + a short title. prev/next are
+     naturally no-ops off /art anyway (no controller bound), so hiding them here
+     is consistent — the mini-player is a "keep it playing / pause" remote. */
+  .taskbar__player-btn[data-mp-act="prev"],
+  .taskbar__player-btn[data-mp-act="next"] { display: none; }
+  .taskbar__player-lcd { max-width: 8ch; }
 }

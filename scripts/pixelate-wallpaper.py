@@ -3,7 +3,7 @@
 pixelate-wallpaper.py — turn a detailed illustration into TRUE pixel art.
 
 Offline asset tool (not part of the site build). Regenerates the desktop
-wallpapers in public/wallpaper/ from local source masters (see SOURCES below).
+wallpapers in public/wallpaper/ from the source masters in design-references/.
 
 Why this exists: downsampling a 4K image just looks "low-res," not pixel art.
 The pixel-art read comes from three things this script does and a plain resize
@@ -23,7 +23,9 @@ Retune by editing the KNOBS below:
     SCALE     ART_W * SCALE = stored width (640 * 3 = 1920)
 
 Usage:   pip install Pillow numpy   &&   python3 scripts/pixelate-wallpaper.py
-Then commit the updated public/wallpaper/*.webp.
+Then commit the updated public/wallpaper/*.webp.  Full rationale + the
+day/night mapping live in docs/PROJECT-STATUS.md ("Wallpaper — pixel-art
+pipeline").
 """
 import os
 import numpy as np
@@ -37,10 +39,9 @@ SNAP_THRESH = 55     # RGB distance under which a colour snaps to a token
 SCALE       = 3
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-# Bring your own high-res source illustrations here (not committed).
 SOURCES = {
-    "day":   os.path.join(ROOT, "wallpaper-sources", "wallpaper-day-source.png"),   # warm sunset -> light theme
-    "night": os.path.join(ROOT, "wallpaper-sources", "wallpaper-night-source.png"), # moonlit    -> dark theme
+    "day":   os.path.join(ROOT, "design-references", "wallpaper-day-source.png"),   # warm sunset -> light theme
+    "night": os.path.join(ROOT, "design-references", "wallpaper-night-source.png"), # moonlit    -> dark theme
 }
 OUT_DIR = os.path.join(ROOT, "public", "wallpaper")
 

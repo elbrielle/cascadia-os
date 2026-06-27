@@ -28,9 +28,7 @@
   background: var(--color-surface);
   color: var(--color-text);
   border: 2px solid var(--bevel-darker);
-  box-shadow:
-    inset  1px  1px 0 var(--bevel-light),
-    inset -1px -1px 0 var(--bevel-dark);
+  box-shadow: var(--bevel-out);
   font-family: var(--font-display);
   font-size: 10px;
   letter-spacing: 1px;

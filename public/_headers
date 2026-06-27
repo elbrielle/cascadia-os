@@ -88,7 +88,7 @@
   #     Covers fetch() in the contact form handler.
   # upgrade-insecure-requests
   #     Browser auto-rewrites any leaked http:// → https:// before request.
-  Content-Security-Policy: default-src 'self'; base-uri 'self'; object-src 'none'; frame-ancestors 'none'; form-action https://api.web3forms.com; img-src 'self' https: data:; font-src 'self'; style-src 'self' 'unsafe-inline'; script-src 'self' 'sha256-vtgAhUJLbMgaG++309rF9L6JOOPMqJ5Je/FOwKIpw9I=' 'sha256-uv/cyGE1G6S2eMzv3yG2M0X6p1WuQMJT+3ceqSR5arI='; connect-src 'self' https://api.web3forms.com; upgrade-insecure-requests
+  Content-Security-Policy: default-src 'self'; base-uri 'self'; object-src 'none'; frame-ancestors 'none'; form-action https://api.web3forms.com; img-src 'self' https: data:; font-src 'self'; style-src 'self' 'unsafe-inline'; script-src 'self' 'sha256-+dalmqNrveQJSYEZ1I2bI7w9Ovmw3g/L/WQSnSodGv4=' 'sha256-uv/cyGE1G6S2eMzv3yG2M0X6p1WuQMJT+3ceqSR5arI='; connect-src 'self' https://api.web3forms.com; upgrade-insecure-requests
 
 # Astro fingerprints /_astro/ filenames with a content hash (e.g.
 # Layout.Bw89FH-O.css), so a content change ships a NEW filename — these can be
@@ -98,3 +98,25 @@
 # fixed filenames, so immutable caching would serve a stale asset after an update.
 /_astro/*
   Cache-Control: public, max-age=31536000, immutable
+
+# Heavy, content-stable media — the images, the trophy video + posters, album
+# art + audio, and the Means-to-an-End photos. These carry FIXED filenames, so
+# unlike /_astro/* they are NOT immutable: a 30-day max-age refreshes an edited
+# asset within a month while still killing the repeat-visit revalidation tax on
+# the ~24MB of media that lives here. Scoped to asset SUBDIRECTORIES, never the
+# route roots (/art/, /about/) — a glob on those would freeze the HTML pages too.
+# Deliberately omits /scripts/ (behavior-bearing; the build pipeline owns its
+# caching) and /fonts/ + /wallpaper/ (kept on the platform default per the note
+# above, so a re-export of a fixed-name font/wallpaper still refreshes).
+/images/*
+  Cache-Control: public, max-age=2592000
+/trophies/*
+  Cache-Control: public, max-age=2592000
+/art/music/*
+  Cache-Control: public, max-age=2592000
+/art/photography/*
+  Cache-Control: public, max-age=2592000
+/art/visual/*
+  Cache-Control: public, max-age=2592000
+/about/means-to-an-end/*
+  Cache-Control: public, max-age=2592000

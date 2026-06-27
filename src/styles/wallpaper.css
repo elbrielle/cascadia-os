@@ -13,8 +13,8 @@
    (1920×1080 pixel-art — 640px art-res, Bayer-dithered, ~36-colour
    token-snapped palette, ~40–52 KB each). `image-rendering: pixelated`
    on the layers keeps the pixel grid crisp when CSS scales them up on
-   larger/hi-dpi screens (instead of blurring the blocks). Pipeline:
-   scripts/pixelate-wallpaper.py.
+   larger/hi-dpi screens (instead of blurring the blocks). Pipeline +
+   rationale: docs/PROJECT-STATUS.md.
    ========================================================================== */
 
 .wallpaper {

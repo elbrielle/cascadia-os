@@ -1,0 +1,27 @@
+---
+// ============================================================================
+//  Img.astro  —  a local-image <img> that prefers the committed .webp sibling
+// ----------------------------------------------------------------------------
+//  Renders a <picture> with a webp <source> and the original .jpg as the <img>
+//  fallback. The .webp is committed beside the .jpg (scripts/gen-webp.cjs), so
+//  a browser that can't decode webp falls back natively — and because the file
+//  really exists, the webp source never 404s into a broken image (which a
+//  build-time-only webp would). `picture { display: contents }` (reset.css)
+//  keeps the wrapper layout-transparent, so the inner <img> sizes identically
+//  to a bare <img>. Drop-in replacement: <Img src={...} alt={...} loading=.../>.
+//
+//  For a NON-jpg src (svg/png/remote), it renders a plain <img> (no webp swap).
+//  All extra attrs (loading, decoding, width, height, class) pass through.
+// ============================================================================
+const { src, alt = "", class: className, ...rest } = Astro.props;
+const isJpg = typeof src === "string" && /\.jpe?g$/i.test(src);
+const webp = isJpg ? src.replace(/\.jpe?g$/i, ".webp") : null;
+---
+{webp ? (
+  <picture>
+    <source type="image/webp" srcset={webp} />
+    <img src={src} alt={alt} class={className} {...rest} />
+  </picture>
+) : (
+  <img src={src} alt={alt} class={className} {...rest} />
+)}

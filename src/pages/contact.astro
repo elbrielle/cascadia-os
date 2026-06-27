@@ -2,43 +2,68 @@
 import Layout from "../layouts/Layout.astro";
 import Window from "../components/Window.astro";
 import { SUBSTACK_URL } from "../lib/substack.js";
+import termScript from "../scripts/contact-terminal.js?url";
 ---
 
 <Layout title="Elisha Lucero — Contact" pageTitle="Contact" current="contact">
 
   <div class="layout__cell contact__form">
-  <Window id="form" title="Contact" width={480}>
-    <h2>Say hi</h2>
-    <p>
-      Want to share something with me? Send a note.
-    </p>
-    <!-- Submits via Web3Forms (free, no backend). To activate:
-           1. Get a free access key at https://web3forms.com (enter your email).
-           2. Paste it into the access_key value below.
-         Alternatives: Formspree (set action="https://formspree.io/f/XXXX" and
-         delete the access_key line) or Netlify Forms (add `data-netlify="true"`
-         + a hidden input name="form-name" value="contact", host on Netlify). -->
-    <form class="form-grid" action="https://api.web3forms.com/submit" method="POST" data-contact-form>
-      <input type="hidden" name="access_key" value="69e1c6ae-628a-4e3a-9ea4-185ad8e1b9b0" />
-      <input type="hidden" name="subject" value="New message from elishalucero.com" />
-      <input type="hidden" name="from_site" value="elishalucero.com" />
-      <!-- honeypot: bots fill this; humans never see it -->
-      <input type="checkbox" name="botcheck" tabindex="-1" autocomplete="off" style="display:none" aria-hidden="true" />
-      <label class="field">
-        <span>Your email</span>
-        <input type="email" name="email" placeholder="you@example.com" required />
-      </label>
-      <label class="field">
-        <span>Subject</span>
-        <input type="text" name="user_subject" placeholder="brief title" />
-      </label>
-      <label class="field">
-        <span>Message</span>
-        <textarea name="message" rows="5" placeholder="say hi" required></textarea>
-      </label>
-      <button class="btn btn--primary" type="submit">Ping me →</button>
-      <p class="form-status" data-form-status role="status" aria-live="polite" style="font-size: var(--text-sm); margin-top: var(--space-2);"></p>
-    </form>
+  <Window id="form" title="Terminal — contact" width={760}>
+    {/* A terminal/console SKIN over the REAL Web3Forms form (NOT a command line
+        you type into). The ASCII logo + boot lines are decorative (aria-hidden);
+        a real <h2> stays for the document outline, the real instruction is the
+        .term__intro <p>, and every field is a true <label>-wraps-input with its
+        [name], required, and the [data-contact-form]/[data-form-status] hooks the
+        inline handler binds to. contact-terminal.js types the boot on first visit
+        and plays the transmit bar on send — pure decoration, submit untouched, so
+        the inline handler's bytes (and the 2-hash CSP) don't change. */}
+    <div class="term" data-term>
+      <div class="term__head">
+      <pre class="term__logo" aria-hidden="true">█████ █████ █   █ █████ █████ █████ █████
+█     █   █ ██  █   █   █   █ █       █
+█     █   █ █ █ █   █   █████ █       █
+█     █   █ █  ██   █   █   █ █       █
+█████ █████ █   █   █   █   █ █████   █  </pre>
+      <div class="term__boot" data-term-banner aria-hidden="true">
+        <span class="term__line">cascadia:~$ ./contact</span>
+        <span class="term__line">loading composer ... <b>ok</b></span>
+        <span class="term__line" data-term-last>ready.</span>
+      </div>
+      </div>
+      <h2 class="term__h2">Send a message</h2>
+      <p class="term__intro">i read every message and will respond as soon as i can.</p>
+      <!-- Submits via Web3Forms (free, no backend). To activate:
+             1. Get a free access key at https://web3forms.com (enter your email).
+             2. Paste it into the access_key value below.
+           Alternatives: Formspree (set action="https://formspree.io/f/XXXX" and
+           delete the access_key line) or Netlify Forms (add `data-netlify="true"`
+           + a hidden input name="form-name" value="contact", host on Netlify). -->
+      <form class="term__session" action="https://api.web3forms.com/submit" method="POST" data-contact-form>
+        <input type="hidden" name="access_key" value="69e1c6ae-628a-4e3a-9ea4-185ad8e1b9b0" />
+        <input type="hidden" name="subject" value="New message from elishalucero.com" />
+        <input type="hidden" name="from_site" value="elishalucero.com" />
+        <!-- honeypot: bots fill this; humans never see it -->
+        <input type="checkbox" name="botcheck" tabindex="-1" autocomplete="off" style="display:none" aria-hidden="true" />
+        <label class="field field--to">
+          <span class="term__key">from *</span>
+          <input type="email" name="email" placeholder="you@example.com" required />
+        </label>
+        <label class="field field--subject">
+          <span class="term__key">subject</span>
+          <input type="text" name="user_subject" placeholder="(optional)" />
+        </label>
+        <label class="field field--msg">
+          <span class="term__key">message *</span>
+          <textarea name="message" rows="6" placeholder="type your message here" required></textarea>
+        </label>
+        <div class="term__send">
+          <span class="term__prompt" aria-hidden="true">cascadia:~$</span>
+          <button class="term__go" type="submit">send</button>
+        </div>
+        <p class="form-status" data-form-status role="status" aria-live="polite"></p>
+        <div class="term__xmit" data-term-xmit aria-hidden="true"></div>
+      </form>
+    </div>
   </Window>
   </div>
 
@@ -203,5 +228,12 @@ import { SUBSTACK_URL } from "../lib/substack.js";
       document.addEventListener("astro:page-load", bindContactForm);
     })();
   </script>
+
+  {/* Decorative console motion (boot type-on + transmit bar). Route-split into
+      the Astro build: this is the only page that renders [data-term], so the
+      script ships here instead of globally. Astro bundles + fingerprints it
+      (external module under /_astro → CSP script-src 'self', no new inline
+      hash). The form's own inline handler above is untouched. */}
+  <script is:inline src={termScript}></script>
 
 </Layout>

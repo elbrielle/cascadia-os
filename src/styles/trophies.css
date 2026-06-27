@@ -1,0 +1,213 @@
+/* ============================================================================
+   trophies.css  —  About "Trophy Case": the launcher list + maximized gallery
+   ----------------------------------------------------------------------------
+   GLOBAL on purpose (imported from Layout.astro, not scoped to a component):
+   the gallery's <img>/<video>/thumbnails are created at runtime by
+   public/scripts/trophy-gallery.js, so a component-scoped <style> (which Astro
+   keys to a data attribute baked in at build) would never reach them — the
+   media would fall back to object-fit:fill and the container would crop it.
+   Data + markup: src/lib/trophies.js + src/pages/about.astro.
+   ========================================================================== */
+
+/* ---- launcher list (lives inside the Trophy Case window) ---------------- */
+.tc-addr {
+  margin: 0 0 var(--space-2);
+  padding: 5px 10px;
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  color: var(--color-text-muted);
+  background: var(--color-surface-sunken);
+  border: 2px solid var(--bevel-dark);
+  box-shadow: var(--bevel-in);
+}
+.tc-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }
+
+.tc-row {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 9px 12px;
+  text-align: left;
+  cursor: pointer;
+  color: var(--color-text);
+  background: var(--color-surface-2);
+  border: 1px solid var(--bevel-dark);
+  font: inherit;
+}
+.tc-row:hover { background: var(--color-surface-hover); }
+.tc-row:focus-visible { outline: 2px solid var(--color-accent); outline-offset: 2px; }
+/* the lead/featured honor (the District finalist) is a raised, warm hero tile —
+   a full bevel, not a one-sided spine */
+.tc-row--featured {
+  background: var(--color-accent-soft);
+  border: 2px solid var(--bevel-darker);
+  box-shadow: var(--bevel-out), var(--shadow-hard);
+}
+
+.tc-ic { flex: none; display: inline-flex; }
+.tc-ic svg { width: 34px; height: auto; }
+.tc-row--featured .tc-ic svg { width: 40px; }
+
+.tc-info { flex: 1 1 auto; min-width: 0; display: flex; flex-direction: column; gap: 1px; }
+.tc-title { font-family: var(--font-display); font-size: var(--text-sm); line-height: 1.15; }
+.tc-row--featured .tc-title { font-size: var(--text-lg); color: var(--color-accent); }
+.tc-sub { font-family: var(--font-mono); font-size: var(--text-xs); color: var(--color-text-muted); }
+
+.tc-count {
+  flex: none;
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  color: var(--color-text-muted);
+  white-space: nowrap;
+}
+.tc-chip {
+  flex: none;
+  font-family: var(--font-display);
+  font-size: var(--text-xs);
+  line-height: 1;
+  padding: 4px 9px;
+  border: 1px solid;
+  white-space: nowrap;
+}
+.tc-chip--win { background: #F4D04A; color: #5A3A06; border-color: #9A6A10; }
+.tc-chip--finalist { background: #C2CFD6; color: #28333B; border-color: #7A8C96; }
+.tc-chip--nominee { background: #BFE3EA; color: #0A4456; border-color: #0F6F8F; }
+.tc-chip--month { background: #F6C99A; color: #7A2E0C; border-color: #C8451A; }
+
+/* On the narrow left column the media-count can crowd the title; drop it there
+   (the chip + the gallery still convey "there's media to open"). */
+@media (max-width: 80em) {
+  .tc-count { display: none; }
+}
+
+/* ---- maximized gallery (overlay, rendered OUTSIDE any window) ----------- */
+.tcg[hidden] { display: none; }
+.tcg {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 18px;
+  background: rgba(8, 18, 26, 0.55);
+}
+:root.tcg-open { overflow: hidden; }
+
+.tcg__win {
+  width: min(1120px, 96vw);
+  height: min(90vh, 760px);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  background: var(--color-surface);
+  border: var(--window-border) solid var(--bevel-darker);
+  box-shadow: inset 2px 2px 0 var(--bevel-light), inset -2px -2px 0 var(--bevel-dark), var(--shadow-hard-lg);
+}
+.tcg.tcg-anim .tcg__win { animation: tcg-pop 180ms var(--ease-soft); }
+@keyframes tcg-pop { 0% { transform: scale(0.94); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }
+
+.tcg__bar {
+  flex: none;
+  height: var(--titlebar-height);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0 6px 0 8px;
+  color: var(--color-titlebar-text);
+  background: linear-gradient(180deg, var(--color-titlebar-b), var(--color-titlebar-a));
+}
+.tcg__ic { display: inline-flex; }
+.tcg__ic svg { height: 18px; width: auto; }
+.tcg__title { flex: 1 1 auto; min-width: 0; font-family: var(--font-display); font-size: var(--text-sm); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.tcg__meta { flex: none; font-family: var(--font-mono); font-size: var(--text-xs); opacity: 0.9; }
+.tcg__x {
+  flex: none;
+  width: 26px; height: 22px;
+  margin-left: 4px;
+  display: inline-flex; align-items: center; justify-content: center;
+  font-family: var(--font-display); font-size: 16px; line-height: 1;
+  cursor: pointer;
+  color: var(--color-text);
+  background: var(--color-surface);
+  border: 2px solid var(--bevel-darker);
+  box-shadow: var(--bevel-out);
+}
+.tcg__x:active { box-shadow: var(--bevel-in); }
+
+.tcg__stage {
+  flex: 1 1 auto;
+  min-height: 0;
+  position: relative;
+  padding: 0;
+  overflow: hidden;
+  background: #0E1A22;
+}
+/* absolute fill so object-fit resolves against a definite box (a flex-sized
+   parent has no explicit height to anchor a percentage against) */
+.tcg__media { position: absolute; inset: 14px; display: flex; align-items: center; justify-content: center; }
+.tcg__img, .tcg__video { width: 100%; height: 100%; object-fit: contain; image-rendering: auto; }
+.tcg__empty { max-width: 360px; text-align: center; font-family: var(--font-mono); font-size: var(--text-sm); line-height: 1.5; color: #AEC4CC; }
+
+.tcg__nav {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 2;
+  width: 38px; height: 54px;
+  display: inline-flex; align-items: center; justify-content: center;
+  font-family: var(--font-display); font-size: 26px; line-height: 1;
+  cursor: pointer;
+  color: var(--color-text);
+  background: var(--color-surface);
+  border: 2px solid var(--bevel-darker);
+  box-shadow: var(--bevel-out);
+}
+.tcg__prev { left: 10px; }
+.tcg__next { right: 10px; }
+.tcg__nav:active { box-shadow: var(--bevel-in); }
+.tcg__nav:disabled { opacity: 0.3; cursor: default; }
+
+.tcg__strip {
+  flex: none;
+  display: flex;
+  gap: 8px;
+  padding: 8px 10px;
+  overflow-x: auto;
+  background: var(--color-surface);
+  border-top: 2px solid var(--bevel-dark);
+}
+.tcg__strip[hidden] { display: none; }
+.tcg__thumb {
+  flex: none;
+  width: 72px; height: 54px;
+  position: relative;
+  cursor: pointer;
+  background: #888 center/cover no-repeat;
+  border: 2px solid var(--bevel-dark);
+  box-shadow: var(--bevel-in);
+}
+.tcg__thumb.is-active { border-color: var(--color-accent); box-shadow: 0 0 0 2px var(--color-accent); }
+.tcg__play {
+  position: absolute; inset: 0;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 16px; color: #fff;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.8);
+  background: rgba(0, 0, 0, 0.28);
+}
+
+.tcg__caption {
+  flex: none;
+  margin: 0;
+  padding: 8px 12px;
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  color: var(--color-text-muted);
+  background: var(--color-surface);
+  border-top: 1px solid var(--bevel-dark);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tcg.tcg-anim .tcg__win { animation: none; }
+}

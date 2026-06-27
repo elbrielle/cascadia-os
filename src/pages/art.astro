@@ -1,0 +1,324 @@
+---
+import Layout from "../layouts/Layout.astro";
+import Window from "../components/Window.astro";
+import TrophyViewer from "../components/TrophyViewer.astro";
+import Img from "../components/Img.astro";
+import { FOLDERS, MEDIA_BASE } from "../lib/art.js";
+// Route-split (fingerprinted ?url → /_astro, immutable-cached, Art-only;
+// trophy-gallery is shared with /about, Vite dedups it to one file). The audio
+// player trio (player-engine/art-player/taskbar-player) stays global in Layout.
+import artMobileScript from "../scripts/art-mobile.js?url";
+import filelistScript from "../scripts/filelist-menu.js?url";
+import notepadScript from "../scripts/notepad.js?url";
+import visualPoemScript from "../scripts/visual-poem.js?url";
+import trophyScript from "../scripts/trophy-gallery.js?url";
+
+const abs = (p) => MEDIA_BASE + p;
+const galleryMedia = (images) =>
+  JSON.stringify(images.map((x) => ({ type: "image", src: abs(x.src) })));
+const trackData = (tracks) =>
+  JSON.stringify(tracks.map((t) => ({ n: t.n, title: t.title, dur: t.dur, src: abs(t.src) })));
+const fmtDur = (s) => Math.floor(s / 60) + ":" + String(Math.round(s % 60)).padStart(2, "0");
+
+const photo = FOLDERS.find((f) => f.key === "photography");
+const music = FOLDERS.find((f) => f.key === "music");
+const poetry = FOLDERS.find((f) => f.key === "poetry");
+
+const singles = photo.items.filter((it) => it.type === "photo");
+const albums = photo.items.filter((it) => it.type === "album");
+
+// CD-player payload (art-player.js sorts newest-first → Embroidered before Fragments).
+const musicAlbums = music.items.map((a) => ({
+  id: a.id, title: a.title, artist: music.intro.artist, year: a.year,
+  subtitle: a.subtitle || "", producer: a.producer || "",
+  playable: a.playable !== false,
+  cover: abs(a.cover), note: a.note || "", artistNote: a.artistNote || "",
+  tracks: a.tracks.map((t) => ({ n: t.n, title: t.title, dur: t.dur, src: t.src ? abs(t.src) : null, sample: t.sample || null })),
+  links: a.links || {},
+}));
+---
+
+<Layout title="Elisha Lucero — Art" pageTitle="Art" current="art">
+
+  {/* The Art page is a Win95 DESKTOP holding four distinct windows — one per
+      medium, each its own tailored idiom (cork board / record crate / Notepad
+      file-list / light table). Each is a real draggable <Window> (windows.js);
+      they tile 2×2 on desktop and stack on mobile. Viewers open OUTSIDE any
+      window (the #tcg gallery here; the CD player / Notepad / ASCII viewers ship
+      in following PRs). */}
+
+  {/* ---- Mobile medium switcher (the launcher rail → a top row of chips) --
+      Per the V2 mobile-reflow direction (A6): on a phone we don't stack all
+      three windows into a 3,600px scroll. Instead ONE medium shows full-screen
+      and these chips switch between them. The chips drive the SAME .is-active
+      window state the taskbar uses (via CascadiaWindows.focus in art-mobile.js),
+      so chip ↔ taskbar stay in sync. Desktop hides this entirely (the grid shows
+      all three windows at once); it only appears below 62em. */}
+  <nav class="art-switch" data-art-switch aria-label="Choose a medium">
+    <button class="art-switch__chip is-active" type="button" data-art-target="art-photo" aria-pressed="true">Photography</button>
+    <button class="art-switch__chip" type="button" data-art-target="art-music" aria-pressed="false">Music</button>
+    <button class="art-switch__chip" type="button" data-art-target="art-poetry" aria-pressed="false">Poetry</button>
+  </nav>
+
+  {/* ---- Photography → CORK BOARD ---------------------------------------- */}
+  <div class="layout__cell art-cell art-cell--photo">
+  <Window id="art-photo" title="Photography" width={560} panes active>
+    <div class="board" data-board>
+      <div class="board__tabs" role="tablist" aria-label="Photography view">
+        <button class="board__tab is-active" type="button" role="tab" aria-selected="true">Albums &amp; singles</button>
+        <span class="board__view">cork board</span>
+      </div>
+      <div class="board__surface" data-scroll-pane>
+        {photo.items.map((it) => (
+          <button
+            class:list={["pin", it.type === "album" && "pin--stack"]}
+            type="button"
+            data-award={`art-${it.id}`}
+            data-title={it.title}
+            data-sub={it.caption || ""}
+            data-media={galleryMedia(it.images)}
+            aria-label={it.type === "album"
+              ? `${it.title} — album of ${it.images.length} photos`
+              : `${it.title} — view photo`}
+          >
+            <span class="pin__pushpin" aria-hidden="true"></span>
+            {it.type === "album" && <span class="pin__count" aria-hidden="true">×{it.images.length}</span>}
+            <span class="pin__photo"><Img src={abs(it.cover)} alt={it.title} loading="lazy" /></span>
+            <span class="pin__cap">{it.title}</span>
+          </button>
+        ))}
+      </div>
+      <div class="art-status">
+        <span class="art-status__cell">{albums.length} albums · {singles.length} singles</span>
+        <span class="art-status__cell art-status__cell--right">pinned by hand</span>
+      </div>
+    </div>
+  </Window>
+  </div>
+
+  {/* ---- Music → CD PLAYER (a Win95 applet that actually plays) ----------- */}
+  <div class="layout__cell art-cell art-cell--music">
+  <Window id="art-music" title="CD Player" width={560} panes>
+    {/* art-player.js reads data-albums, sorts newest-first, and drives the single
+        <audio preload="none"> — nothing downloads until Play. The transport, seek,
+        and tracklist are all wired (no fake affordances). */}
+    <div class="cdp" data-cdp data-albums={JSON.stringify(musicAlbums)}>
+      {/* Album selector — clear tabs (built by art-player.js), not the old
+          confusing far-edge skip buttons. Switching album switches the mode. */}
+      <div class="cdp__albums" data-cdp-albums role="tablist" aria-label="Album"></div>
+
+      <div class="cdp__lcd" aria-hidden="true">
+        <span class="cdp__lcd-no" data-cdp-no>01</span>
+        <span class="cdp__lcd-title" data-cdp-lcdtitle>—</span>
+        <span class="cdp__lcd-time" data-cdp-time>0:00</span>
+      </div>
+      <div class="cdp__head">
+        <span class="cdp__cover"><img data-cdp-cover src="" alt="" loading="lazy" /></span>
+        <div class="cdp__meta">
+          <span class="cdp__album" data-cdp-album></span>
+          <span class="cdp__sub" data-cdp-sub></span>
+          <nav class="cdp__links" data-cdp-links aria-label="Listen on"></nav>
+        </div>
+      </div>
+      {/* Liner-Notes caption (Fragments): description + years-later recollection. */}
+      <div class="cdp__note" data-cdp-note></div>
+      <div class="cdp__transport">
+        <button class="cdp__btn cdp__btn--prev" type="button" data-cdp-act="prev" aria-label="Previous track"><span aria-hidden="true">◄◄</span><svg class="cdp__ico cdp__ico--prev" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><rect x="6.5" y="6" width="2.2" height="12" rx="1"/><path d="M18 6.5 18 17.5 9.8 12 Z"/></svg></button>
+        <button class="cdp__btn cdp__btn--play" type="button" data-cdp-act="toggle" data-cdp-toggle aria-label="Play"><span aria-hidden="true">►</span><svg class="cdp__ico cdp__ico--play" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M8 5 20 12 8 19 Z"/></svg><svg class="cdp__ico cdp__ico--pause" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><rect x="7.5" y="6" width="3.4" height="12" rx="1.2"/><rect x="13.1" y="6" width="3.4" height="12" rx="1.2"/></svg></button>
+        <button class="cdp__btn cdp__btn--stop" type="button" data-cdp-act="stop" aria-label="Stop"><span aria-hidden="true">■</span><svg class="cdp__ico cdp__ico--stop" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><rect x="6.5" y="6.5" width="11" height="11" rx="2.6"/></svg></button>
+        <button class="cdp__btn cdp__btn--next" type="button" data-cdp-act="next" aria-label="Next track"><span aria-hidden="true">►►</span><svg class="cdp__ico cdp__ico--next" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M6 6.5 6 17.5 14.2 12 Z"/><rect x="15.3" y="6" width="2.2" height="12" rx="1"/></svg></button>
+      </div>
+      <input class="cdp__seek" type="range" data-cdp-seek min="0" max="0" value="0" step="1" aria-label="Seek" />
+      <ol class="cdp__tracks" data-cdp-tracks data-scroll-pane></ol>
+      <div class="art-status">
+        <span class="art-status__cell" data-cdp-pos></span>
+        <span class="art-status__cell art-status__cell--right" data-cdp-artist></span>
+      </div>
+      {/* The <audio> no longer lives here — it's relocated to the persisted
+          taskbar footer (Layout.astro) as the single shared element, so playback
+          + state survive view-transition navigations and the taskbar mini-player
+          can keep playing off /art. art-player.js binds to [data-cdp-audio] there
+          and remains the sole controller of src/volume/currentTime/the fade. */}
+    </div>
+  </Window>
+  </div>
+
+  {/* ---- Poetry → NOTEPAD / EXPLORER FILE-LIST ---------------------------- */}
+  <div class="layout__cell art-cell art-cell--poetry">
+  <Window id="art-poetry" title="Poetry" width={560} panes>
+    <div class="filelist" data-filelist data-view="icons">
+      {/* Real Win95 dropdown menu bar (filelist-menu.js wires open/close + the
+          View toggle + Sort). View + Sort are fully wired; File/Edit each carry a
+          single greyed (aria-disabled+disabled) placeholder so the bar reads
+          complete without a fake affordance — the real File/Edit actions + gag
+          copy await Elisha's sign-off (no em dashes per her house style), so they
+          ship inert this pass. */}
+      {/* A disclosure-button bar (NOT a WAI-ARIA menubar — we don't implement
+          roving tabindex / Left-Right roving, so claiming role=menubar would
+          over-promise). Each top button toggles its dropdown via aria-expanded +
+          aria-controls; the View pair are aria-pressed toggle buttons. */}
+      <div class="filelist__menu" data-fl-menu>
+        <div class="fl-menu">
+          <button class="filelist__menu-item" type="button" data-menu="file" aria-expanded="false" aria-controls="fl-pop-file">File</button>
+          <ul class="fl-menu__pop" id="fl-pop-file" hidden>
+            <li><button type="button" aria-disabled="true" disabled>Properties</button></li>
+          </ul>
+        </div>
+        <div class="fl-menu">
+          <button class="filelist__menu-item" type="button" data-menu="edit" aria-expanded="false" aria-controls="fl-pop-edit">Edit</button>
+          <ul class="fl-menu__pop" id="fl-pop-edit" hidden>
+            <li><button type="button" aria-disabled="true" disabled>Undo</button></li>
+          </ul>
+        </div>
+        <div class="fl-menu">
+          <button class="filelist__menu-item" type="button" data-menu="view" aria-expanded="false" aria-controls="fl-pop-view">View</button>
+          <ul class="fl-menu__pop" id="fl-pop-view" hidden>
+            <li><button type="button" aria-pressed="true" data-fl-view="icons">Large Icons</button></li>
+            <li><button type="button" aria-pressed="false" data-fl-view="list">List</button></li>
+          </ul>
+        </div>
+        <div class="fl-menu">
+          <button class="filelist__menu-item" type="button" data-menu="sort" aria-expanded="false" aria-controls="fl-pop-sort">Sort</button>
+          <ul class="fl-menu__pop" id="fl-pop-sort" hidden>
+            <li><button type="button" data-fl-sort="name">by Name</button></li>
+            <li><button type="button" data-fl-sort="kind">by Type</button></li>
+            <li><button type="button" data-fl-sort="date">by Year</button></li>
+          </ul>
+        </div>
+      </div>
+      <div class="filelist__head">
+        <button class="filelist__col filelist__col--name" type="button" data-sort="name">Name</button>
+        <button class="filelist__col filelist__col--kind" type="button" data-sort="kind">Type</button>
+        <button class="filelist__col filelist__col--date" type="button" data-sort="date">Year</button>
+      </div>
+      <ul class="filelist__rows" data-scroll-pane>
+        {poetry.items.map((it) => {
+          const isVisual = it.type === "visual";
+          return (
+            <li>
+              <button
+                class="filelist__row"
+                type="button"
+                data-np={isVisual ? undefined : true}
+                data-poem={isVisual ? undefined : it.poemText}
+                data-vpv={isVisual ? it.id : undefined}
+                data-slides={isVisual ? JSON.stringify(it.slides) : undefined}
+                data-title={it.title}
+                data-year={it.year}
+                data-source={it.source || ""}
+                data-attribution={it.attribution || ""}
+                data-title-art-alt={isVisual ? it.titleArt.alt : undefined}
+                aria-label={`${it.title} — open ${isVisual ? "the slide viewer" : "in Notepad"}`}
+              >
+                {isVisual ? (
+                  <span class="filelist__icon filelist__icon--art"><Img src={abs(it.titleArt.src)} alt="" loading="lazy" /></span>
+                ) : (
+                  <span class="filelist__icon" data-icon="poem" aria-hidden="true"></span>
+                )}
+                <span class="filelist__name">{isVisual ? it.title : `${it.title}.txt`}</span>
+                <span class="filelist__kind">{isVisual ? "Visual Poem" : "Text Document"}</span>
+                <span class="filelist__date">{it.year}</span>
+              </button>
+            </li>
+          );
+        })}
+      </ul>
+      <div class="art-status">
+        <span class="art-status__cell">{poetry.items.length} documents</span>
+        <span class="art-status__cell art-status__cell--right">open → viewer</span>
+      </div>
+    </div>
+  </Window>
+  </div>
+
+  {/* Maximized gallery — shared TrophyViewer (#tcg); lives outside any window so
+      its position:fixed anchors to the viewport. trophy-gallery.js (in Layout)
+      wires the photo + album launchers ([data-award]). */}
+  <TrophyViewer />
+
+  {/* Notepad viewer — opens a written poem verbatim. Outside any window (fixed
+      overlay). notepad.js (in Layout) wires the [data-np] file-list rows. */}
+  <div id="np" class="np os-modal" hidden aria-hidden="true">
+    <div class="np__win" role="dialog" aria-modal="true" aria-labelledby="np-title">
+      <header class="np__bar">
+        <span class="np__ic" data-icon="poem" aria-hidden="true"></span>
+        <span class="np__title" id="np-title"></span>
+        <button class="np__x" type="button" data-np-close aria-label="Close Notepad">×</button>
+      </header>
+      <div class="np__menubar" aria-hidden="true">
+        <span class="np__menu">File</span>
+        <span class="np__menu">Edit</span>
+        <span class="np__menu">Format</span>
+        <span class="np__menu">View</span>
+        <span class="np__menu">Help</span>
+      </div>
+      <div class="np__paper">
+        <p class="np__attr" id="np-attr" hidden></p>
+        <pre class="np__text" id="np-text" tabindex="0"></pre>
+      </div>
+      <div class="np__status" aria-hidden="true">
+        <span class="np__status-cell" id="np-status-src"></span>
+        <span class="np__status-cell np__status-cell--right" id="np-status-meta"></span>
+      </div>
+    </div>
+  </div>
+
+  {/* Visual-poem viewer — a green-on-black BBS/teletype terminal for "what i
+      chose". Outside any window (fixed .os-modal overlay). visual-poem.js (in
+      Layout) wires the [data-vpv] file-list row; the title painting is injected
+      lazily on open (its src is copied from the row thumbnail — never eager-
+      loaded). Frame 0 = framed title painting; frames 1-5 = the five stanzas,
+      teletyped over the LCD. The in-overlay controls use data-vpv-* (distinct
+      from the row's data-vpv) so the launcher can never re-bind onto them. */}
+  <div id="vpv" class="vpv os-modal" hidden aria-hidden="true">
+    <div class="vpv__win" role="dialog" aria-modal="true" aria-labelledby="vpv-title">
+      <header class="vpv__bar">
+        <span class="vpv__ic" data-icon="poem" aria-hidden="true"></span>
+        <span class="vpv__title" id="vpv-title"></span>
+        <span class="vpv__meta" id="vpv-meta" aria-live="polite"></span>
+        <button class="vpv__x" type="button" data-vpv-close aria-label="Close viewer">×</button>
+      </header>
+
+      <div class="vpv__stage">
+        <button class="vpv__nav vpv__prev" type="button" data-vpv-prev aria-label="Previous slide">‹</button>
+
+        {/* The LCD "terminal" screen — box-drawing-framed, green-on-black. No
+            role/aria-label: it wraps both the cover frame and the stanza, so a
+            static "stanza" name would mislabel the cover; the dialog name +
+            the #vpv-meta live counter carry the accessible context. */}
+        <div class="vpv__screen">
+          {/* Title-painting frame — frame 0 only. JS toggles [hidden] and sets
+              the <img> src (copied from the row thumbnail) on open. */}
+          <figure class="vpv__art" id="vpv-art" hidden>
+            {/* <img> injected here in open(); src copied from the row thumbnail */}
+            <figcaption class="vpv__art-cap" id="vpv-art-cap"></figcaption>
+          </figure>
+
+          {/* BBS section header: ── I. ── */}
+          <div class="vpv__rule" id="vpv-rule" aria-hidden="true"></div>
+
+          {/* Verbatim stanza, white-space:pre. textContent only. The trailing
+              .vpv__cur span is the blinking cursor, kept after the text node.
+              NOT aria-live: the teletype mutates this node every ~16ms, which
+              would spam a screen reader with partial fragments. It is focusable
+              (tabindex=0) so AT reads the settled poem on demand; the live slide
+              counter lives on #vpv-meta. */}
+          <pre class="vpv__text" id="vpv-text" tabindex="0"></pre>
+        </div>
+
+        <button class="vpv__nav vpv__next" type="button" data-vpv-next aria-label="Next slide">›</button>
+      </div>
+
+      <p class="vpv__hint" aria-hidden="true">‹ prev&nbsp;&nbsp;·&nbsp;&nbsp;next ›&nbsp;&nbsp;·&nbsp;&nbsp;ESC to close</p>
+    </div>
+  </div>
+
+  {/* Art-only route-split scripts (external + fingerprinted via ?url). The audio
+      player trio stays global in Layout (cross-page playback + load order). */}
+  <script is:inline src={artMobileScript}></script>
+  <script is:inline src={filelistScript}></script>
+  <script is:inline src={notepadScript}></script>
+  <script is:inline src={visualPoemScript}></script>
+  <script is:inline src={trophyScript}></script>
+
+</Layout>

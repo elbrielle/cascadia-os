@@ -27,7 +27,7 @@
 //
 //  When to rerun:
 //    Any edit to an inline <script> block in src/**/*.astro. Two such blocks
-//    exist today:
+//    exist today (see docs/PROJECT-STATUS.md "Operational notes"):
 //      - src/layouts/Layout.astro    astro:after-swap sidebar nav-sync
 //      - src/pages/contact.astro     Web3Forms submit handler
 //    The script logs which built page each unique hash came from so you can
